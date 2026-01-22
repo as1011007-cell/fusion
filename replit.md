@@ -2,9 +2,28 @@
 
 ## Overview
 
-Feud Fusion is a social party game mobile application built with React Native and Expo. The game challenges players to think from diverse cultural perspectives by answering questions about how different demographic groups (Gen Z, Desi Parents, etc.) would respond to various scenarios. The app supports solo play, party mode (local multiplayer), and daily challenges.
+Feud Fusion is a social party game mobile application built with React Native and Expo. The game challenges players to think from diverse cultural perspectives by answering questions about how different demographic groups would respond to various scenarios. The app supports solo play, party mode (local multiplayer), and daily challenges.
 
 The game features a vibrant "Electric Collision" aesthetic with neon accents, perspective bubbles, and game show-inspired visuals. Players earn points based on correct answers, with higher rewards for riskier "answer layers" (Most Common, Most Honest, Most Embarrassing).
+
+## Recent Changes (January 2026)
+
+### Profile System
+- Full profile creation with avatar selection and name input
+- Photo upload support using expo-image-picker
+- Avatar shop with 16 purchasable avatars (free starters to 1000-coin premium)
+- Earned coins system for avatar purchases
+
+### Question System
+- 28 diverse demographic panels implemented
+- 5,500+ total questions (50 variations per template)
+- No-repeat question tracking until all answered, persisted in AsyncStorage
+- Panels: Gen Z, Desi Parents, Hustlers, Artists, Office Workers, Small Town, Blonde, Elder Sister, Endo Warriors, Millennials, Boomers, Teachers, Nurses, Gamers, Introverts, Extroverts, Pet Parents, Fitness Buffs, Foodies, Remote Workers, New Parents, College Students, Travelers, Music Lovers, Bookworms, Tech Workers, Only Child, Middle Child
+
+### Settings
+- Background music toggle
+- Haptic feedback toggle
+- Question history reset functionality
 
 ## User Preferences
 
