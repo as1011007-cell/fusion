@@ -339,7 +339,7 @@ export default function ShopScreen() {
                       {avatar.name}
                     </ThemedText>
                     <View style={[styles.priceTag, !canAfford && styles.priceTagDisabled]}>
-                      <Feather name="star" size={12} color={canAfford ? GameColors.accent : GameColors.textSecondary} />
+                      <Feather name="dollar-sign" size={12} color={canAfford ? GameColors.accent : GameColors.textSecondary} />
                       <ThemedText style={[styles.priceText, !canAfford && styles.textDisabled]}>
                         {avatar.price}
                       </ThemedText>
