@@ -23,6 +23,7 @@ import { queryClient } from "@/lib/query-client";
 
 import RootStackNavigator from "@/navigation/RootStackNavigator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { BackgroundMusic } from "@/components/BackgroundMusic";
 import { GameProvider } from "@/context/GameContext";
 import { ProfileProvider } from "@/context/ProfileContext";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -61,6 +62,7 @@ export default function App() {
                     <NavigationContainer>
                       <RootStackNavigator />
                     </NavigationContainer>
+                    <BackgroundMusic />
                     <StatusBar style="light" />
                   </KeyboardProvider>
                 </GestureHandlerRootView>

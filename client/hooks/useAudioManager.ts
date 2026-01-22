@@ -1,32 +1,54 @@
-import { useEffect, useRef, useCallback, useState } from "react";
-import { useAudioPlayer, AudioPlayer } from "expo-audio";
+import { useEffect, useCallback, useState } from "react";
+import { useAudioPlayer } from "expo-audio";
 import { useProfile } from "@/context/ProfileContext";
+
+const BACKGROUND_MUSIC_URL = "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3";
 
 export function useAudioManager() {
   const { settings } = useProfile();
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  const playBackgroundMusic = useCallback(() => {
-    if (!settings.musicEnabled) return;
-    setIsPlaying(true);
-  }, [settings.musicEnabled]);
-
-  const stopBackgroundMusic = useCallback(() => {
-    setIsPlaying(false);
-  }, []);
+  const [isReady, setIsReady] = useState(false);
+  
+  const player = useAudioPlayer(BACKGROUND_MUSIC_URL);
 
   useEffect(() => {
-    if (settings.musicEnabled) {
-      setIsPlaying(true);
-    } else {
-      setIsPlaying(false);
+    if (player) {
+      player.loop = true;
+      player.volume = settings.musicVolume;
+      setIsReady(true);
     }
-  }, [settings.musicEnabled]);
+  }, [player]);
+
+  useEffect(() => {
+    if (!isReady || !player) return;
+
+    if (settings.musicEnabled) {
+      player.play();
+    } else {
+      player.pause();
+    }
+  }, [settings.musicEnabled, isReady, player]);
+
+  useEffect(() => {
+    if (player) {
+      player.volume = settings.musicVolume;
+    }
+  }, [settings.musicVolume, player]);
+
+  const playBackgroundMusic = useCallback(() => {
+    if (!settings.musicEnabled || !player) return;
+    player.play();
+  }, [settings.musicEnabled, player]);
+
+  const stopBackgroundMusic = useCallback(() => {
+    if (player) {
+      player.pause();
+    }
+  }, [player]);
 
   return {
     playBackgroundMusic,
     stopBackgroundMusic,
-    isPlaying: isPlaying && settings.musicEnabled,
+    isPlaying: player?.playing ?? false,
     musicEnabled: settings.musicEnabled,
     volume: settings.musicVolume,
   };
