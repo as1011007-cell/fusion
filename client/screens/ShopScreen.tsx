@@ -149,20 +149,24 @@ export default function ShopScreen() {
         const checkoutData = await checkoutResponse.json();
 
         if (checkoutData.url) {
-          await WebBrowser.openBrowserAsync(checkoutData.url);
-          addStarPoints(5000);
+          const result = await WebBrowser.openBrowserAsync(checkoutData.url);
+          if (result.type === 'dismiss' || result.type === 'cancel') {
+            addStarPoints(5000);
+            if (settings.hapticsEnabled) {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+          }
         }
       } else {
-        addStarPoints(5000);
+        console.error('Star Points product not found in Stripe');
         if (settings.hapticsEnabled) {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
       }
     } catch (error) {
       console.error('Purchase error:', error);
-      addStarPoints(5000);
       if (settings.hapticsEnabled) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
     } finally {
       setLoading(null);
@@ -199,20 +203,24 @@ export default function ShopScreen() {
         const checkoutData = await checkoutResponse.json();
 
         if (checkoutData.url) {
-          await WebBrowser.openBrowserAsync(checkoutData.url);
-          setAdFree(true);
+          const result = await WebBrowser.openBrowserAsync(checkoutData.url);
+          if (result.type === 'dismiss' || result.type === 'cancel') {
+            setAdFree(true);
+            if (settings.hapticsEnabled) {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+          }
         }
       } else {
-        setAdFree(true);
+        console.error('Ad-Free product not found in Stripe');
         if (settings.hapticsEnabled) {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
       }
     } catch (error) {
       console.error('Purchase error:', error);
-      setAdFree(true);
       if (settings.hapticsEnabled) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
     } finally {
       setLoading(null);
@@ -251,20 +259,24 @@ export default function ShopScreen() {
         const checkoutData = await checkoutResponse.json();
 
         if (checkoutData.url) {
-          await WebBrowser.openBrowserAsync(checkoutData.url);
-          setHasSupported(true);
+          const result = await WebBrowser.openBrowserAsync(checkoutData.url);
+          if (result.type === 'dismiss' || result.type === 'cancel') {
+            setHasSupported(true);
+            if (settings.hapticsEnabled) {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+          }
         }
       } else {
-        setHasSupported(true);
+        console.error('Support product not found in Stripe');
         if (settings.hapticsEnabled) {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
       }
     } catch (error) {
       console.error('Support purchase error:', error);
-      setHasSupported(true);
       if (settings.hapticsEnabled) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
     } finally {
       setLoading(null);

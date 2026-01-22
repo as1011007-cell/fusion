@@ -47,6 +47,25 @@ async function createProducts() {
     console.log('Created: 5000 Star Points - $5.00');
   }
 
+  if (!existingNames.includes('Support the Developer')) {
+    const coffeeProduct = await stripe.products.create({
+      name: 'Support the Developer',
+      description: 'Buy the developer a coffee! Thank you for your support.',
+      metadata: {
+        type: 'one_time',
+        category: 'tip',
+      },
+    });
+
+    await stripe.prices.create({
+      product: coffeeProduct.id,
+      unit_amount: 300,
+      currency: 'usd',
+    });
+
+    console.log('Created: Support the Developer - $3.00');
+  }
+
   console.log('Product seeding complete!');
 }
 
