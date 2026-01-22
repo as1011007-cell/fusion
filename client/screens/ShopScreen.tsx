@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator } from "react-native";
+import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -300,8 +300,8 @@ export default function ShopScreen() {
                   style={[styles.avatarCard, isEquipped && styles.avatarCardEquipped]}
                   onPress={() => handleEquipAvatar(avatar.id)}
                 >
-                  <View style={[styles.avatarIconLarge, { backgroundColor: avatar.color + "30" }]}>
-                    <Feather name={avatar.icon as any} size={32} color={avatar.color} />
+                  <View style={[styles.avatarImageContainer, { borderColor: avatar.color }]}>
+                    <Image source={avatar.image} style={styles.avatarImage} />
                   </View>
                   <ThemedText style={styles.avatarName}>{avatar.name}</ThemedText>
                   {isEquipped ? (
@@ -332,8 +332,8 @@ export default function ShopScreen() {
                     style={[styles.avatarCard, styles.avatarCardLocked, !canAfford && styles.avatarCardDisabled]}
                     onPress={() => canAfford && handlePurchaseAvatar(avatar.id, avatar.price)}
                   >
-                    <View style={[styles.avatarIconLarge, { backgroundColor: avatar.color + "20" }]}>
-                      <Feather name={avatar.icon as any} size={32} color={canAfford ? avatar.color : GameColors.textSecondary} />
+                    <View style={[styles.avatarImageContainer, { borderColor: canAfford ? avatar.color : GameColors.textSecondary, opacity: canAfford ? 1 : 0.5 }]}>
+                      <Image source={avatar.image} style={styles.avatarImage} />
                     </View>
                     <ThemedText style={[styles.avatarName, !canAfford && styles.textDisabled]}>
                       {avatar.name}
@@ -773,6 +773,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: Spacing.sm,
+  },
+  avatarImageContainer: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 3,
+    overflow: "hidden",
+    marginBottom: Spacing.sm,
+  },
+  avatarImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
   },
   avatarName: {
     ...Typography.small,

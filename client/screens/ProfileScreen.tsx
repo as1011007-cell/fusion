@@ -142,9 +142,7 @@ export default function ProfileScreen() {
               setCustomPhoto(null);
             }}
           >
-            <View style={[styles.avatarIcon, { backgroundColor: avatar.color + "30" }]}>
-              <Feather name={avatar.icon as any} size={24} color={avatar.color} />
-            </View>
+            <Image source={avatar.image} style={styles.avatarImageSmall} />
           </Pressable>
         ))}
       </View>
@@ -195,15 +193,11 @@ export default function ProfileScreen() {
         ) : currentAvatar ? (
           <View
             style={[
-              styles.profileAvatar,
-              { backgroundColor: currentAvatar.color + "30" },
+              styles.profileAvatarContainer,
+              { borderColor: currentAvatar.color },
             ]}
           >
-            <Feather
-              name={currentAvatar.icon as any}
-              size={40}
-              color={currentAvatar.color}
-            />
+            <Image source={currentAvatar.image} style={styles.profileAvatarImage} />
           </View>
         ) : null}
 
@@ -398,6 +392,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  avatarImageSmall: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
   nameInput: {
     backgroundColor: GameColors.backgroundDark,
     borderRadius: BorderRadius.md,
@@ -439,6 +438,18 @@ const styles = StyleSheet.create({
     borderRadius: 35,
     alignItems: "center",
     justifyContent: "center",
+  },
+  profileAvatarContainer: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 3,
+    overflow: "hidden",
+  },
+  profileAvatarImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
   },
   profileInfo: {
     flex: 1,

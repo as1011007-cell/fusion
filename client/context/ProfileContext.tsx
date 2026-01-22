@@ -1,10 +1,30 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+export const avatarImages: { [key: string]: any } = {
+  "avatar-1": require("../../assets/avatars/avatar-1.png"),
+  "avatar-2": require("../../assets/avatars/avatar-2.png"),
+  "avatar-3": require("../../assets/avatars/avatar-3.png"),
+  "avatar-4": require("../../assets/avatars/avatar-4.png"),
+  "avatar-5": require("../../assets/avatars/avatar-5.png"),
+  "avatar-6": require("../../assets/avatars/avatar-6.png"),
+  "avatar-7": require("../../assets/avatars/avatar-7.png"),
+  "avatar-8": require("../../assets/avatars/avatar-8.png"),
+  "avatar-9": require("../../assets/avatars/avatar-9.png"),
+  "avatar-10": require("../../assets/avatars/avatar-10.png"),
+  "avatar-11": require("../../assets/avatars/avatar-11.png"),
+  "avatar-12": require("../../assets/avatars/avatar-12.png"),
+  "avatar-13": require("../../assets/avatars/avatar-13.png"),
+  "avatar-14": require("../../assets/avatars/avatar-14.png"),
+  "avatar-15": require("../../assets/avatars/avatar-15.png"),
+  "avatar-16": require("../../assets/avatars/avatar-16.png"),
+};
+
 export type Avatar = {
   id: string;
   name: string;
   icon: string;
+  image: any;
   color: string;
   price: number;
   owned: boolean;
@@ -49,22 +69,22 @@ type ProfileContextType = {
 };
 
 const defaultAvatars: Avatar[] = [
-  { id: "avatar-1", name: "Happy Kid", icon: "smile", color: "#FF006E", price: 0, owned: true },
-  { id: "avatar-2", name: "Cool Cat", icon: "github", color: "#FFD700", price: 0, owned: true },
-  { id: "avatar-3", name: "Friendly Ghost", icon: "cloud", color: "#FFFFFF", price: 0, owned: true },
-  { id: "avatar-4", name: "Silly Monster", icon: "frown", color: "#00F5FF", price: 100, owned: false },
-  { id: "avatar-5", name: "Royal Prince", icon: "award", color: "#FFD700", price: 150, owned: false },
-  { id: "avatar-6", name: "Fire Dragon", icon: "sun", color: "#FF8C00", price: 200, owned: false },
-  { id: "avatar-7", name: "Sleepy Owl", icon: "moon", color: "#C0C0FF", price: 250, owned: false },
-  { id: "avatar-8", name: "Space Alien", icon: "globe", color: "#9B59B6", price: 300, owned: false },
-  { id: "avatar-9", name: "Thunder Bear", icon: "cloud-lightning", color: "#F1C40F", price: 350, owned: false },
-  { id: "avatar-10", name: "Brave Fox", icon: "sunrise", color: "#E74C3C", price: 400, owned: false },
-  { id: "avatar-11", name: "Ice Yeti", icon: "hexagon", color: "#1ABC9C", price: 450, owned: false },
-  { id: "avatar-12", name: "Purple Goblin", icon: "target", color: "#8E44AD", price: 500, owned: false },
-  { id: "avatar-13", name: "Ocean Mermaid", icon: "compass", color: "#3498DB", price: 600, owned: false },
-  { id: "avatar-14", name: "Forest Elf", icon: "feather", color: "#00FF87", price: 700, owned: false },
-  { id: "avatar-15", name: "Pink Unicorn", icon: "heart", color: "#E91E63", price: 800, owned: false },
-  { id: "avatar-16", name: "Golden Hero", icon: "shield", color: "#FF006E", price: 1000, owned: false },
+  { id: "avatar-1", name: "Happy Kid", icon: "smile", image: avatarImages["avatar-1"], color: "#FF006E", price: 0, owned: true },
+  { id: "avatar-2", name: "Cool Cat", icon: "github", image: avatarImages["avatar-2"], color: "#FFD700", price: 0, owned: true },
+  { id: "avatar-3", name: "Friendly Ghost", icon: "cloud", image: avatarImages["avatar-3"], color: "#FFFFFF", price: 0, owned: true },
+  { id: "avatar-4", name: "Silly Monster", icon: "frown", image: avatarImages["avatar-4"], color: "#00F5FF", price: 100, owned: false },
+  { id: "avatar-5", name: "Royal Prince", icon: "award", image: avatarImages["avatar-5"], color: "#FFD700", price: 150, owned: false },
+  { id: "avatar-6", name: "Fire Dragon", icon: "sun", image: avatarImages["avatar-6"], color: "#FF8C00", price: 200, owned: false },
+  { id: "avatar-7", name: "Sleepy Owl", icon: "moon", image: avatarImages["avatar-7"], color: "#C0C0FF", price: 250, owned: false },
+  { id: "avatar-8", name: "Space Alien", icon: "globe", image: avatarImages["avatar-8"], color: "#9B59B6", price: 300, owned: false },
+  { id: "avatar-9", name: "Thunder Bear", icon: "cloud-lightning", image: avatarImages["avatar-9"], color: "#F1C40F", price: 350, owned: false },
+  { id: "avatar-10", name: "Brave Fox", icon: "sunrise", image: avatarImages["avatar-10"], color: "#E74C3C", price: 400, owned: false },
+  { id: "avatar-11", name: "Ice Yeti", icon: "hexagon", image: avatarImages["avatar-11"], color: "#1ABC9C", price: 450, owned: false },
+  { id: "avatar-12", name: "Purple Goblin", icon: "target", image: avatarImages["avatar-12"], color: "#8E44AD", price: 500, owned: false },
+  { id: "avatar-13", name: "Ocean Mermaid", icon: "compass", image: avatarImages["avatar-13"], color: "#3498DB", price: 600, owned: false },
+  { id: "avatar-14", name: "Forest Elf", icon: "feather", image: avatarImages["avatar-14"], color: "#00FF87", price: 700, owned: false },
+  { id: "avatar-15", name: "Pink Unicorn", icon: "heart", image: avatarImages["avatar-15"], color: "#E91E63", price: 800, owned: false },
+  { id: "avatar-16", name: "Golden Hero", icon: "shield", image: avatarImages["avatar-16"], color: "#FF006E", price: 1000, owned: false },
 ];
 
 const defaultSettings: Settings = {
