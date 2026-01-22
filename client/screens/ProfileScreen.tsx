@@ -367,66 +367,6 @@ export default function ProfileScreen() {
                 <Feather name="chevron-right" size={20} color={GameColors.textSecondary} />
               </Pressable>
             </Animated.View>
-
-            {profiles.length > 1 ? (
-              <Animated.View entering={FadeInUp.delay(300).springify()} style={styles.switchSection}>
-                <ThemedText style={styles.sectionTitle}>Switch Profile</ThemedText>
-                {profiles
-                  .filter((p) => p.id !== currentProfile?.id)
-                  .map((profile) => {
-                    const avatar = avatars.find((a) => a.id === profile.avatarId);
-                    return (
-                      <Pressable
-                        key={profile.id}
-                        style={styles.profileItem}
-                        onPress={() => handleSelectProfile(profile.id)}
-                      >
-                        {profile.customPhoto ? (
-                          <Image
-                            source={{ uri: profile.customPhoto }}
-                            style={styles.profileItemPhoto}
-                          />
-                        ) : avatar ? (
-                          <View
-                            style={[
-                              styles.profileItemAvatar,
-                              { backgroundColor: avatar.color + "30" },
-                            ]}
-                          >
-                            <Feather
-                              name={avatar.icon as any}
-                              size={20}
-                              color={avatar.color}
-                            />
-                          </View>
-                        ) : null}
-                        <ThemedText style={styles.profileItemName}>
-                          {profile.name}
-                        </ThemedText>
-                        <Pressable
-                          onPress={() => handleDeleteProfile(profile.id)}
-                          style={styles.deleteButton}
-                        >
-                          <Feather name="trash-2" size={16} color={GameColors.wrong} />
-                        </Pressable>
-                      </Pressable>
-                    );
-                  })}
-              </Animated.View>
-            ) : null}
-
-            <Pressable
-              style={styles.addProfileButton}
-              onPress={() => {
-                setShowCreateForm(true);
-                setProfileName("");
-                setSelectedAvatarId(avatars[0]?.id || "");
-                setCustomPhoto(null);
-              }}
-            >
-              <Feather name="plus" size={20} color={GameColors.primary} />
-              <ThemedText style={styles.addProfileText}>Add New Profile</ThemedText>
-            </Pressable>
           </>
         ) : (
           renderProfileForm()
