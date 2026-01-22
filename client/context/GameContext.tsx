@@ -1,4 +1,8 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { allQuestions, getQuestionsForPanel, getDailyChallenge, Question, AnswerLayer } from "@/data/questions";
+
+export type { Question, AnswerLayer };
 
 export type Panel = {
   id: string;
@@ -8,8 +12,6 @@ export type Panel = {
   color: string;
 };
 
-export type AnswerLayer = "common" | "honest" | "embarrassing";
-
 export type PowerCard = {
   id: string;
   name: string;
@@ -18,34 +20,44 @@ export type PowerCard = {
   count: number;
 };
 
-export type Question = {
+export type PartyRole = "talker" | "whisperer" | "saboteur";
+
+export type PartyPlayer = {
   id: string;
-  text: string;
-  panelId: string;
-  answers: {
-    common: string[];
-    honest: string[];
-    embarrassing: string[];
-  };
+  name: string;
+  role: PartyRole;
+  team: "red" | "blue";
+  score: number;
 };
 
+export type GameMode = "solo" | "party" | "daily";
+
 export type GameState = {
+  mode: GameMode;
   currentRound: number;
   totalRounds: number;
   score: number;
   streak: number;
+  bestStreak: number;
   selectedPanel: Panel | null;
   selectedLayer: AnswerLayer;
   currentQuestion: Question | null;
+  questions: Question[];
   powerCards: PowerCard[];
   isPlaying: boolean;
-  playerAnswer: string;
+  selectedOptionIndex: number | null;
   showResults: boolean;
   lastResult: {
     correct: boolean;
     points: number;
     correctAnswer: string;
   } | null;
+  partyPlayers: PartyPlayer[];
+  currentTeam: "red" | "blue";
+  redScore: number;
+  blueScore: number;
+  dailyChallengeCompleted: boolean;
+  dailyChallengeDate: string | null;
 };
 
 type GameContextType = {
@@ -53,13 +65,19 @@ type GameContextType = {
   panels: Panel[];
   setSelectedPanel: (panel: Panel) => void;
   setSelectedLayer: (layer: AnswerLayer) => void;
-  startGame: () => void;
-  submitAnswer: (answer: string) => void;
+  startGame: (mode: GameMode) => void;
+  selectOption: (optionIndex: number) => void;
   nextRound: () => void;
   usePowerCard: (cardId: string) => void;
   resetGame: () => void;
   totalCoins: number;
   addCoins: (amount: number) => void;
+  totalGamesPlayed: number;
+  highScore: number;
+  addPartyPlayer: (name: string, team: "red" | "blue") => void;
+  removePartyPlayer: (playerId: string) => void;
+  assignRoles: () => void;
+  switchTeam: () => void;
 };
 
 const panels: Panel[] = [
@@ -107,59 +125,6 @@ const panels: Panel[] = [
   },
 ];
 
-const questions: Question[] = [
-  {
-    id: "1",
-    text: "What's the first thing you do when you wake up?",
-    panelId: "gen-z",
-    answers: {
-      common: ["Check phone", "Scroll TikTok", "Hit snooze"],
-      honest: ["Doomscroll for 30 min", "Skip breakfast", "Ignore alarms"],
-      embarrassing: ["Text ex at 3am", "Cry in bed", "Call in sick again"],
-    },
-  },
-  {
-    id: "2",
-    text: "What do you secretly judge others for?",
-    panelId: "desi-parents",
-    answers: {
-      common: ["Bad grades", "Messy house", "Not calling elders"],
-      honest: ["Their kids' choices", "Cooking skills", "Not saving money"],
-      embarrassing: ["Not owning a house", "Unmarried at 25", "Eating out too much"],
-    },
-  },
-  {
-    id: "3",
-    text: "What's your guilty pleasure?",
-    panelId: "hustlers",
-    answers: {
-      common: ["Expensive coffee", "Networking events", "Self-help books"],
-      honest: ["Checking bank balance", "LinkedIn stalking", "Bragging subtly"],
-      embarrassing: ["Sleeping in", "Netflix binges", "Ordering takeout"],
-    },
-  },
-  {
-    id: "4",
-    text: "What inspires your creative work?",
-    panelId: "artists",
-    answers: {
-      common: ["Nature", "Music", "Emotions"],
-      honest: ["Deadlines", "Rent due", "Caffeine"],
-      embarrassing: ["Jealousy of others", "Spite", "Procrastination anxiety"],
-    },
-  },
-  {
-    id: "5",
-    text: "What gets you through Monday?",
-    panelId: "office-workers",
-    answers: {
-      common: ["Coffee", "Colleagues", "Countdown to Friday"],
-      honest: ["Paycheck thoughts", "Memes in group chat", "Long lunch breaks"],
-      embarrassing: ["Job searching at desk", "Crying in bathroom", "Faking enthusiasm"],
-    },
-  },
-];
-
 const initialPowerCards: PowerCard[] = [
   {
     id: "mute",
@@ -171,7 +136,7 @@ const initialPowerCards: PowerCard[] = [
   {
     id: "steal",
     name: "Steal",
-    description: "Copy the top answer",
+    description: "Reveal one wrong answer",
     icon: "copy",
     count: 1,
   },
@@ -185,18 +150,27 @@ const initialPowerCards: PowerCard[] = [
 ];
 
 const initialGameState: GameState = {
+  mode: "solo",
   currentRound: 0,
   totalRounds: 5,
   score: 0,
   streak: 0,
+  bestStreak: 0,
   selectedPanel: null,
   selectedLayer: "common",
   currentQuestion: null,
+  questions: [],
   powerCards: initialPowerCards,
   isPlaying: false,
-  playerAnswer: "",
+  selectedOptionIndex: null,
   showResults: false,
   lastResult: null,
+  partyPlayers: [],
+  currentTeam: "red",
+  redScore: 0,
+  blueScore: 0,
+  dailyChallengeCompleted: false,
+  dailyChallengeDate: null,
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -204,6 +178,46 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 export function GameProvider({ children }: { children: ReactNode }) {
   const [gameState, setGameState] = useState<GameState>(initialGameState);
   const [totalCoins, setTotalCoins] = useState(100);
+  const [totalGamesPlayed, setTotalGamesPlayed] = useState(0);
+  const [highScore, setHighScore] = useState(0);
+
+  useEffect(() => {
+    loadPlayerData();
+  }, []);
+
+  const loadPlayerData = async () => {
+    try {
+      const coins = await AsyncStorage.getItem("totalCoins");
+      const games = await AsyncStorage.getItem("totalGamesPlayed");
+      const high = await AsyncStorage.getItem("highScore");
+      const dailyDate = await AsyncStorage.getItem("dailyChallengeDate");
+
+      if (coins) setTotalCoins(parseInt(coins, 10));
+      if (games) setTotalGamesPlayed(parseInt(games, 10));
+      if (high) setHighScore(parseInt(high, 10));
+      
+      const today = new Date().toISOString().split("T")[0];
+      if (dailyDate === today) {
+        setGameState(prev => ({ ...prev, dailyChallengeCompleted: true, dailyChallengeDate: today }));
+      }
+    } catch (error) {
+      console.error("Error loading player data:", error);
+    }
+  };
+
+  const savePlayerData = async () => {
+    try {
+      await AsyncStorage.setItem("totalCoins", totalCoins.toString());
+      await AsyncStorage.setItem("totalGamesPlayed", totalGamesPlayed.toString());
+      await AsyncStorage.setItem("highScore", highScore.toString());
+    } catch (error) {
+      console.error("Error saving player data:", error);
+    }
+  };
+
+  useEffect(() => {
+    savePlayerData();
+  }, [totalCoins, totalGamesPlayed, highScore]);
 
   const setSelectedPanel = (panel: Panel) => {
     setGameState((prev) => ({ ...prev, selectedPanel: panel }));
@@ -213,52 +227,90 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setGameState((prev) => ({ ...prev, selectedLayer: layer }));
   };
 
-  const startGame = () => {
-    const panelQuestions = questions.filter(
-      (q) => q.panelId === gameState.selectedPanel?.id
-    );
-    const randomQuestion =
-      panelQuestions[Math.floor(Math.random() * panelQuestions.length)] ||
-      questions[0];
+  const startGame = (mode: GameMode) => {
+    let questions: Question[] = [];
+    let totalRounds = 5;
+
+    if (mode === "daily") {
+      questions = getDailyChallenge();
+      totalRounds = questions.length;
+    } else if (mode === "party") {
+      questions = allQuestions.sort(() => Math.random() - 0.5).slice(0, 10);
+      totalRounds = 10;
+    } else if (gameState.selectedPanel) {
+      questions = getQuestionsForPanel(
+        gameState.selectedPanel.id,
+        gameState.selectedLayer,
+        5
+      );
+      totalRounds = 5;
+    }
+
+    if (questions.length === 0) {
+      questions = allQuestions.sort(() => Math.random() - 0.5).slice(0, 5);
+    }
 
     setGameState((prev) => ({
       ...prev,
+      mode,
       isPlaying: true,
       currentRound: 1,
+      totalRounds,
       score: 0,
       streak: 0,
-      currentQuestion: randomQuestion,
+      bestStreak: 0,
+      currentQuestion: questions[0],
+      questions,
       showResults: false,
       lastResult: null,
+      selectedOptionIndex: null,
       powerCards: initialPowerCards,
+      redScore: 0,
+      blueScore: 0,
+      currentTeam: "red",
     }));
   };
 
-  const submitAnswer = (answer: string) => {
-    if (!gameState.currentQuestion) return;
+  const selectOption = (optionIndex: number) => {
+    if (!gameState.currentQuestion || gameState.showResults) return;
 
-    const correctAnswers =
-      gameState.currentQuestion.answers[gameState.selectedLayer];
-    const isCorrect = correctAnswers.some(
-      (a) => a.toLowerCase().includes(answer.toLowerCase()) ||
-             answer.toLowerCase().includes(a.toLowerCase())
-    );
+    const selectedOption = gameState.currentQuestion.options[optionIndex];
+    const isCorrect = selectedOption.isCorrect;
 
     const basePoints = gameState.selectedLayer === "common" ? 100 :
                        gameState.selectedLayer === "honest" ? 200 : 300;
     const streakBonus = gameState.streak * 50;
     const points = isCorrect ? basePoints + streakBonus : 0;
 
+    const correctOption = gameState.currentQuestion.options.find(o => o.isCorrect);
+
+    const newStreak = isCorrect ? gameState.streak + 1 : 0;
+    const newBestStreak = Math.max(gameState.bestStreak, newStreak);
+
+    let newRedScore = gameState.redScore;
+    let newBlueScore = gameState.blueScore;
+
+    if (gameState.mode === "party") {
+      if (gameState.currentTeam === "red") {
+        newRedScore += points;
+      } else {
+        newBlueScore += points;
+      }
+    }
+
     setGameState((prev) => ({
       ...prev,
-      playerAnswer: answer,
+      selectedOptionIndex: optionIndex,
       showResults: true,
       score: prev.score + points,
-      streak: isCorrect ? prev.streak + 1 : 0,
+      streak: newStreak,
+      bestStreak: newBestStreak,
+      redScore: newRedScore,
+      blueScore: newBlueScore,
       lastResult: {
         correct: isCorrect,
         points,
-        correctAnswer: correctAnswers[0],
+        correctAnswer: correctOption?.text || "",
       },
     }));
 
@@ -269,45 +321,142 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const nextRound = () => {
     if (gameState.currentRound >= gameState.totalRounds) {
-      setGameState((prev) => ({
-        ...prev,
-        isPlaying: false,
-        showResults: false,
-      }));
+      if (gameState.score > highScore) {
+        setHighScore(gameState.score);
+      }
+      setTotalGamesPlayed(prev => prev + 1);
+      
+      if (gameState.mode === "daily") {
+        const today = new Date().toISOString().split("T")[0];
+        AsyncStorage.setItem("dailyChallengeDate", today);
+        setGameState(prev => ({ 
+          ...prev, 
+          isPlaying: false, 
+          showResults: false,
+          dailyChallengeCompleted: true,
+          dailyChallengeDate: today,
+        }));
+      } else {
+        setGameState((prev) => ({
+          ...prev,
+          isPlaying: false,
+          showResults: false,
+        }));
+      }
       return;
     }
 
-    const availableQuestions = questions.filter(
-      (q) => q.id !== gameState.currentQuestion?.id
-    );
-    const randomQuestion =
-      availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+    const nextQuestion = gameState.questions[gameState.currentRound];
+    const nextTeam = gameState.mode === "party" 
+      ? (gameState.currentTeam === "red" ? "blue" : "red") 
+      : gameState.currentTeam;
 
     setGameState((prev) => ({
       ...prev,
       currentRound: prev.currentRound + 1,
-      currentQuestion: randomQuestion,
-      playerAnswer: "",
+      currentQuestion: nextQuestion,
+      selectedOptionIndex: null,
       showResults: false,
       lastResult: null,
+      currentTeam: nextTeam,
     }));
   };
 
   const usePowerCard = (cardId: string) => {
+    const card = gameState.powerCards.find(c => c.id === cardId);
+    if (!card || card.count <= 0) return;
+
+    if (cardId === "mute" && gameState.currentRound < gameState.totalRounds) {
+      nextRound();
+    }
+
+    if (cardId === "steal" && gameState.currentQuestion) {
+      const wrongOptions = gameState.currentQuestion.options
+        .map((opt, idx) => ({ opt, idx }))
+        .filter(({ opt }) => !opt.isCorrect);
+      
+      if (wrongOptions.length > 0) {
+        const randomWrong = wrongOptions[Math.floor(Math.random() * wrongOptions.length)];
+        const updatedOptions = gameState.currentQuestion.options.map((opt, idx) => 
+          idx === randomWrong.idx ? { ...opt, text: `[X] ${opt.text}` } : opt
+        );
+        setGameState(prev => ({
+          ...prev,
+          currentQuestion: prev.currentQuestion ? {
+            ...prev.currentQuestion,
+            options: updatedOptions,
+          } : null,
+        }));
+      }
+    }
+
     setGameState((prev) => ({
       ...prev,
-      powerCards: prev.powerCards.map((card) =>
-        card.id === cardId ? { ...card, count: Math.max(0, card.count - 1) } : card
+      powerCards: prev.powerCards.map((c) =>
+        c.id === cardId ? { ...c, count: Math.max(0, c.count - 1) } : c
       ),
     }));
   };
 
   const resetGame = () => {
-    setGameState(initialGameState);
+    setGameState({
+      ...initialGameState,
+      dailyChallengeCompleted: gameState.dailyChallengeCompleted,
+      dailyChallengeDate: gameState.dailyChallengeDate,
+    });
   };
 
   const addCoins = (amount: number) => {
     setTotalCoins((prev) => prev + amount);
+  };
+
+  const addPartyPlayer = (name: string, team: "red" | "blue") => {
+    const newPlayer: PartyPlayer = {
+      id: Math.random().toString(36).substring(2, 9),
+      name,
+      role: "whisperer",
+      team,
+      score: 0,
+    };
+    setGameState(prev => ({
+      ...prev,
+      partyPlayers: [...prev.partyPlayers, newPlayer],
+    }));
+  };
+
+  const removePartyPlayer = (playerId: string) => {
+    setGameState(prev => ({
+      ...prev,
+      partyPlayers: prev.partyPlayers.filter(p => p.id !== playerId),
+    }));
+  };
+
+  const assignRoles = () => {
+    const roles: PartyRole[] = ["talker", "whisperer", "saboteur"];
+    const redTeam = gameState.partyPlayers.filter(p => p.team === "red");
+    const blueTeam = gameState.partyPlayers.filter(p => p.team === "blue");
+
+    const assignTeamRoles = (team: PartyPlayer[]): PartyPlayer[] => {
+      if (team.length === 0) return team;
+      
+      const shuffled = [...team].sort(() => Math.random() - 0.5);
+      return shuffled.map((player, index) => ({
+        ...player,
+        role: roles[index % roles.length],
+      }));
+    };
+
+    setGameState(prev => ({
+      ...prev,
+      partyPlayers: [...assignTeamRoles(redTeam), ...assignTeamRoles(blueTeam)],
+    }));
+  };
+
+  const switchTeam = () => {
+    setGameState(prev => ({
+      ...prev,
+      currentTeam: prev.currentTeam === "red" ? "blue" : "red",
+    }));
   };
 
   return (
@@ -318,12 +467,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
         setSelectedPanel,
         setSelectedLayer,
         startGame,
-        submitAnswer,
+        selectOption,
         nextRound,
         usePowerCard,
         resetGame,
         totalCoins,
         addCoins,
+        totalGamesPlayed,
+        highScore,
+        addPartyPlayer,
+        removePartyPlayer,
+        assignRoles,
+        switchTeam,
       }}
     >
       {children}

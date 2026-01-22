@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
-  useAnimatedStyle,
   useSharedValue,
   withTiming,
   Easing,
+  useAnimatedProps,
 } from "react-native-reanimated";
 import Svg, { Circle } from "react-native-svg";
 
@@ -54,7 +54,7 @@ export function Timer({ duration, onComplete, isActive }: TimerProps) {
     return () => clearInterval(interval);
   }, [isActive, duration]);
 
-  const animatedCircleStyle = useAnimatedStyle(() => ({
+  const animatedProps = useAnimatedProps(() => ({
     strokeDashoffset: circumference * (1 - progress.value),
   }));
 
@@ -85,7 +85,7 @@ export function Timer({ duration, onComplete, isActive }: TimerProps) {
           strokeDasharray={circumference}
           strokeLinecap="round"
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
-          style={animatedCircleStyle}
+          animatedProps={animatedProps}
         />
       </Svg>
       <View style={styles.textContainer}>

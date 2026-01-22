@@ -5,6 +5,8 @@ import GameSetupScreen from "@/screens/GameSetupScreen";
 import GamePlayScreen from "@/screens/GamePlayScreen";
 import ResultsScreen from "@/screens/ResultsScreen";
 import ProfileScreen from "@/screens/ProfileScreen";
+import PartySetupScreen from "@/screens/PartySetupScreen";
+import DailyChallengeScreen from "@/screens/DailyChallengeScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { GameColors } from "@/constants/theme";
 
@@ -14,6 +16,8 @@ export type RootStackParamList = {
   GamePlay: undefined;
   Results: undefined;
   Profile: undefined;
+  PartySetup: undefined;
+  DailyChallenge: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -44,6 +48,8 @@ export default function RootStackNavigator() {
         component={ProfileScreen}
         options={{ presentation: "modal" }}
       />
+      <Stack.Screen name="PartySetup" component={PartySetupScreen} />
+      <Stack.Screen name="DailyChallenge" component={DailyChallengeScreen} />
     </Stack.Navigator>
   );
 }

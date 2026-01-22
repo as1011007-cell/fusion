@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Pressable } from "react-native";
+import { StyleSheet, View, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -9,29 +9,38 @@ import * as Haptics from "expo-haptics";
 
 import { ThemedText } from "@/components/ThemedText";
 import { QuestionCard } from "@/components/QuestionCard";
-import { AnswerInput } from "@/components/AnswerInput";
+import { MultipleChoiceOptions } from "@/components/MultipleChoiceOptions";
 import { PowerCardDock } from "@/components/PowerCardDock";
 import { Timer } from "@/components/Timer";
 import { ScoreDisplay } from "@/components/ScoreDisplay";
 import { ResultCard } from "@/components/ResultCard";
 import { GradientButton } from "@/components/GradientButton";
-import { GameColors, Spacing, Typography } from "@/constants/theme";
+import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
-import { useGame } from "@/context/GameContext";
+import { useGame, Panel } from "@/context/GameContext";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "GamePlay">;
 
 const ROUND_DURATION = 30;
+
+const defaultPanel: Panel = {
+  id: "mixed",
+  name: "Mixed",
+  description: "All panels",
+  icon: "globe",
+  color: GameColors.secondary,
+};
 
 export default function GamePlayScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const {
     gameState,
-    submitAnswer,
+    selectOption,
     nextRound,
     usePowerCard,
     resetGame,
+    panels,
   } = useGame();
 
   const [timerActive, setTimerActive] = useState(true);
@@ -54,14 +63,14 @@ export default function GamePlayScreen() {
     navigation.goBack();
   };
 
-  const handleSubmit = (answer: string) => {
+  const handleSelectOption = (index: number) => {
     setTimerActive(false);
-    submitAnswer(answer);
+    selectOption(index);
   };
 
   const handleTimeUp = () => {
-    if (!gameState.showResults) {
-      submitAnswer("");
+    if (!gameState.showResults && gameState.selectedOptionIndex === null) {
+      selectOption(-1);
     }
   };
 
@@ -77,9 +86,13 @@ export default function GamePlayScreen() {
     usePowerCard(cardId);
   };
 
-  if (!gameState.currentQuestion || !gameState.selectedPanel) {
+  if (!gameState.currentQuestion) {
     return null;
   }
+
+  const currentPanel = gameState.mode === "solo" && gameState.selectedPanel
+    ? gameState.selectedPanel
+    : panels.find(p => p.id === gameState.currentQuestion?.panelId) || defaultPanel;
 
   return (
     <View style={styles.container}>
@@ -101,28 +114,76 @@ export default function GamePlayScreen() {
         <ScoreDisplay score={gameState.score} streak={gameState.streak} />
       </View>
 
-      <View style={styles.content}>
+      {gameState.mode === "party" ? (
+        <View style={styles.teamIndicator}>
+          <View
+            style={[
+              styles.teamBadge,
+              {
+                backgroundColor:
+                  gameState.currentTeam === "red" ? "#FF444430" : "#4444FF30",
+              },
+            ]}
+          >
+            <ThemedText
+              style={[
+                styles.teamText,
+                { color: gameState.currentTeam === "red" ? "#FF4444" : "#4444FF" },
+              ]}
+            >
+              {gameState.currentTeam === "red" ? "Red Team" : "Blue Team"}'s Turn
+            </ThemedText>
+          </View>
+          <View style={styles.teamScores}>
+            <ThemedText style={[styles.teamScore, { color: "#FF4444" }]}>
+              {gameState.redScore}
+            </ThemedText>
+            <ThemedText style={styles.teamScoreDivider}>-</ThemedText>
+            <ThemedText style={[styles.teamScore, { color: "#4444FF" }]}>
+              {gameState.blueScore}
+            </ThemedText>
+          </View>
+        </View>
+      ) : null}
+
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {!gameState.showResults ? (
-          <Animated.View entering={FadeIn.duration(300)} style={styles.questionArea}>
+          <Animated.View entering={FadeIn.duration(300)}>
             <QuestionCard
               question={gameState.currentQuestion.text}
-              panel={gameState.selectedPanel}
-              layer={gameState.selectedLayer}
+              panel={currentPanel}
+              layer={gameState.currentQuestion.layer || gameState.selectedLayer}
               round={gameState.currentRound}
               totalRounds={gameState.totalRounds}
             />
+
+            <View style={styles.optionsContainer}>
+              <MultipleChoiceOptions
+                options={gameState.currentQuestion.options}
+                selectedIndex={gameState.selectedOptionIndex}
+                showResults={gameState.showResults}
+                onSelect={handleSelectOption}
+              />
+            </View>
           </Animated.View>
         ) : (
-          <Animated.View
-            entering={SlideInUp.springify()}
-            style={styles.resultArea}
-          >
+          <Animated.View entering={SlideInUp.springify()}>
             {gameState.lastResult ? (
               <ResultCard
                 correct={gameState.lastResult.correct}
                 points={gameState.lastResult.points}
                 correctAnswer={gameState.lastResult.correctAnswer}
-                playerAnswer={gameState.playerAnswer || "(No answer)"}
+                playerAnswer={
+                  gameState.selectedOptionIndex !== null &&
+                  gameState.selectedOptionIndex >= 0
+                    ? gameState.currentQuestion.options[gameState.selectedOptionIndex]
+                        ?.text || "(No answer)"
+                    : "(Time's up!)"
+                }
               />
             ) : null}
 
@@ -145,17 +206,14 @@ export default function GamePlayScreen() {
             </Animated.View>
           </Animated.View>
         )}
-      </View>
+      </ScrollView>
 
       {!gameState.showResults ? (
-        <View style={styles.footer}>
+        <View style={[styles.footer, { paddingBottom: insets.bottom + Spacing.md }]}>
           <PowerCardDock
             cards={gameState.powerCards}
             onUseCard={handleUsePowerCard}
           />
-          <View style={{ paddingBottom: insets.bottom }}>
-            <AnswerInput onSubmit={handleSubmit} disabled={gameState.showResults} />
-          </View>
         </View>
       ) : null}
     </View>
@@ -186,17 +244,43 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
   },
+  teamIndicator: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  teamBadge: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+  },
+  teamText: {
+    ...Typography.body,
+    fontWeight: "600",
+  },
+  teamScores: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  teamScore: {
+    ...Typography.h4,
+    fontWeight: "700",
+  },
+  teamScoreDivider: {
+    ...Typography.h4,
+    color: GameColors.textSecondary,
+    marginHorizontal: Spacing.sm,
+  },
   content: {
     flex: 1,
-    justifyContent: "center",
   },
-  questionArea: {
-    flex: 1,
-    justifyContent: "center",
+  contentContainer: {
+    paddingBottom: Spacing.xl,
   },
-  resultArea: {
-    flex: 1,
-    justifyContent: "center",
+  optionsContainer: {
+    marginTop: Spacing.xl,
   },
   nextButtonContainer: {
     paddingHorizontal: Spacing.lg,

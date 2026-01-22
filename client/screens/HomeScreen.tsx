@@ -27,7 +27,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  const { totalCoins } = useGame();
+  const { totalCoins, gameState } = useGame();
 
   const profileScale = useSharedValue(1);
 
@@ -42,6 +42,16 @@ export default function HomeScreen() {
 
   const handlePlay = () => {
     navigation.navigate("GameSetup");
+  };
+
+  const handlePartyMode = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    navigation.navigate("PartySetup");
+  };
+
+  const handleDailyChallenge = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    navigation.navigate("DailyChallenge");
   };
 
   return (
@@ -97,28 +107,47 @@ export default function HomeScreen() {
           <View style={styles.secondaryButtons}>
             <Pressable
               style={styles.secondaryButton}
-              onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+              onPress={handlePartyMode}
             >
-              <View style={styles.secondaryButtonIcon}>
+              <View style={[styles.secondaryButtonIcon, { backgroundColor: GameColors.secondary + "20" }]}>
                 <Feather name="users" size={20} color={GameColors.secondary} />
               </View>
-              <ThemedText style={styles.secondaryButtonText}>
-                Party Mode
-              </ThemedText>
-              <ThemedText style={styles.comingSoon}>Soon</ThemedText>
+              <View style={styles.secondaryButtonContent}>
+                <ThemedText style={styles.secondaryButtonText}>
+                  Party Mode
+                </ThemedText>
+                <ThemedText style={styles.secondaryButtonDesc}>
+                  Teams and chaos
+                </ThemedText>
+              </View>
+              <Feather name="chevron-right" size={20} color={GameColors.textSecondary} />
             </Pressable>
 
             <Pressable
-              style={styles.secondaryButton}
-              onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+              style={[
+                styles.secondaryButton,
+                gameState.dailyChallengeCompleted && styles.completedButton,
+              ]}
+              onPress={handleDailyChallenge}
             >
-              <View style={styles.secondaryButtonIcon}>
+              <View style={[styles.secondaryButtonIcon, { backgroundColor: GameColors.accent + "20" }]}>
                 <Feather name="calendar" size={20} color={GameColors.accent} />
               </View>
-              <ThemedText style={styles.secondaryButtonText}>
-                Daily Challenge
-              </ThemedText>
-              <ThemedText style={styles.comingSoon}>Soon</ThemedText>
+              <View style={styles.secondaryButtonContent}>
+                <ThemedText style={styles.secondaryButtonText}>
+                  Daily Challenge
+                </ThemedText>
+                <ThemedText style={styles.secondaryButtonDesc}>
+                  {gameState.dailyChallengeCompleted ? "Completed today!" : "New challenge awaits"}
+                </ThemedText>
+              </View>
+              {gameState.dailyChallengeCompleted ? (
+                <Feather name="check-circle" size={20} color={GameColors.correct} />
+              ) : (
+                <View style={styles.newBadge}>
+                  <ThemedText style={styles.newBadgeText}>NEW</ThemedText>
+                </View>
+              )}
             </Pressable>
           </View>
         </Animated.View>
@@ -205,7 +234,7 @@ const styles = StyleSheet.create({
   },
   buttonsContainer: {
     width: "100%",
-    maxWidth: 320,
+    maxWidth: 340,
   },
   secondaryButtons: {
     marginTop: Spacing.xl,
@@ -218,28 +247,41 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     marginBottom: Spacing.md,
   },
+  completedButton: {
+    opacity: 0.7,
+  },
   secondaryButtonIcon: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: BorderRadius.sm,
-    backgroundColor: "rgba(255,255,255,0.05)",
     alignItems: "center",
     justifyContent: "center",
     marginRight: Spacing.md,
   },
+  secondaryButtonContent: {
+    flex: 1,
+  },
   secondaryButtonText: {
     ...Typography.body,
     color: GameColors.textPrimary,
-    flex: 1,
     fontWeight: "600",
   },
-  comingSoon: {
+  secondaryButtonDesc: {
     ...Typography.caption,
     color: GameColors.textSecondary,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    marginTop: 2,
+  },
+  newBadge: {
+    backgroundColor: GameColors.primary,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.xs,
+  },
+  newBadgeText: {
+    ...Typography.caption,
+    color: GameColors.textPrimary,
+    fontWeight: "700",
+    fontSize: 10,
   },
   footer: {
     alignItems: "center",
