@@ -3,9 +3,13 @@ import type { Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import * as fs from "fs";
 import * as path from "path";
+import { initStripe } from "./stripeInit";
+import { WebhookHandlers } from "./webhookHandlers";
+import { getStripePublishableKey, getUncachableStripeClient } from "./stripeClient";
 
 const app = express();
 const log = console.log;
+let stripeInitialized = false;
 
 declare module "http" {
   interface IncomingMessage {
@@ -227,8 +231,85 @@ function setupErrorHandler(app: express.Application) {
 
 (async () => {
   setupCors(app);
+
+  app.post(
+    '/api/stripe/webhook',
+    express.raw({ type: 'application/json' }),
+    async (req, res) => {
+      const signature = req.headers['stripe-signature'];
+
+      if (!signature) {
+        return res.status(400).json({ error: 'Missing stripe-signature' });
+      }
+
+      try {
+        const sig = Array.isArray(signature) ? signature[0] : signature;
+
+        if (!Buffer.isBuffer(req.body)) {
+          console.error('STRIPE WEBHOOK ERROR: req.body is not a Buffer');
+          return res.status(500).json({ error: 'Webhook processing error' });
+        }
+
+        await WebhookHandlers.processWebhook(req.body as Buffer, sig);
+        res.status(200).json({ received: true });
+      } catch (error: any) {
+        console.error('Webhook error:', error.message);
+        res.status(400).json({ error: 'Webhook processing error' });
+      }
+    }
+  );
+
   setupBodyParsing(app);
   setupRequestLogging(app);
+
+  stripeInitialized = await initStripe();
+
+  app.get('/api/stripe/publishable-key', async (_req, res) => {
+    try {
+      const publishableKey = await getStripePublishableKey();
+      res.json({ publishableKey });
+    } catch (error) {
+      res.status(500).json({ error: 'Stripe not configured' });
+    }
+  });
+
+  app.post('/api/stripe/create-checkout', async (req, res) => {
+    try {
+      const { priceId, successUrl, cancelUrl } = req.body;
+      const stripe = await getUncachableStripeClient();
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [{ price: priceId, quantity: 1 }],
+        mode: 'payment',
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+      });
+
+      res.json({ url: session.url });
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/stripe/products', async (_req, res) => {
+    try {
+      const stripe = await getUncachableStripeClient();
+      const products = await stripe.products.list({ active: true });
+      const prices = await stripe.prices.list({ active: true });
+
+      const productsWithPrices = products.data.map(product => ({
+        ...product,
+        prices: prices.data.filter(price => price.product === product.id),
+      }));
+
+      res.json({ products: productsWithPrices });
+    } catch (error: any) {
+      console.error('Products error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
 
   configureExpoAndLanding(app);
 

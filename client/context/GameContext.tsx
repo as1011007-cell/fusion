@@ -75,6 +75,7 @@ type GameContextType = {
   switchTeam: () => void;
   getAnsweredCount: () => number;
   getTotalQuestionCount: () => number;
+  purchasePowerCards: () => void;
 };
 
 const initialPowerCards: PowerCard[] = [
@@ -455,6 +456,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
   
   const getTotalQuestionCount = () => allQuestions.length;
 
+  const purchasePowerCards = () => {
+    setGameState(prev => ({
+      ...prev,
+      powerCards: prev.powerCards.map(card => ({
+        ...card,
+        count: card.count + 2,
+      })),
+    }));
+  };
+
   return (
     <GameContext.Provider
       value={{
@@ -477,6 +488,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         switchTeam,
         getAnsweredCount,
         getTotalQuestionCount,
+        purchasePowerCards,
       }}
     >
       {children}
