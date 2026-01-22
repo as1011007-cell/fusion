@@ -33,19 +33,22 @@ export async function getStripeSecretKey() {
 }
 
 let stripeSync: any = null;
+let stripeSyncKey: string = '';
 
 export async function getStripeSync() {
-  if (!stripeSync) {
+  const currentKey = await getStripeSecretKey();
+  
+  if (!stripeSync || stripeSyncKey !== currentKey) {
     const { StripeSync } = await import('stripe-replit-sync');
-    const secretKey = await getStripeSecretKey();
 
     stripeSync = new StripeSync({
       poolConfig: {
         connectionString: process.env.DATABASE_URL!,
         max: 2,
       },
-      stripeSecretKey: secretKey,
+      stripeSecretKey: currentKey,
     });
+    stripeSyncKey = currentKey;
   }
   return stripeSync;
 }

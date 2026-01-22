@@ -13,7 +13,7 @@ export function getApiUrl(): string {
 
   let url = new URL(`https://${host}`);
 
-  return url.href;
+  return url.href.replace(/\/$/, '');
 }
 
 async function throwIfResNotOk(res: Response) {
