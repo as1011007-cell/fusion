@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { allQuestions, getQuestionsForPanel, getDailyChallenge, Question, AnswerLayer } from "@/data/questions";
 import { allPanels, Panel } from "@/data/panels";
+
+type StarPointsCallback = ((amount: number) => void) | null;
 
 export type { Question, AnswerLayer, Panel };
 
@@ -79,6 +81,7 @@ type GameContextType = {
   canClaimWeeklyPowerCards: () => boolean;
   claimWeeklyPowerCards: () => boolean;
   lastWeeklyClaimDate: string | null;
+  setStarPointsCallback: (callback: StarPointsCallback) => void;
 };
 
 const initialPowerCards: PowerCard[] = [
@@ -139,6 +142,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [totalGamesPlayed, setTotalGamesPlayed] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [lastWeeklyClaimDate, setLastWeeklyClaimDate] = useState<string | null>(null);
+  const starPointsCallbackRef = React.useRef<StarPointsCallback>(null);
+
+  const setStarPointsCallback = useCallback((callback: StarPointsCallback) => {
+    starPointsCallbackRef.current = callback;
+  }, []);
 
   useEffect(() => {
     loadPlayerData();
@@ -331,6 +339,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
     if (isCorrect) {
       addCoins(Math.floor(points / 10));
+      const starPointsEarned = Math.floor(points / 20);
+      if (starPointsCallbackRef.current && starPointsEarned > 0) {
+        starPointsCallbackRef.current(starPointsEarned);
+      }
     }
   };
 
@@ -527,6 +539,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         canClaimWeeklyPowerCards,
         claimWeeklyPowerCards,
         lastWeeklyClaimDate,
+        setStarPointsCallback,
       }}
     >
       {children}

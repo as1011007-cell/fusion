@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { StyleSheet, View, Image, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -19,6 +19,8 @@ import { FloatingBubbles } from "@/components/FloatingBubbles";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGame } from "@/context/GameContext";
+import { useTheme } from "@/context/ThemeContext";
+import { useProfile } from "@/context/ProfileContext";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Home">;
 
@@ -27,16 +29,26 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  const { totalCoins, gameState } = useGame();
+  const { totalCoins, gameState, setStarPointsCallback } = useGame();
+  const { currentTheme, starPoints, addStarPoints } = useTheme();
+  const { settings } = useProfile();
+  const colors = currentTheme.colors;
 
   const profileScale = useSharedValue(1);
+
+  useEffect(() => {
+    setStarPointsCallback(addStarPoints);
+    return () => setStarPointsCallback(null);
+  }, [addStarPoints, setStarPointsCallback]);
 
   const profileStyle = useAnimatedStyle(() => ({
     transform: [{ scale: profileScale.value }],
   }));
 
   const handleProfilePress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     navigation.navigate("Profile");
   };
 
@@ -45,22 +57,28 @@ export default function HomeScreen() {
   };
 
   const handlePartyMode = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     navigation.navigate("PartySetup");
   };
 
   const handleDailyChallenge = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     navigation.navigate("DailyChallenge");
   };
 
   const handleShop = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     navigation.navigate("Shop");
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <FloatingBubbles />
 
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
@@ -117,8 +135,6 @@ export default function HomeScreen() {
           <GradientButton
             onPress={handlePlay}
             variant="primary"
-            accessibilityLabel="Play Now"
-            accessibilityHint="Start a new solo game"
           >
             Play Now
           </GradientButton>
