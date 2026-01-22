@@ -16,6 +16,7 @@ import * as Haptics from "expo-haptics";
 import { ThemedText } from "@/components/ThemedText";
 import { GradientButton } from "@/components/GradientButton";
 import { FloatingBubbles } from "@/components/FloatingBubbles";
+import { AdBanner } from "@/components/AdBanner";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGame } from "@/context/GameContext";
@@ -194,8 +195,12 @@ export default function HomeScreen() {
         </Animated.View>
       </View>
 
+      <Animated.View entering={FadeInUp.delay(800).springify()}>
+        <AdBanner />
+      </Animated.View>
+
       <Animated.View
-        entering={FadeInUp.delay(800).springify()}
+        entering={FadeInUp.delay(900).springify()}
         style={[styles.footer, { paddingBottom: insets.bottom + Spacing.lg }]}
       >
         <ThemedText style={styles.footerText}>

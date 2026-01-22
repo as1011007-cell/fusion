@@ -17,6 +17,7 @@ import * as Haptics from "expo-haptics";
 
 import { ThemedText } from "@/components/ThemedText";
 import { GradientButton } from "@/components/GradientButton";
+import { AdBanner } from "@/components/AdBanner";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGame } from "@/context/GameContext";
@@ -292,6 +293,10 @@ export default function ResultsScreen() {
               ? "Good job! Keep practicing those perspectives!"
               : "Keep trying! Understanding others takes practice!"}
           </ThemedText>
+        </Animated.View>
+
+        <Animated.View entering={FadeInUp.delay(isPartyMode ? 750 : 650).springify()}>
+          <AdBanner />
         </Animated.View>
       </ScrollView>
 
