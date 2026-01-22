@@ -24,7 +24,7 @@ export default function ShopScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { avatars, purchaseAvatar, currentProfile, updateProfile } = useProfile();
   const { totalCoins, addCoins, gameState, purchasePowerCards, canClaimWeeklyPowerCards, claimWeeklyPowerCards } = useGame();
-  const { themes, currentTheme, setCurrentTheme, purchaseTheme, starPoints, addStarPoints, spendStarPoints, isAdFree, setAdFree } = useTheme();
+  const { themes, currentTheme, setCurrentTheme, purchaseTheme, starPoints, addStarPoints, spendStarPoints, isAdFree, setAdFree, hasSupported, setHasSupported } = useTheme();
   const [activeTab, setActiveTab] = useState<TabType>("avatars");
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -211,6 +211,58 @@ export default function ShopScreen() {
     } catch (error) {
       console.error('Purchase error:', error);
       setAdFree(true);
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleSupportDeveloper = async () => {
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    setLoading("support");
+    try {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/stripe/products`);
+      const data = await response.json();
+
+      const coffeeProduct = data.products?.find((p: any) => 
+        p.name?.toLowerCase().includes('coffee') || 
+        p.name?.toLowerCase().includes('support') ||
+        p.metadata?.category === 'tip'
+      );
+
+      if (coffeeProduct?.prices?.[0]?.id) {
+        const successUrl = `${apiUrl}/payment-success?type=support`;
+        const cancelUrl = `${apiUrl}/payment-cancel`;
+
+        const checkoutResponse = await fetch(`${apiUrl}/api/stripe/create-checkout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            priceId: coffeeProduct.prices[0].id,
+            successUrl,
+            cancelUrl,
+          }),
+        });
+        const checkoutData = await checkoutResponse.json();
+
+        if (checkoutData.url) {
+          await WebBrowser.openBrowserAsync(checkoutData.url);
+          setHasSupported(true);
+        }
+      } else {
+        setHasSupported(true);
+        if (settings.hapticsEnabled) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+      }
+    } catch (error) {
+      console.error('Support purchase error:', error);
+      setHasSupported(true);
       if (settings.hapticsEnabled) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
@@ -492,6 +544,40 @@ export default function ShopScreen() {
             ) : (
               <>
                 <ThemedText style={styles.realMoneyText}>$5.00</ThemedText>
+                <Feather name="external-link" size={16} color="#fff" />
+              </>
+            )}
+          </Pressable>
+        )}
+      </View>
+
+      <View style={styles.premiumCard}>
+        <View style={styles.premiumHeader}>
+          <View style={[styles.premiumIcon, { backgroundColor: "#8B4513" + "20" }]}>
+            <Feather name="coffee" size={32} color="#8B4513" />
+          </View>
+          <View style={styles.premiumInfo}>
+            <ThemedText style={styles.premiumTitle}>Support the Developer</ThemedText>
+            <ThemedText style={styles.premiumDesc}>Buy me a coffee!</ThemedText>
+          </View>
+        </View>
+
+        {hasSupported ? (
+          <View style={styles.purchasedBadge}>
+            <Feather name="heart" size={20} color={GameColors.primary} />
+            <ThemedText style={styles.purchasedText}>Thank You!</ThemedText>
+          </View>
+        ) : (
+          <Pressable
+            style={[styles.realMoneyButton, { backgroundColor: "#8B4513" }]}
+            onPress={handleSupportDeveloper}
+            disabled={loading === "support"}
+          >
+            {loading === "support" ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <ThemedText style={styles.realMoneyText}>$3.00</ThemedText>
                 <Feather name="external-link" size={16} color="#fff" />
               </>
             )}

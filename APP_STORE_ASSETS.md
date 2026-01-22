@@ -132,6 +132,7 @@ The `/support` route redirects to this email address.
 **In-App Purchases:**
 - 5,000 Star Points: $4.99
 - Ad-Free Version: $4.99
+- Support the Developer (Coffee Tip): $2.99
 
 ---
 

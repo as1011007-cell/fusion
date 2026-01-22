@@ -113,6 +113,8 @@ type ThemeContextType = {
   spendStarPoints: (amount: number) => boolean;
   isAdFree: boolean;
   setAdFree: (value: boolean) => void;
+  hasSupported: boolean;
+  setHasSupported: (value: boolean) => void;
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -122,6 +124,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [currentThemeId, setCurrentThemeId] = useState<ThemeId>("electric");
   const [starPoints, setStarPoints] = useState(0);
   const [isAdFree, setIsAdFree] = useState(false);
+  const [hasSupported, setHasSupportedState] = useState(false);
 
   useEffect(() => {
     loadThemeData();
@@ -133,6 +136,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       const savedOwnedThemes = await AsyncStorage.getItem("ownedThemes");
       const savedStarPoints = await AsyncStorage.getItem("starPoints");
       const savedAdFree = await AsyncStorage.getItem("isAdFree");
+      const savedHasSupported = await AsyncStorage.getItem("hasSupported");
 
       if (savedThemeId) {
         setCurrentThemeId(savedThemeId as ThemeId);
@@ -155,6 +159,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       if (savedAdFree === "true") {
         setIsAdFree(true);
       }
+
+      if (savedHasSupported === "true") {
+        setHasSupportedState(true);
+      }
     } catch (error) {
       console.error("Error loading theme data:", error);
     }
@@ -167,6 +175,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       await AsyncStorage.setItem("ownedThemes", JSON.stringify(ownedIds));
       await AsyncStorage.setItem("starPoints", starPoints.toString());
       await AsyncStorage.setItem("isAdFree", isAdFree.toString());
+      await AsyncStorage.setItem("hasSupported", hasSupported.toString());
     } catch (error) {
       console.error("Error saving theme data:", error);
     }
@@ -174,7 +183,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     saveThemeData();
-  }, [currentThemeId, themes, starPoints, isAdFree]);
+  }, [currentThemeId, themes, starPoints, isAdFree, hasSupported]);
 
   const currentTheme = themes.find((t) => t.id === currentThemeId) || themes[0];
 
@@ -212,6 +221,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setIsAdFree(value);
   };
 
+  const setHasSupported = (value: boolean) => {
+    setHasSupportedState(value);
+  };
+
   return (
     <ThemeContext.Provider
       value={{
@@ -224,6 +237,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         spendStarPoints,
         isAdFree,
         setAdFree,
+        hasSupported,
+        setHasSupported,
       }}
     >
       {children}
