@@ -54,6 +54,11 @@ export default function HomeScreen() {
     navigation.navigate("DailyChallenge");
   };
 
+  const handleShop = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    navigation.navigate("Shop");
+  };
+
   return (
     <View style={styles.container}>
       <FloatingBubbles />
@@ -72,10 +77,10 @@ export default function HomeScreen() {
           <Feather name="user" size={20} color={GameColors.textPrimary} />
         </AnimatedPressable>
 
-        <View style={styles.coinsContainer}>
-          <Feather name="star" size={16} color={GameColors.accent} />
+        <Pressable onPress={handleShop} style={styles.shopButton}>
+          <Feather name="shopping-bag" size={18} color={GameColors.accent} />
           <ThemedText style={styles.coinsText}>{totalCoins}</ThemedText>
-        </View>
+        </Pressable>
       </View>
 
       <View style={styles.content}>
@@ -185,7 +190,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  coinsContainer: {
+  shopButton: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: GameColors.surface,
