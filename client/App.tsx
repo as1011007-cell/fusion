@@ -25,6 +25,7 @@ import RootStackNavigator from "@/navigation/RootStackNavigator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GameProvider } from "@/context/GameContext";
 import { ProfileProvider } from "@/context/ProfileContext";
+import { AuthProvider } from "@/context/AuthContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -51,20 +52,22 @@ export default function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <ProfileProvider>
-          <GameProvider>
-            <SafeAreaProvider>
-              <GestureHandlerRootView style={styles.root}>
-                <KeyboardProvider>
-                  <NavigationContainer>
-                    <RootStackNavigator />
-                  </NavigationContainer>
-                  <StatusBar style="light" />
-                </KeyboardProvider>
-              </GestureHandlerRootView>
-            </SafeAreaProvider>
-          </GameProvider>
-        </ProfileProvider>
+        <AuthProvider>
+          <ProfileProvider>
+            <GameProvider>
+              <SafeAreaProvider>
+                <GestureHandlerRootView style={styles.root}>
+                  <KeyboardProvider>
+                    <NavigationContainer>
+                      <RootStackNavigator />
+                    </NavigationContainer>
+                    <StatusBar style="light" />
+                  </KeyboardProvider>
+                </GestureHandlerRootView>
+              </SafeAreaProvider>
+            </GameProvider>
+          </ProfileProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

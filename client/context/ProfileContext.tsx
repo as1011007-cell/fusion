@@ -10,12 +10,17 @@ export type Avatar = {
   owned: boolean;
 };
 
+export type SocialProvider = "google" | "facebook" | null;
+
 export type Profile = {
   id: string;
   name: string;
   avatarId: string;
   customPhoto: string | null;
   createdAt: string;
+  socialProvider?: SocialProvider;
+  socialId?: string;
+  email?: string;
 };
 
 export type Settings = {
@@ -31,6 +36,7 @@ type ProfileContextType = {
   settings: Settings;
   answeredQuestions: Set<string>;
   createProfile: (name: string, avatarId: string, customPhoto?: string) => void;
+  createSocialProfile: (name: string, photo: string | null, provider: SocialProvider, socialId: string, email?: string) => void;
   updateProfile: (profileId: string, updates: Partial<Profile>) => void;
   deleteProfile: (profileId: string) => void;
   selectProfile: (profileId: string) => void;
@@ -39,6 +45,7 @@ type ProfileContextType = {
   markQuestionAnswered: (questionId: string) => void;
   resetAnsweredQuestions: () => void;
   getUnansweredCount: (totalQuestions: number) => number;
+  findProfileBySocialId: (socialId: string) => Profile | undefined;
 };
 
 const defaultAvatars: Avatar[] = [
@@ -143,6 +150,39 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     setAnsweredQuestions(new Set());
   };
 
+  const createSocialProfile = (
+    name: string,
+    photo: string | null,
+    provider: SocialProvider,
+    socialId: string,
+    email?: string
+  ) => {
+    const existingProfile = profiles.find((p) => p.socialId === socialId);
+    if (existingProfile) {
+      updateProfile(existingProfile.id, { name, customPhoto: photo, email });
+      setCurrentProfile({ ...existingProfile, name, customPhoto: photo, email });
+      return;
+    }
+
+    const newProfile: Profile = {
+      id: Math.random().toString(36).substring(2, 11),
+      name,
+      avatarId: "avatar-1",
+      customPhoto: photo,
+      createdAt: new Date().toISOString(),
+      socialProvider: provider,
+      socialId,
+      email,
+    };
+    setProfiles((prev) => [...prev, newProfile]);
+    setCurrentProfile(newProfile);
+    setAnsweredQuestions(new Set());
+  };
+
+  const findProfileBySocialId = (socialId: string): Profile | undefined => {
+    return profiles.find((p) => p.socialId === socialId);
+  };
+
   const updateProfile = (profileId: string, updates: Partial<Profile>) => {
     setProfiles((prev) =>
       prev.map((p) => (p.id === profileId ? { ...p, ...updates } : p))
@@ -203,6 +243,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         settings,
         answeredQuestions,
         createProfile,
+        createSocialProfile,
         updateProfile,
         deleteProfile,
         selectProfile,
@@ -211,6 +252,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         markQuestionAnswered,
         resetAnsweredQuestions,
         getUnansweredCount,
+        findProfileBySocialId,
       }}
     >
       {children}

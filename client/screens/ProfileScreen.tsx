@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { StyleSheet, View, ScrollView, Pressable, TextInput, Image, Platform } from "react-native";
+import React, { useState, useEffect } from "react";
+import { StyleSheet, View, ScrollView, Pressable, TextInput, Image, Platform, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -14,20 +14,35 @@ import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useProfile } from "@/context/ProfileContext";
 import { useGame } from "@/context/GameContext";
+import { useAuth } from "@/context/AuthContext";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Profile">;
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  const { currentProfile, profiles, avatars, createProfile, updateProfile, selectProfile, deleteProfile } = useProfile();
+  const { currentProfile, profiles, avatars, createProfile, createSocialProfile, updateProfile, selectProfile, deleteProfile } = useProfile();
   const { totalCoins } = useGame();
+  const { socialUser, isLoading: authLoading, loginWithGoogle, loginWithFacebook, logout, error: authError } = useAuth();
 
   const [showCreateForm, setShowCreateForm] = useState(!currentProfile && profiles.length === 0);
   const [profileName, setProfileName] = useState("");
   const [selectedAvatarId, setSelectedAvatarId] = useState(avatars[0]?.id || "");
   const [customPhoto, setCustomPhoto] = useState<string | null>(null);
   const [editingProfile, setEditingProfile] = useState(false);
+
+  useEffect(() => {
+    if (socialUser && !currentProfile) {
+      createSocialProfile(
+        socialUser.name,
+        socialUser.picture,
+        socialUser.provider,
+        socialUser.id,
+        socialUser.email
+      );
+      setShowCreateForm(false);
+    }
+  }, [socialUser]);
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -101,11 +116,70 @@ export default function ProfileScreen() {
   const ownedAvatars = avatars.filter((a) => a.owned);
   const currentAvatar = avatars.find((a) => a.id === currentProfile?.avatarId);
 
+  const handleGoogleLogin = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await loginWithGoogle();
+  };
+
+  const handleFacebookLogin = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await loginWithFacebook();
+  };
+
+  const handleLogout = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await logout();
+  };
+
+  const renderSocialLoginButtons = () => (
+    <View style={styles.socialSection}>
+      <ThemedText style={styles.socialTitle}>Quick Sign In</ThemedText>
+      <ThemedText style={styles.socialSubtitle}>
+        Sync your profile with your social account
+      </ThemedText>
+
+      {authError ? (
+        <View style={styles.errorContainer}>
+          <Feather name="alert-circle" size={16} color={GameColors.wrong} />
+          <ThemedText style={styles.errorText}>{authError}</ThemedText>
+        </View>
+      ) : null}
+
+      {authLoading ? (
+        <ActivityIndicator size="large" color={GameColors.primary} style={styles.loader} />
+      ) : (
+        <View style={styles.socialButtons}>
+          <Pressable style={styles.googleButton} onPress={handleGoogleLogin}>
+            <View style={styles.socialIconWrapper}>
+              <Feather name="mail" size={20} color="#ffffff" />
+            </View>
+            <ThemedText style={styles.socialButtonText}>Continue with Google</ThemedText>
+          </Pressable>
+
+          <Pressable style={styles.facebookButton} onPress={handleFacebookLogin}>
+            <View style={styles.socialIconWrapper}>
+              <Feather name="facebook" size={20} color="#ffffff" />
+            </View>
+            <ThemedText style={styles.socialButtonText}>Continue with Facebook</ThemedText>
+          </Pressable>
+        </View>
+      )}
+
+      <View style={styles.dividerContainer}>
+        <View style={styles.divider} />
+        <ThemedText style={styles.dividerText}>or create manually</ThemedText>
+        <View style={styles.divider} />
+      </View>
+    </View>
+  );
+
   const renderProfileForm = () => (
     <Animated.View entering={FadeInDown.springify()} style={styles.formContainer}>
       <ThemedText style={styles.formTitle}>
         {editingProfile ? "Edit Profile" : "Create Profile"}
       </ThemedText>
+
+      {!editingProfile ? renderSocialLoginButtons() : null}
 
       <View style={styles.photoSection}>
         <Pressable onPress={handlePickImage} style={styles.photoButton}>
@@ -211,12 +285,31 @@ export default function ProfileScreen() {
           <ThemedText style={styles.profileStats}>
             {totalCoins} coins earned
           </ThemedText>
+          {currentProfile?.socialProvider ? (
+            <View style={styles.connectedBadge}>
+              <Feather
+                name={currentProfile.socialProvider === "google" ? "mail" : "facebook"}
+                size={12}
+                color={GameColors.correct}
+              />
+              <ThemedText style={styles.connectedText}>
+                Connected with {currentProfile.socialProvider === "google" ? "Google" : "Facebook"}
+              </ThemedText>
+            </View>
+          ) : null}
         </View>
 
         <Pressable onPress={handleStartEditing} style={styles.editButton}>
           <Feather name="edit-2" size={20} color={GameColors.textPrimary} />
         </Pressable>
       </View>
+
+      {socialUser && currentProfile?.socialId === socialUser.id ? (
+        <Pressable style={styles.logoutButton} onPress={handleLogout}>
+          <Feather name="log-out" size={18} color={GameColors.wrong} />
+          <ThemedText style={styles.logoutText}>Sign Out</ThemedText>
+        </Pressable>
+      ) : null}
     </Animated.View>
   );
 
@@ -598,6 +691,118 @@ const styles = StyleSheet.create({
   addProfileText: {
     ...Typography.body,
     color: GameColors.primary,
+    marginLeft: Spacing.sm,
+  },
+  socialSection: {
+    marginBottom: Spacing.xl,
+  },
+  socialTitle: {
+    ...Typography.h4,
+    color: GameColors.textPrimary,
+    textAlign: "center",
+    marginBottom: Spacing.xs,
+  },
+  socialSubtitle: {
+    ...Typography.caption,
+    color: GameColors.textSecondary,
+    textAlign: "center",
+    marginBottom: Spacing.lg,
+  },
+  socialButtons: {
+    gap: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  googleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#4285F4",
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+  },
+  facebookButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1877F2",
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+  },
+  socialIconWrapper: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  socialButtonText: {
+    ...Typography.body,
+    color: "#ffffff",
+    fontWeight: "600",
+    marginLeft: Spacing.md,
+    flex: 1,
+    textAlign: "center",
+  },
+  dividerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: Spacing.md,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: GameColors.textSecondary + "40",
+  },
+  dividerText: {
+    ...Typography.caption,
+    color: GameColors.textSecondary,
+    marginHorizontal: Spacing.md,
+  },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: GameColors.wrong + "20",
+    borderRadius: BorderRadius.sm,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  errorText: {
+    ...Typography.caption,
+    color: GameColors.wrong,
+    marginLeft: Spacing.sm,
+    flex: 1,
+  },
+  loader: {
+    marginVertical: Spacing.lg,
+  },
+  connectedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: GameColors.correct + "20",
+    borderRadius: BorderRadius.sm,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  connectedText: {
+    ...Typography.caption,
+    color: GameColors.correct,
+    marginLeft: Spacing.xs,
+  },
+  logoutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.md,
+    marginTop: Spacing.lg,
+    borderWidth: 1,
+    borderColor: GameColors.wrong,
+    borderRadius: BorderRadius.md,
+  },
+  logoutText: {
+    ...Typography.body,
+    color: GameColors.wrong,
     marginLeft: Spacing.sm,
   },
 });
