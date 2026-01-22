@@ -38,8 +38,16 @@ export default function ShopScreen() {
     navigation.goBack();
   };
 
-  const handlePurchaseAvatar = (avatarId: string, price: number) => {
-    if (totalCoins >= price) {
+  const handlePurchaseAvatar = (avatarId: string, price: number, useStarPoints: boolean) => {
+    if (useStarPoints && starPoints >= price) {
+      const success = purchaseAvatar(avatarId, starPoints);
+      if (success) {
+        spendStarPoints(price);
+        if (settings.hapticsEnabled) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+      }
+    } else if (!useStarPoints && totalCoins >= price) {
       const success = purchaseAvatar(avatarId, totalCoins);
       if (success) {
         addCoins(-price);
@@ -325,26 +333,41 @@ export default function ShopScreen() {
           <ThemedText style={styles.sectionTitle}>Available to Purchase</ThemedText>
           <View style={styles.avatarGrid}>
             {lockedAvatars.map((avatar, index) => {
-              const canAfford = totalCoins >= avatar.price;
+              const canAffordCoins = totalCoins >= avatar.price;
+              const canAffordStars = starPoints >= avatar.price;
+              const canAfford = canAffordCoins || canAffordStars;
               return (
                 <Animated.View key={avatar.id} entering={FadeInUp.delay(300 + index * 50).springify()}>
-                  <Pressable
-                    style={[styles.avatarCard, styles.avatarCardLocked, !canAfford && styles.avatarCardDisabled]}
-                    onPress={() => canAfford && handlePurchaseAvatar(avatar.id, avatar.price)}
-                  >
+                  <View style={[styles.avatarCard, styles.avatarCardLocked, !canAfford && styles.avatarCardDisabled]}>
                     <View style={[styles.avatarImageContainer, { borderColor: canAfford ? avatar.color : GameColors.textSecondary, opacity: canAfford ? 1 : 0.5 }]}>
                       <Image source={avatar.image} style={styles.avatarImage} />
                     </View>
                     <ThemedText style={[styles.avatarName, !canAfford && styles.textDisabled]}>
                       {avatar.name}
                     </ThemedText>
-                    <View style={[styles.priceTag, !canAfford && styles.priceTagDisabled]}>
-                      <Feather name="dollar-sign" size={12} color={canAfford ? GameColors.accent : GameColors.textSecondary} />
-                      <ThemedText style={[styles.priceText, !canAfford && styles.textDisabled]}>
-                        {avatar.price}
-                      </ThemedText>
+                    <View style={styles.avatarPriceButtons}>
+                      <Pressable
+                        style={[styles.avatarBuyButton, !canAffordStars && styles.avatarBuyButtonDisabled]}
+                        onPress={() => canAffordStars && handlePurchaseAvatar(avatar.id, avatar.price, true)}
+                        disabled={!canAffordStars}
+                      >
+                        <Feather name="star" size={10} color={canAffordStars ? GameColors.accent : GameColors.textSecondary} />
+                        <ThemedText style={[styles.avatarBuyText, !canAffordStars && styles.textDisabled]}>
+                          {avatar.price}
+                        </ThemedText>
+                      </Pressable>
+                      <Pressable
+                        style={[styles.avatarBuyButton, !canAffordCoins && styles.avatarBuyButtonDisabled]}
+                        onPress={() => canAffordCoins && handlePurchaseAvatar(avatar.id, avatar.price, false)}
+                        disabled={!canAffordCoins}
+                      >
+                        <Feather name="dollar-sign" size={10} color={canAffordCoins ? GameColors.secondary : GameColors.textSecondary} />
+                        <ThemedText style={[styles.avatarBuyText, !canAffordCoins && styles.textDisabled]}>
+                          {avatar.price}
+                        </ThemedText>
+                      </Pressable>
                     </View>
-                  </Pressable>
+                  </View>
                 </Animated.View>
               );
             })}
@@ -828,6 +851,27 @@ const styles = StyleSheet.create({
   },
   priceTagDisabled: {
     backgroundColor: "transparent",
+  },
+  avatarPriceButtons: {
+    flexDirection: "row",
+    gap: 4,
+  },
+  avatarBuyButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: GameColors.backgroundDark,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: BorderRadius.sm,
+    gap: 2,
+  },
+  avatarBuyButtonDisabled: {
+    opacity: 0.4,
+  },
+  avatarBuyText: {
+    ...Typography.caption,
+    color: GameColors.textPrimary,
+    fontWeight: "600",
   },
   priceText: {
     ...Typography.caption,
