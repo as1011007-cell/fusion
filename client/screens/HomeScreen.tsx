@@ -4,12 +4,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   FadeInDown,
   FadeInUp,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 
@@ -32,18 +37,47 @@ export default function HomeScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { totalCoins, gameState, setStarPointsCallback } = useGame();
   const { currentTheme, starPoints, addStarPoints } = useTheme();
-  const { settings } = useProfile();
+  const { settings, currentProfile } = useProfile();
   const colors = currentTheme.colors;
 
   const profileScale = useSharedValue(1);
+  const logoScale = useSharedValue(1);
+  const glowOpacity = useSharedValue(0.5);
 
   useEffect(() => {
     setStarPointsCallback(addStarPoints);
     return () => setStarPointsCallback(null);
   }, [addStarPoints, setStarPointsCallback]);
 
+  useEffect(() => {
+    logoScale.value = withRepeat(
+      withSequence(
+        withTiming(1.05, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      true
+    );
+    glowOpacity.value = withRepeat(
+      withSequence(
+        withTiming(0.8, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0.4, { duration: 1500, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      true
+    );
+  }, []);
+
   const profileStyle = useAnimatedStyle(() => ({
     transform: [{ scale: profileScale.value }],
+  }));
+
+  const logoStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: logoScale.value }],
+  }));
+
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
   }));
 
   const handleProfilePress = () => {
@@ -54,6 +88,9 @@ export default function HomeScreen() {
   };
 
   const handlePlay = () => {
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
     navigation.navigate("GameSetup");
   };
 
@@ -94,28 +131,33 @@ export default function HomeScreen() {
           style={[styles.profileButton, profileStyle]}
           accessibilityLabel="Open your profile"
           accessibilityRole="button"
-          accessibilityHint="View and edit your player profile"
         >
-          <Feather name="user" size={20} color={GameColors.textPrimary} />
+          <LinearGradient
+            colors={[GameColors.primary + "40", GameColors.secondary + "40"]}
+            style={styles.profileGradient}
+          >
+            <Feather name="user" size={20} color={GameColors.textPrimary} />
+          </LinearGradient>
         </AnimatedPressable>
 
-        <Pressable
-          onPress={handleShop}
-          style={styles.shopButton}
-          accessibilityLabel={`Shop. You have ${totalCoins} coins`}
-          accessibilityRole="button"
-          accessibilityHint="Open the shop to buy avatars, themes, and power cards"
-        >
-          <Feather name="shopping-bag" size={18} color={GameColors.accent} />
-          <ThemedText style={styles.coinsText}>{totalCoins}</ThemedText>
-        </Pressable>
+        <View style={styles.currencyContainer}>
+          <Pressable onPress={handleShop} style={styles.currencyBadge}>
+            <Feather name="star" size={16} color={GameColors.secondary} />
+            <ThemedText style={styles.currencyText}>{starPoints}</ThemedText>
+          </Pressable>
+          <Pressable onPress={handleShop} style={styles.currencyBadge}>
+            <Feather name="disc" size={16} color={GameColors.accent} />
+            <ThemedText style={[styles.currencyText, { color: GameColors.accent }]}>{totalCoins}</ThemedText>
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.content}>
-        <Animated.View entering={FadeInDown.delay(200).springify()}>
-          <Image
+        <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.logoWrapper}>
+          <Animated.View style={[styles.logoGlow, glowStyle]} />
+          <Animated.Image
             source={require("../../assets/images/icon.png")}
-            style={styles.logo}
+            style={[styles.logo, logoStyle]}
             resizeMode="contain"
           />
         </Animated.View>
@@ -124,8 +166,10 @@ export default function HomeScreen() {
           entering={FadeInUp.delay(400).springify()}
           style={styles.titleContainer}
         >
-          <ThemedText style={styles.title}>FEUD</ThemedText>
-          <ThemedText style={styles.titleAccent}>FUSION</ThemedText>
+          <View style={styles.titleRow}>
+            <ThemedText style={styles.title}>FEUD</ThemedText>
+            <ThemedText style={styles.titleAccent}>FUSION</ThemedText>
+          </View>
           <ThemedText style={styles.subtitle}>What Would They Say?</ThemedText>
         </Animated.View>
 
@@ -133,33 +177,36 @@ export default function HomeScreen() {
           entering={FadeInUp.delay(600).springify()}
           style={styles.buttonsContainer}
         >
-          <GradientButton
-            onPress={handlePlay}
-            variant="primary"
-          >
-            Play Now
-          </GradientButton>
+          <Pressable onPress={handlePlay} style={styles.playButtonWrapper}>
+            <LinearGradient
+              colors={[GameColors.primary, "#FF1493", GameColors.secondary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.playButton}
+            >
+              <Feather name="play" size={24} color="#fff" style={styles.playIcon} />
+              <ThemedText style={styles.playButtonText}>PLAY NOW</ThemedText>
+            </LinearGradient>
+          </Pressable>
 
           <View style={styles.secondaryButtons}>
             <Pressable
               style={styles.secondaryButton}
               onPress={handlePartyMode}
-              accessibilityLabel="Party Mode - Teams and chaos"
-              accessibilityRole="button"
-              accessibilityHint="Play with friends in team competition"
             >
-              <View style={[styles.secondaryButtonIcon, { backgroundColor: GameColors.secondary + "20" }]}>
-                <Feather name="users" size={20} color={GameColors.secondary} />
-              </View>
-              <View style={styles.secondaryButtonContent}>
-                <ThemedText style={styles.secondaryButtonText}>
-                  Party Mode
-                </ThemedText>
-                <ThemedText style={styles.secondaryButtonDesc}>
-                  Teams and chaos
-                </ThemedText>
-              </View>
-              <Feather name="chevron-right" size={20} color={GameColors.textSecondary} />
+              <LinearGradient
+                colors={[GameColors.secondary + "30", GameColors.secondary + "10"]}
+                style={styles.secondaryButtonGradient}
+              >
+                <View style={styles.secondaryButtonIcon}>
+                  <Feather name="users" size={22} color={GameColors.secondary} />
+                </View>
+                <View style={styles.secondaryButtonContent}>
+                  <ThemedText style={styles.secondaryButtonText}>Party Mode</ThemedText>
+                  <ThemedText style={styles.secondaryButtonDesc}>Play with friends</ThemedText>
+                </View>
+                <Feather name="chevron-right" size={20} color={GameColors.secondary} />
+              </LinearGradient>
             </Pressable>
 
             <Pressable
@@ -168,28 +215,28 @@ export default function HomeScreen() {
                 gameState.dailyChallengeCompleted && styles.completedButton,
               ]}
               onPress={handleDailyChallenge}
-              accessibilityLabel={`Daily Challenge - ${gameState.dailyChallengeCompleted ? "Completed today" : "New challenge awaits"}`}
-              accessibilityRole="button"
-              accessibilityHint="Play today's special challenge"
             >
-              <View style={[styles.secondaryButtonIcon, { backgroundColor: GameColors.accent + "20" }]}>
-                <Feather name="calendar" size={20} color={GameColors.accent} />
-              </View>
-              <View style={styles.secondaryButtonContent}>
-                <ThemedText style={styles.secondaryButtonText}>
-                  Daily Challenge
-                </ThemedText>
-                <ThemedText style={styles.secondaryButtonDesc}>
-                  {gameState.dailyChallengeCompleted ? "Completed today!" : "New challenge awaits"}
-                </ThemedText>
-              </View>
-              {gameState.dailyChallengeCompleted ? (
-                <Feather name="check-circle" size={20} color={GameColors.correct} />
-              ) : (
-                <View style={styles.newBadge}>
-                  <ThemedText style={styles.newBadgeText}>NEW</ThemedText>
+              <LinearGradient
+                colors={[GameColors.accent + "30", GameColors.accent + "10"]}
+                style={styles.secondaryButtonGradient}
+              >
+                <View style={styles.secondaryButtonIcon}>
+                  <Feather name="zap" size={22} color={GameColors.accent} />
                 </View>
-              )}
+                <View style={styles.secondaryButtonContent}>
+                  <ThemedText style={styles.secondaryButtonText}>Daily Challenge</ThemedText>
+                  <ThemedText style={styles.secondaryButtonDesc}>
+                    {gameState.dailyChallengeCompleted ? "Completed!" : "Win bonus rewards"}
+                  </ThemedText>
+                </View>
+                {gameState.dailyChallengeCompleted ? (
+                  <Feather name="check-circle" size={20} color={GameColors.correct} />
+                ) : (
+                  <View style={styles.liveBadge}>
+                    <ThemedText style={styles.liveBadgeText}>LIVE</ThemedText>
+                  </View>
+                )}
+              </LinearGradient>
             </Pressable>
           </View>
         </Animated.View>
@@ -201,7 +248,7 @@ export default function HomeScreen() {
 
       <Animated.View
         entering={FadeInUp.delay(900).springify()}
-        style={[styles.footer, { paddingBottom: insets.bottom + Spacing.lg }]}
+        style={[styles.footer, { paddingBottom: insets.bottom + Spacing.md }]}
       >
         <ThemedText style={styles.footerText}>
           Think from their perspective, not yours
@@ -224,26 +271,39 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   profileButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: GameColors.surface,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    overflow: "hidden",
+  },
+  profileGradient: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: GameColors.primary + "50",
   },
-  shopButton: {
+  currencyContainer: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+  currencyBadge: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: GameColors.surface,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
+    gap: Spacing.xs,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
   },
-  coinsText: {
+  currencyText: {
     ...Typography.body,
-    color: GameColors.accent,
+    color: GameColors.secondary,
     fontWeight: "700",
-    marginLeft: Spacing.xs,
+    fontSize: 14,
   },
   content: {
     flex: 1,
@@ -251,50 +311,105 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: Spacing.xl,
   },
+  logoWrapper: {
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.lg,
+  },
+  logoGlow: {
+    position: "absolute",
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: GameColors.primary,
+    shadowColor: GameColors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 40,
+  },
   logo: {
-    width: 120,
-    height: 120,
-    marginBottom: Spacing.xl,
+    width: 140,
+    height: 140,
   },
   titleContainer: {
     alignItems: "center",
-    marginBottom: Spacing["3xl"],
+    marginBottom: Spacing["2xl"],
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
   },
   title: {
     ...Typography.h1,
-    fontSize: 48,
+    fontSize: 42,
     color: GameColors.textPrimary,
-    letterSpacing: 8,
+    letterSpacing: 4,
+    fontWeight: "800",
   },
   titleAccent: {
     ...Typography.h1,
-    fontSize: 48,
+    fontSize: 42,
     color: GameColors.primary,
-    letterSpacing: 8,
-    marginTop: -Spacing.sm,
+    letterSpacing: 4,
+    fontWeight: "800",
   },
   subtitle: {
     ...Typography.body,
     color: GameColors.textSecondary,
-    marginTop: Spacing.md,
+    marginTop: Spacing.sm,
+    fontSize: 16,
+    letterSpacing: 1,
   },
   buttonsContainer: {
     width: "100%",
     maxWidth: 340,
   },
-  secondaryButtons: {
-    marginTop: Spacing.xl,
+  playButtonWrapper: {
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
+    shadowColor: GameColors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  secondaryButton: {
+  playButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: GameColors.surface,
+    justifyContent: "center",
+    paddingVertical: Spacing.lg + 4,
+    borderRadius: BorderRadius.lg,
+  },
+  playIcon: {
+    marginRight: Spacing.sm,
+  },
+  playButtonText: {
+    ...Typography.h2,
+    color: "#fff",
+    fontWeight: "800",
+    fontSize: 20,
+    letterSpacing: 2,
+  },
+  secondaryButtons: {
+    marginTop: Spacing.xl,
+    gap: Spacing.md,
+  },
+  secondaryButton: {
     borderRadius: BorderRadius.md,
-    padding: Spacing.lg,
-    marginBottom: Spacing.md,
+    overflow: "hidden",
   },
   completedButton: {
     opacity: 0.7,
+  },
+  secondaryButtonGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
   },
   secondaryButtonIcon: {
     width: 44,
@@ -302,6 +417,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.sm,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.1)",
     marginRight: Spacing.md,
   },
   secondaryButtonContent: {
@@ -310,24 +426,26 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     ...Typography.body,
     color: GameColors.textPrimary,
-    fontWeight: "600",
+    fontWeight: "700",
+    fontSize: 16,
   },
   secondaryButtonDesc: {
     ...Typography.caption,
     color: GameColors.textSecondary,
     marginTop: 2,
   },
-  newBadge: {
-    backgroundColor: GameColors.primary,
+  liveBadge: {
+    backgroundColor: GameColors.wrong,
     paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
+    paddingVertical: 4,
     borderRadius: BorderRadius.xs,
   },
-  newBadgeText: {
+  liveBadgeText: {
     ...Typography.caption,
-    color: GameColors.textPrimary,
-    fontWeight: "700",
+    color: "#fff",
+    fontWeight: "800",
     fontSize: 10,
+    letterSpacing: 1,
   },
   footer: {
     alignItems: "center",
@@ -338,5 +456,6 @@ const styles = StyleSheet.create({
     color: GameColors.textSecondary,
     textAlign: "center",
     fontStyle: "italic",
+    opacity: 0.7,
   },
 });
