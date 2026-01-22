@@ -51,7 +51,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const redirectUri = AuthSession.makeRedirectUri({
     scheme: "feudfusion",
     path: "auth",
+    preferLocalhost: false,
   });
+
+  // Log the redirect URI for debugging OAuth setup
+  useEffect(() => {
+    console.log("OAuth Redirect URI:", redirectUri);
+  }, [redirectUri]);
 
   useEffect(() => {
     loadStoredUser();
