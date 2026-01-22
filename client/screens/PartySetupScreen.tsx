@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, View, ScrollView, Pressable, TextInput } from "react-native";
+import { StyleSheet, View, ScrollView, Pressable, TextInput, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -11,16 +11,18 @@ import { ThemedText } from "@/components/ThemedText";
 import { GradientButton } from "@/components/GradientButton";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
-import { useGame } from "@/context/GameContext";
+import { useGame, PartyRole } from "@/context/GameContext";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "PartySetup">;
 
 export default function PartySetupScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  const { gameState, addPartyPlayer, removePartyPlayer, assignRoles, startGame } = useGame();
+  const { gameState, addPartyPlayer, removePartyPlayer, updatePlayerRole, startGame } = useGame();
   const [playerName, setPlayerName] = useState("");
   const [selectedTeam, setSelectedTeam] = useState<"red" | "blue">("red");
+  const [roleModalVisible, setRoleModalVisible] = useState(false);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -37,25 +39,59 @@ export default function PartySetupScreen() {
 
   const handleStartParty = () => {
     if (gameState.partyPlayers.length >= 2) {
-      assignRoles();
       startGame("party");
       navigation.navigate("GamePlay");
     }
   };
 
+  const handleSelectRole = (playerId: string) => {
+    setSelectedPlayerId(playerId);
+    setRoleModalVisible(true);
+  };
+
+  const handleRoleChange = (role: PartyRole) => {
+    if (selectedPlayerId) {
+      updatePlayerRole(selectedPlayerId, role);
+    }
+    setRoleModalVisible(false);
+    setSelectedPlayerId(null);
+  };
+
   const redTeam = gameState.partyPlayers.filter(p => p.team === "red");
   const blueTeam = gameState.partyPlayers.filter(p => p.team === "blue");
 
-  const roleIcons: Record<string, string> = {
-    talker: "mic",
-    whisperer: "message-circle",
-    saboteur: "alert-triangle",
-  };
+  const roles: { role: PartyRole; icon: string; color: string; name: string; desc: string }[] = [
+    { role: "talker", icon: "mic", color: GameColors.accent, name: "Talker", desc: "Speaks the answer out loud" },
+    { role: "whisperer", icon: "message-circle", color: GameColors.secondary, name: "Whisperer", desc: "Can only whisper suggestions" },
+    { role: "saboteur", icon: "alert-triangle", color: GameColors.wrong, name: "Saboteur", desc: "Secret agent for the other team" },
+  ];
 
-  const roleColors: Record<string, string> = {
-    talker: GameColors.accent,
-    whisperer: GameColors.secondary,
-    saboteur: GameColors.wrong,
+  const getRoleInfo = (role: PartyRole) => roles.find(r => r.role === role) || roles[0];
+
+  const PlayerCard = ({ player }: { player: typeof gameState.partyPlayers[0] }) => {
+    const roleInfo = getRoleInfo(player.role);
+    return (
+      <View style={styles.playerCard}>
+        <Pressable
+          style={styles.playerInfo}
+          onPress={() => handleSelectRole(player.id)}
+        >
+          <View style={[styles.roleIcon, { backgroundColor: roleInfo.color + "30" }]}>
+            <Feather name={roleInfo.icon as any} size={14} color={roleInfo.color} />
+          </View>
+          <View style={styles.playerDetails}>
+            <ThemedText style={styles.playerName}>{player.name}</ThemedText>
+            <ThemedText style={[styles.playerRole, { color: roleInfo.color }]}>
+              {roleInfo.name}
+            </ThemedText>
+          </View>
+          <Feather name="chevron-down" size={16} color={GameColors.textSecondary} />
+        </Pressable>
+        <Pressable onPress={() => removePartyPlayer(player.id)} style={styles.removeButton}>
+          <Feather name="x" size={18} color={GameColors.textSecondary} />
+        </Pressable>
+      </View>
+    );
   };
 
   return (
@@ -131,21 +167,7 @@ export default function PartySetupScreen() {
               <ThemedText style={styles.teamCount}>{redTeam.length} players</ThemedText>
             </View>
             {redTeam.map((player) => (
-              <View key={player.id} style={styles.playerCard}>
-                <View style={styles.playerInfo}>
-                  <View style={[styles.roleIcon, { backgroundColor: roleColors[player.role] + "30" }]}>
-                    <Feather
-                      name={roleIcons[player.role] as any}
-                      size={14}
-                      color={roleColors[player.role]}
-                    />
-                  </View>
-                  <ThemedText style={styles.playerName}>{player.name}</ThemedText>
-                </View>
-                <Pressable onPress={() => removePartyPlayer(player.id)}>
-                  <Feather name="x" size={18} color={GameColors.textSecondary} />
-                </Pressable>
-              </View>
+              <PlayerCard key={player.id} player={player} />
             ))}
             {redTeam.length === 0 ? (
               <View style={styles.emptyTeam}>
@@ -162,21 +184,7 @@ export default function PartySetupScreen() {
               <ThemedText style={styles.teamCount}>{blueTeam.length} players</ThemedText>
             </View>
             {blueTeam.map((player) => (
-              <View key={player.id} style={styles.playerCard}>
-                <View style={styles.playerInfo}>
-                  <View style={[styles.roleIcon, { backgroundColor: roleColors[player.role] + "30" }]}>
-                    <Feather
-                      name={roleIcons[player.role] as any}
-                      size={14}
-                      color={roleColors[player.role]}
-                    />
-                  </View>
-                  <ThemedText style={styles.playerName}>{player.name}</ThemedText>
-                </View>
-                <Pressable onPress={() => removePartyPlayer(player.id)}>
-                  <Feather name="x" size={18} color={GameColors.textSecondary} />
-                </Pressable>
-              </View>
+              <PlayerCard key={player.id} player={player} />
             ))}
             {blueTeam.length === 0 ? (
               <View style={styles.emptyTeam}>
@@ -187,34 +195,19 @@ export default function PartySetupScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInUp.delay(300).springify()} style={styles.rolesInfo}>
-          <ThemedText style={styles.sectionTitle}>Roles</ThemedText>
-          <View style={styles.roleCard}>
-            <View style={[styles.roleIconLarge, { backgroundColor: GameColors.accent + "30" }]}>
-              <Feather name="mic" size={20} color={GameColors.accent} />
+          <ThemedText style={styles.sectionTitle}>Roles Guide</ThemedText>
+          <ThemedText style={styles.rolesHint}>Tap a player to change their role</ThemedText>
+          {roles.map((role) => (
+            <View key={role.role} style={styles.roleCard}>
+              <View style={[styles.roleIconLarge, { backgroundColor: role.color + "30" }]}>
+                <Feather name={role.icon as any} size={20} color={role.color} />
+              </View>
+              <View style={styles.roleContent}>
+                <ThemedText style={styles.roleName}>{role.name}</ThemedText>
+                <ThemedText style={styles.roleDesc}>{role.desc}</ThemedText>
+              </View>
             </View>
-            <View style={styles.roleContent}>
-              <ThemedText style={styles.roleName}>Talker</ThemedText>
-              <ThemedText style={styles.roleDesc}>Speaks the answer out loud</ThemedText>
-            </View>
-          </View>
-          <View style={styles.roleCard}>
-            <View style={[styles.roleIconLarge, { backgroundColor: GameColors.secondary + "30" }]}>
-              <Feather name="message-circle" size={20} color={GameColors.secondary} />
-            </View>
-            <View style={styles.roleContent}>
-              <ThemedText style={styles.roleName}>Whisperer</ThemedText>
-              <ThemedText style={styles.roleDesc}>Can only whisper suggestions</ThemedText>
-            </View>
-          </View>
-          <View style={styles.roleCard}>
-            <View style={[styles.roleIconLarge, { backgroundColor: GameColors.wrong + "30" }]}>
-              <Feather name="alert-triangle" size={20} color={GameColors.wrong} />
-            </View>
-            <View style={styles.roleContent}>
-              <ThemedText style={styles.roleName}>Saboteur</ThemedText>
-              <ThemedText style={styles.roleDesc}>Secret agent for the other team</ThemedText>
-            </View>
-          </View>
+          ))}
         </Animated.View>
       </ScrollView>
 
@@ -230,6 +223,37 @@ export default function PartySetupScreen() {
           Start Chaos
         </GradientButton>
       </Animated.View>
+
+      <Modal
+        visible={roleModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRoleModalVisible(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setRoleModalVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <ThemedText style={styles.modalTitle}>Select Role</ThemedText>
+            {roles.map((role) => (
+              <Pressable
+                key={role.role}
+                style={styles.roleOption}
+                onPress={() => handleRoleChange(role.role)}
+              >
+                <View style={[styles.roleIconLarge, { backgroundColor: role.color + "30" }]}>
+                  <Feather name={role.icon as any} size={20} color={role.color} />
+                </View>
+                <View style={styles.roleContent}>
+                  <ThemedText style={styles.roleName}>{role.name}</ThemedText>
+                  <ThemedText style={styles.roleDesc}>{role.desc}</ThemedText>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -272,6 +296,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...Typography.h3,
     color: GameColors.textPrimary,
+    marginBottom: Spacing.sm,
+  },
+  rolesHint: {
+    ...Typography.caption,
+    color: GameColors.textSecondary,
     marginBottom: Spacing.md,
   },
   teamSelector: {
@@ -345,25 +374,37 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: GameColors.surface,
-    padding: Spacing.md,
+    padding: Spacing.sm,
     borderRadius: BorderRadius.sm,
     marginBottom: Spacing.xs,
   },
   playerInfo: {
     flexDirection: "row",
     alignItems: "center",
+    flex: 1,
+  },
+  playerDetails: {
+    flex: 1,
+    marginLeft: Spacing.sm,
   },
   roleIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: Spacing.sm,
   },
   playerName: {
     ...Typography.small,
     color: GameColors.textPrimary,
+    fontWeight: "600",
+  },
+  playerRole: {
+    ...Typography.caption,
+    fontSize: 10,
+  },
+  removeButton: {
+    padding: Spacing.xs,
   },
   emptyTeam: {
     backgroundColor: GameColors.surface,
@@ -412,5 +453,33 @@ const styles = StyleSheet.create({
     backgroundColor: GameColors.backgroundDark,
     borderTopWidth: 1,
     borderTopColor: "rgba(255,255,255,0.05)",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.xl,
+  },
+  modalContent: {
+    backgroundColor: GameColors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+    width: "100%",
+    maxWidth: 340,
+  },
+  modalTitle: {
+    ...Typography.h4,
+    color: GameColors.textPrimary,
+    marginBottom: Spacing.lg,
+    textAlign: "center",
+  },
+  roleOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: GameColors.backgroundDark,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.sm,
   },
 });

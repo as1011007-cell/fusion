@@ -146,6 +146,15 @@ export default function GamePlayScreen() {
         </View>
       ) : null}
 
+      {gameState.doubleBluffActive ? (
+        <View style={styles.doubleBluffIndicator}>
+          <Feather name="zap" size={16} color={GameColors.accent} />
+          <ThemedText style={styles.doubleBluffText}>
+            Double Bluff Active - 2x Points!
+          </ThemedText>
+        </View>
+      ) : null}
+
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.contentContainer}
@@ -249,7 +258,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   teamBadge: {
     paddingHorizontal: Spacing.lg,
@@ -272,6 +281,23 @@ const styles = StyleSheet.create({
     ...Typography.h4,
     color: GameColors.textSecondary,
     marginHorizontal: Spacing.sm,
+  },
+  doubleBluffIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: GameColors.accent + "20",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    marginHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.full,
+    marginBottom: Spacing.sm,
+  },
+  doubleBluffText: {
+    ...Typography.body,
+    color: GameColors.accent,
+    fontWeight: "600",
+    marginLeft: Spacing.sm,
   },
   content: {
     flex: 1,

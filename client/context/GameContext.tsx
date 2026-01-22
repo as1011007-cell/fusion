@@ -58,6 +58,7 @@ export type GameState = {
   blueScore: number;
   dailyChallengeCompleted: boolean;
   dailyChallengeDate: string | null;
+  doubleBluffActive: boolean;
 };
 
 type GameContextType = {
@@ -76,7 +77,7 @@ type GameContextType = {
   highScore: number;
   addPartyPlayer: (name: string, team: "red" | "blue") => void;
   removePartyPlayer: (playerId: string) => void;
-  assignRoles: () => void;
+  updatePlayerRole: (playerId: string, role: PartyRole) => void;
   switchTeam: () => void;
 };
 
@@ -127,10 +128,10 @@ const panels: Panel[] = [
 
 const initialPowerCards: PowerCard[] = [
   {
-    id: "mute",
-    name: "Mute",
-    description: "Skip a difficult question",
-    icon: "volume-x",
+    id: "skip",
+    name: "Skip",
+    description: "Skip this question",
+    icon: "skip-forward",
     count: 2,
   },
   {
@@ -171,6 +172,7 @@ const initialGameState: GameState = {
   blueScore: 0,
   dailyChallengeCompleted: false,
   dailyChallengeDate: null,
+  doubleBluffActive: false,
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -268,19 +270,26 @@ export function GameProvider({ children }: { children: ReactNode }) {
       redScore: 0,
       blueScore: 0,
       currentTeam: "red",
+      doubleBluffActive: false,
     }));
   };
 
   const selectOption = (optionIndex: number) => {
     if (!gameState.currentQuestion || gameState.showResults) return;
 
-    const selectedOption = gameState.currentQuestion.options[optionIndex];
-    const isCorrect = selectedOption.isCorrect;
+    const selectedOption = optionIndex >= 0 
+      ? gameState.currentQuestion.options[optionIndex]
+      : null;
+    const isCorrect = selectedOption?.isCorrect || false;
 
     const basePoints = gameState.selectedLayer === "common" ? 100 :
                        gameState.selectedLayer === "honest" ? 200 : 300;
     const streakBonus = gameState.streak * 50;
-    const points = isCorrect ? basePoints + streakBonus : 0;
+    let points = isCorrect ? basePoints + streakBonus : 0;
+
+    if (gameState.doubleBluffActive && isCorrect) {
+      points *= 2;
+    }
 
     const correctOption = gameState.currentQuestion.options.find(o => o.isCorrect);
 
@@ -307,6 +316,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       bestStreak: newBestStreak,
       redScore: newRedScore,
       blueScore: newBlueScore,
+      doubleBluffActive: false,
       lastResult: {
         correct: isCorrect,
         points,
@@ -359,6 +369,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       showResults: false,
       lastResult: null,
       currentTeam: nextTeam,
+      doubleBluffActive: false,
     }));
   };
 
@@ -366,14 +377,21 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const card = gameState.powerCards.find(c => c.id === cardId);
     if (!card || card.count <= 0) return;
 
-    if (cardId === "mute" && gameState.currentRound < gameState.totalRounds) {
+    if (cardId === "skip" && gameState.currentRound < gameState.totalRounds) {
+      setGameState((prev) => ({
+        ...prev,
+        powerCards: prev.powerCards.map((c) =>
+          c.id === cardId ? { ...c, count: Math.max(0, c.count - 1) } : c
+        ),
+      }));
       nextRound();
+      return;
     }
 
     if (cardId === "steal" && gameState.currentQuestion) {
       const wrongOptions = gameState.currentQuestion.options
         .map((opt, idx) => ({ opt, idx }))
-        .filter(({ opt }) => !opt.isCorrect);
+        .filter(({ opt }) => !opt.isCorrect && !opt.text.startsWith("[X]"));
       
       if (wrongOptions.length > 0) {
         const randomWrong = wrongOptions[Math.floor(Math.random() * wrongOptions.length)];
@@ -386,8 +404,23 @@ export function GameProvider({ children }: { children: ReactNode }) {
             ...prev.currentQuestion,
             options: updatedOptions,
           } : null,
+          powerCards: prev.powerCards.map((c) =>
+            c.id === cardId ? { ...c, count: Math.max(0, c.count - 1) } : c
+          ),
         }));
+        return;
       }
+    }
+
+    if (cardId === "double-bluff") {
+      setGameState((prev) => ({
+        ...prev,
+        doubleBluffActive: true,
+        powerCards: prev.powerCards.map((c) =>
+          c.id === cardId ? { ...c, count: Math.max(0, c.count - 1) } : c
+        ),
+      }));
+      return;
     }
 
     setGameState((prev) => ({
@@ -403,6 +436,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       ...initialGameState,
       dailyChallengeCompleted: gameState.dailyChallengeCompleted,
       dailyChallengeDate: gameState.dailyChallengeDate,
+      partyPlayers: [],
     });
   };
 
@@ -431,24 +465,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  const assignRoles = () => {
-    const roles: PartyRole[] = ["talker", "whisperer", "saboteur"];
-    const redTeam = gameState.partyPlayers.filter(p => p.team === "red");
-    const blueTeam = gameState.partyPlayers.filter(p => p.team === "blue");
-
-    const assignTeamRoles = (team: PartyPlayer[]): PartyPlayer[] => {
-      if (team.length === 0) return team;
-      
-      const shuffled = [...team].sort(() => Math.random() - 0.5);
-      return shuffled.map((player, index) => ({
-        ...player,
-        role: roles[index % roles.length],
-      }));
-    };
-
+  const updatePlayerRole = (playerId: string, role: PartyRole) => {
     setGameState(prev => ({
       ...prev,
-      partyPlayers: [...assignTeamRoles(redTeam), ...assignTeamRoles(blueTeam)],
+      partyPlayers: prev.partyPlayers.map(p =>
+        p.id === playerId ? { ...p, role } : p
+      ),
     }));
   };
 
@@ -477,7 +499,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         highScore,
         addPartyPlayer,
         removePartyPlayer,
-        assignRoles,
+        updatePlayerRole,
         switchTeam,
       }}
     >
