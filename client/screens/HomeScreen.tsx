@@ -73,11 +73,20 @@ export default function HomeScreen() {
             profileScale.value = withSpring(1);
           }}
           style={[styles.profileButton, profileStyle]}
+          accessibilityLabel="Open your profile"
+          accessibilityRole="button"
+          accessibilityHint="View and edit your player profile"
         >
           <Feather name="user" size={20} color={GameColors.textPrimary} />
         </AnimatedPressable>
 
-        <Pressable onPress={handleShop} style={styles.shopButton}>
+        <Pressable
+          onPress={handleShop}
+          style={styles.shopButton}
+          accessibilityLabel={`Shop. You have ${totalCoins} coins`}
+          accessibilityRole="button"
+          accessibilityHint="Open the shop to buy avatars, themes, and power cards"
+        >
           <Feather name="shopping-bag" size={18} color={GameColors.accent} />
           <ThemedText style={styles.coinsText}>{totalCoins}</ThemedText>
         </Pressable>
@@ -105,7 +114,12 @@ export default function HomeScreen() {
           entering={FadeInUp.delay(600).springify()}
           style={styles.buttonsContainer}
         >
-          <GradientButton onPress={handlePlay} variant="primary">
+          <GradientButton
+            onPress={handlePlay}
+            variant="primary"
+            accessibilityLabel="Play Now"
+            accessibilityHint="Start a new solo game"
+          >
             Play Now
           </GradientButton>
 
@@ -113,6 +127,9 @@ export default function HomeScreen() {
             <Pressable
               style={styles.secondaryButton}
               onPress={handlePartyMode}
+              accessibilityLabel="Party Mode - Teams and chaos"
+              accessibilityRole="button"
+              accessibilityHint="Play with friends in team competition"
             >
               <View style={[styles.secondaryButtonIcon, { backgroundColor: GameColors.secondary + "20" }]}>
                 <Feather name="users" size={20} color={GameColors.secondary} />
@@ -134,6 +151,9 @@ export default function HomeScreen() {
                 gameState.dailyChallengeCompleted && styles.completedButton,
               ]}
               onPress={handleDailyChallenge}
+              accessibilityLabel={`Daily Challenge - ${gameState.dailyChallengeCompleted ? "Completed today" : "New challenge awaits"}`}
+              accessibilityRole="button"
+              accessibilityHint="Play today's special challenge"
             >
               <View style={[styles.secondaryButtonIcon, { backgroundColor: GameColors.accent + "20" }]}>
                 <Feather name="calendar" size={20} color={GameColors.accent} />

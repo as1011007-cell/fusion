@@ -49,22 +49,22 @@ type ProfileContextType = {
 };
 
 const defaultAvatars: Avatar[] = [
-  { id: "avatar-1", name: "Lightning", icon: "zap", color: "#FF006E", price: 0, owned: true },
-  { id: "avatar-2", name: "Star", icon: "star", color: "#FFD700", price: 0, owned: true },
-  { id: "avatar-3", name: "Heart", icon: "heart", color: "#FF4444", price: 0, owned: true },
-  { id: "avatar-4", name: "Diamond", icon: "octagon", color: "#00F5FF", price: 100, owned: false },
-  { id: "avatar-5", name: "Crown", icon: "award", color: "#FFD700", price: 150, owned: false },
-  { id: "avatar-6", name: "Flame", icon: "sun", color: "#FF8C00", price: 200, owned: false },
-  { id: "avatar-7", name: "Moon", icon: "moon", color: "#C0C0FF", price: 250, owned: false },
-  { id: "avatar-8", name: "Galaxy", icon: "globe", color: "#9B59B6", price: 300, owned: false },
-  { id: "avatar-9", name: "Thunder", icon: "cloud-lightning", color: "#F1C40F", price: 350, owned: false },
-  { id: "avatar-10", name: "Phoenix", icon: "sunrise", color: "#E74C3C", price: 400, owned: false },
-  { id: "avatar-11", name: "Crystal", icon: "hexagon", color: "#1ABC9C", price: 450, owned: false },
-  { id: "avatar-12", name: "Nebula", icon: "target", color: "#8E44AD", price: 500, owned: false },
-  { id: "avatar-13", name: "Cosmic", icon: "compass", color: "#3498DB", price: 600, owned: false },
-  { id: "avatar-14", name: "Aurora", icon: "layers", color: "#00FF87", price: 700, owned: false },
-  { id: "avatar-15", name: "Infinity", icon: "circle", color: "#E91E63", price: 800, owned: false },
-  { id: "avatar-16", name: "Legend", icon: "shield", color: "#FF006E", price: 1000, owned: false },
+  { id: "avatar-1", name: "Happy Kid", icon: "smile", color: "#FF006E", price: 0, owned: true },
+  { id: "avatar-2", name: "Cool Cat", icon: "github", color: "#FFD700", price: 0, owned: true },
+  { id: "avatar-3", name: "Friendly Ghost", icon: "cloud", color: "#FFFFFF", price: 0, owned: true },
+  { id: "avatar-4", name: "Silly Monster", icon: "frown", color: "#00F5FF", price: 100, owned: false },
+  { id: "avatar-5", name: "Royal Prince", icon: "award", color: "#FFD700", price: 150, owned: false },
+  { id: "avatar-6", name: "Fire Dragon", icon: "sun", color: "#FF8C00", price: 200, owned: false },
+  { id: "avatar-7", name: "Sleepy Owl", icon: "moon", color: "#C0C0FF", price: 250, owned: false },
+  { id: "avatar-8", name: "Space Alien", icon: "globe", color: "#9B59B6", price: 300, owned: false },
+  { id: "avatar-9", name: "Thunder Bear", icon: "cloud-lightning", color: "#F1C40F", price: 350, owned: false },
+  { id: "avatar-10", name: "Brave Fox", icon: "sunrise", color: "#E74C3C", price: 400, owned: false },
+  { id: "avatar-11", name: "Ice Yeti", icon: "hexagon", color: "#1ABC9C", price: 450, owned: false },
+  { id: "avatar-12", name: "Purple Goblin", icon: "target", color: "#8E44AD", price: 500, owned: false },
+  { id: "avatar-13", name: "Ocean Mermaid", icon: "compass", color: "#3498DB", price: 600, owned: false },
+  { id: "avatar-14", name: "Forest Elf", icon: "feather", color: "#00FF87", price: 700, owned: false },
+  { id: "avatar-15", name: "Pink Unicorn", icon: "heart", color: "#E91E63", price: 800, owned: false },
+  { id: "avatar-16", name: "Golden Hero", icon: "shield", color: "#FF006E", price: 1000, owned: false },
 ];
 
 const defaultSettings: Settings = {

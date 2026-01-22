@@ -23,7 +23,7 @@ export default function ShopScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { avatars, purchaseAvatar, currentProfile, updateProfile } = useProfile();
-  const { totalCoins, addCoins, gameState, purchasePowerCards } = useGame();
+  const { totalCoins, addCoins, gameState, purchasePowerCards, canClaimWeeklyPowerCards, claimWeeklyPowerCards } = useGame();
   const { themes, currentTheme, setCurrentTheme, purchaseTheme, starPoints, addStarPoints, spendStarPoints, isAdFree, setAdFree } = useTheme();
   const [activeTab, setActiveTab] = useState<TabType>("avatars");
   const [loading, setLoading] = useState<string | null>(null);
@@ -72,6 +72,16 @@ export default function ShopScreen() {
     const success = spendStarPoints(500);
     if (success) {
       purchasePowerCards();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
+  };
+
+  const handleClaimWeeklyPowerCards = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const success = claimWeeklyPowerCards();
+    if (success) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -285,54 +295,100 @@ export default function ShopScreen() {
     </Animated.View>
   );
 
-  const renderPowerupsTab = () => (
-    <Animated.View entering={FadeInDown.springify()}>
-      <ThemedText style={styles.sectionTitle}>Power Cards</ThemedText>
-      <ThemedText style={styles.sectionDesc}>Get more power cards for gameplay</ThemedText>
+  const renderPowerupsTab = () => {
+    const canClaim = canClaimWeeklyPowerCards();
+    
+    return (
+      <Animated.View entering={FadeInDown.springify()}>
+        <ThemedText style={styles.sectionTitle}>Power Cards</ThemedText>
+        <ThemedText style={styles.sectionDesc}>Get more power cards for gameplay</ThemedText>
 
-      <View style={styles.bundleCard}>
-        <View style={styles.bundleHeader}>
-          <View style={styles.bundleIcon}>
-            <Feather name="package" size={32} color={GameColors.primary} />
+        <View style={styles.bundleCard}>
+          <View style={styles.bundleHeader}>
+            <View style={[styles.bundleIcon, { backgroundColor: GameColors.correct + "20" }]}>
+              <Feather name="gift" size={32} color={GameColors.correct} />
+            </View>
+            <View style={styles.bundleInfo}>
+              <ThemedText style={styles.bundleTitle}>Weekly Free Cards</ThemedText>
+              <ThemedText style={styles.bundleDesc}>
+                {canClaim ? "Claim your free power cards!" : "Come back next week for more"}
+              </ThemedText>
+            </View>
           </View>
-          <View style={styles.bundleInfo}>
-            <ThemedText style={styles.bundleTitle}>Power Card Bundle</ThemedText>
-            <ThemedText style={styles.bundleDesc}>+2 Skip, +2 Steal, +2 Double Bluff</ThemedText>
-          </View>
+
+          <Pressable
+            style={[styles.weeklyClaimButton, !canClaim && styles.purchaseButtonDisabled]}
+            onPress={handleClaimWeeklyPowerCards}
+            disabled={!canClaim}
+            accessibilityLabel={canClaim ? "Claim free weekly power cards" : "Weekly power cards already claimed"}
+            accessibilityRole="button"
+            accessibilityHint="Get one free power card of each type once per week"
+          >
+            {canClaim ? (
+              <>
+                <Feather name="gift" size={18} color="#fff" />
+                <ThemedText style={styles.weeklyClaimText}>Claim Free Cards</ThemedText>
+              </>
+            ) : (
+              <>
+                <Feather name="clock" size={18} color={GameColors.textSecondary} />
+                <ThemedText style={styles.weeklyClaimTextDisabled}>Already Claimed</ThemedText>
+              </>
+            )}
+          </Pressable>
         </View>
 
-        <View style={styles.bundleCards}>
+        <View style={styles.bundleCard}>
+          <View style={styles.bundleHeader}>
+            <View style={styles.bundleIcon}>
+              <Feather name="package" size={32} color={GameColors.primary} />
+            </View>
+            <View style={styles.bundleInfo}>
+              <ThemedText style={styles.bundleTitle}>Power Card Bundle</ThemedText>
+              <ThemedText style={styles.bundleDesc}>+2 Skip, +2 Steal, +2 Double Bluff</ThemedText>
+            </View>
+          </View>
+
+          <View style={styles.bundleCards}>
+            {powerCards.map((card) => (
+              <View key={card.id} style={styles.cardPreview}>
+                <Feather name={card.icon as any} size={20} color={GameColors.secondary} />
+                <ThemedText style={styles.cardName}>{card.name}</ThemedText>
+                <ThemedText style={styles.cardCount}>+2</ThemedText>
+              </View>
+            ))}
+          </View>
+
+          <Pressable
+            style={[styles.purchaseButton, starPoints < 500 && styles.purchaseButtonDisabled]}
+            onPress={handlePurchasePowerCards}
+            disabled={starPoints < 500}
+            accessibilityLabel={`Buy power card bundle for 500 star points. You have ${starPoints} star points`}
+            accessibilityRole="button"
+            accessibilityHint="Purchase extra power cards using star points"
+          >
+            <Feather name="star" size={18} color={GameColors.accent} />
+            <ThemedText style={styles.purchaseButtonText}>500 Star Points</ThemedText>
+          </Pressable>
+        </View>
+
+        <View style={styles.currentCards}>
+          <ThemedText style={styles.currentCardsTitle}>Your Current Cards</ThemedText>
           {powerCards.map((card) => (
-            <View key={card.id} style={styles.cardPreview}>
-              <Feather name={card.icon as any} size={20} color={GameColors.secondary} />
-              <ThemedText style={styles.cardName}>{card.name}</ThemedText>
-              <ThemedText style={styles.cardCount}>+2</ThemedText>
+            <View 
+              key={card.id} 
+              style={styles.currentCardRow}
+              accessibilityLabel={`${card.name}: ${card.count} cards available`}
+            >
+              <Feather name={card.icon as any} size={20} color={GameColors.textSecondary} />
+              <ThemedText style={styles.currentCardName}>{card.name}</ThemedText>
+              <ThemedText style={styles.currentCardCount}>x{card.count}</ThemedText>
             </View>
           ))}
         </View>
-
-        <Pressable
-          style={[styles.purchaseButton, starPoints < 500 && styles.purchaseButtonDisabled]}
-          onPress={handlePurchasePowerCards}
-          disabled={starPoints < 500}
-        >
-          <Feather name="star" size={18} color={GameColors.accent} />
-          <ThemedText style={styles.purchaseButtonText}>500 Star Points</ThemedText>
-        </Pressable>
-      </View>
-
-      <View style={styles.currentCards}>
-        <ThemedText style={styles.currentCardsTitle}>Your Current Cards</ThemedText>
-        {powerCards.map((card) => (
-          <View key={card.id} style={styles.currentCardRow}>
-            <Feather name={card.icon as any} size={20} color={GameColors.textSecondary} />
-            <ThemedText style={styles.currentCardName}>{card.name}</ThemedText>
-            <ThemedText style={styles.currentCardCount}>x{card.count}</ThemedText>
-          </View>
-        ))}
-      </View>
-    </Animated.View>
-  );
+      </Animated.View>
+    );
+  };
 
   const renderPremiumTab = () => (
     <Animated.View entering={FadeInDown.springify()}>
@@ -761,6 +817,25 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
     marginLeft: Spacing.sm,
+  },
+  weeklyClaimButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: GameColors.correct,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.sm,
+  },
+  weeklyClaimText: {
+    ...Typography.body,
+    color: "#fff",
+    fontWeight: "600",
+  },
+  weeklyClaimTextDisabled: {
+    ...Typography.body,
+    color: GameColors.textSecondary,
+    fontWeight: "600",
   },
   currentCards: {
     backgroundColor: GameColors.surface,

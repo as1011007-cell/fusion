@@ -76,6 +76,9 @@ type GameContextType = {
   getAnsweredCount: () => number;
   getTotalQuestionCount: () => number;
   purchasePowerCards: () => void;
+  canClaimWeeklyPowerCards: () => boolean;
+  claimWeeklyPowerCards: () => boolean;
+  lastWeeklyClaimDate: string | null;
 };
 
 const initialPowerCards: PowerCard[] = [
@@ -135,6 +138,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [totalCoins, setTotalCoins] = useState(100);
   const [totalGamesPlayed, setTotalGamesPlayed] = useState(0);
   const [highScore, setHighScore] = useState(0);
+  const [lastWeeklyClaimDate, setLastWeeklyClaimDate] = useState<string | null>(null);
 
   useEffect(() => {
     loadPlayerData();
@@ -147,10 +151,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const high = await AsyncStorage.getItem("highScore");
       const dailyDate = await AsyncStorage.getItem("dailyChallengeDate");
       const answeredIds = await AsyncStorage.getItem("answeredQuestionIds");
+      const weeklyClaimDate = await AsyncStorage.getItem("lastWeeklyClaimDate");
 
       if (coins) setTotalCoins(parseInt(coins, 10));
       if (games) setTotalGamesPlayed(parseInt(games, 10));
       if (high) setHighScore(parseInt(high, 10));
+      if (weeklyClaimDate) setLastWeeklyClaimDate(weeklyClaimDate);
       
       const today = new Date().toISOString().split("T")[0];
       const answered = answeredIds ? new Set<string>(JSON.parse(answeredIds)) : new Set<string>();
@@ -175,6 +181,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
         "answeredQuestionIds",
         JSON.stringify([...gameState.answeredQuestionIds])
       );
+      if (lastWeeklyClaimDate) {
+        await AsyncStorage.setItem("lastWeeklyClaimDate", lastWeeklyClaimDate);
+      }
     } catch (error) {
       console.error("Error saving player data:", error);
     }
@@ -182,7 +191,33 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     savePlayerData();
-  }, [totalCoins, totalGamesPlayed, highScore, gameState.answeredQuestionIds]);
+  }, [totalCoins, totalGamesPlayed, highScore, gameState.answeredQuestionIds, lastWeeklyClaimDate]);
+
+  const canClaimWeeklyPowerCards = (): boolean => {
+    if (!lastWeeklyClaimDate) return true;
+    
+    const lastClaim = new Date(lastWeeklyClaimDate);
+    const now = new Date();
+    const diffTime = now.getTime() - lastClaim.getTime();
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    
+    return diffDays >= 7;
+  };
+
+  const claimWeeklyPowerCards = (): boolean => {
+    if (!canClaimWeeklyPowerCards()) return false;
+    
+    setGameState(prev => ({
+      ...prev,
+      powerCards: prev.powerCards.map(card => ({
+        ...card,
+        count: card.count + 1,
+      })),
+    }));
+    
+    setLastWeeklyClaimDate(new Date().toISOString().split("T")[0]);
+    return true;
+  };
 
   const setSelectedPanel = (panel: Panel) => {
     setGameState((prev) => ({ ...prev, selectedPanel: panel }));
@@ -489,6 +524,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
         getAnsweredCount,
         getTotalQuestionCount,
         purchasePowerCards,
+        canClaimWeeklyPowerCards,
+        claimWeeklyPowerCards,
+        lastWeeklyClaimDate,
       }}
     >
       {children}
