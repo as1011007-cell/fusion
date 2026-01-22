@@ -194,11 +194,8 @@ export default function HomeScreen() {
               style={styles.secondaryButton}
               onPress={handlePartyMode}
             >
-              <LinearGradient
-                colors={[GameColors.secondary + "30", GameColors.secondary + "10"]}
-                style={styles.secondaryButtonGradient}
-              >
-                <View style={styles.secondaryButtonIcon}>
+              <View style={[styles.secondaryButtonInner, { borderLeftColor: GameColors.secondary }]}>
+                <View style={[styles.secondaryButtonIcon, { backgroundColor: GameColors.secondary + "30" }]}>
                   <Feather name="users" size={22} color={GameColors.secondary} />
                 </View>
                 <View style={styles.secondaryButtonContent}>
@@ -206,7 +203,7 @@ export default function HomeScreen() {
                   <ThemedText style={styles.secondaryButtonDesc}>Play with friends</ThemedText>
                 </View>
                 <Feather name="chevron-right" size={20} color={GameColors.secondary} />
-              </LinearGradient>
+              </View>
             </Pressable>
 
             <Pressable
@@ -216,11 +213,8 @@ export default function HomeScreen() {
               ]}
               onPress={handleDailyChallenge}
             >
-              <LinearGradient
-                colors={[GameColors.accent + "30", GameColors.accent + "10"]}
-                style={styles.secondaryButtonGradient}
-              >
-                <View style={styles.secondaryButtonIcon}>
+              <View style={[styles.secondaryButtonInner, { borderLeftColor: GameColors.accent }]}>
+                <View style={[styles.secondaryButtonIcon, { backgroundColor: GameColors.accent + "30" }]}>
                   <Feather name="zap" size={22} color={GameColors.accent} />
                 </View>
                 <View style={styles.secondaryButtonContent}>
@@ -236,7 +230,7 @@ export default function HomeScreen() {
                     <ThemedText style={styles.liveBadgeText}>LIVE</ThemedText>
                   </View>
                 )}
-              </LinearGradient>
+              </View>
             </Pressable>
           </View>
         </Animated.View>
@@ -404,13 +398,13 @@ const styles = StyleSheet.create({
   completedButton: {
     opacity: 0.7,
   },
-  secondaryButtonGradient: {
+  secondaryButtonInner: {
     flexDirection: "row",
     alignItems: "center",
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.1)",
+    backgroundColor: GameColors.surface,
+    borderLeftWidth: 4,
   },
   secondaryButtonIcon: {
     width: 44,
