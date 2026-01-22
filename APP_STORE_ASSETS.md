@@ -85,19 +85,26 @@ Welcome to Feud Fusion! This is our launch version featuring:
 
 ---
 
-## Privacy Policy Requirements
+## Privacy Policy
 
-Your app will need a privacy policy URL. It should cover:
-- What data is collected (local storage only - no account required)
-- No personal data transmitted to servers
-- In-app purchases via Stripe
+**Privacy Policy URL**: `https://YOUR-REPLIT-DOMAIN/privacy`
+
+After publishing, your privacy policy will be available at your app's domain + `/privacy`
+
+The privacy policy page is already created and includes:
+- What data is collected
+- How data is processed
+- Payment processing (Stripe)
+- User rights
 - Contact information
 
 ---
 
-## Support URL
+## Support
 
-You'll need a support URL or email for users to contact you.
+**Support Email**: support@feudfusion.app
+
+The `/support` route redirects to this email address.
 
 ---
 

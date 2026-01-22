@@ -311,6 +311,22 @@ function setupErrorHandler(app: express.Application) {
     }
   });
 
+  // Privacy Policy page
+  app.get('/privacy', (_req, res) => {
+    const privacyPath = path.resolve(
+      process.cwd(),
+      "server",
+      "templates",
+      "privacy-policy.html",
+    );
+    res.sendFile(privacyPath);
+  });
+
+  // Support page redirect
+  app.get('/support', (_req, res) => {
+    res.redirect('mailto:support@feudfusion.app');
+  });
+
   configureExpoAndLanding(app);
 
   const server = await registerRoutes(app);
