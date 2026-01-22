@@ -33,6 +33,20 @@ The game features a vibrant "Electric Collision" aesthetic with neon accents, pe
 - Haptic feedback toggle
 - Question history reset functionality
 
+### Shop System (January 2026)
+- Unified Shop screen with 4 tabs: Avatars, Themes, Power-Ups, Premium
+- Dual currency system: Coins (for avatars) and Star Points (for themes/power cards)
+- 5 purchasable UI themes: Electric Collision (free), Sunset Vibes, Ocean Breeze, Forest Mist, Galaxy Night (1500 stars each)
+- Power card bundle purchase: +2 Skip, +2 Steal, +2 Double Bluff for 500 star points
+- Premium purchases via Stripe: 5000 Star Points ($5) and Ad-Free Version ($5)
+- ThemeContext manages theme selection and purchases with AsyncStorage persistence
+
+### Stripe Integration
+- Stripe payments for real-money purchases using stripe-replit-sync
+- Backend routes: /api/stripe/products, /api/stripe/create-checkout, /api/stripe/webhook
+- Webhook handling for payment confirmation
+- Uses expo-web-browser to open Stripe Checkout on mobile
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
