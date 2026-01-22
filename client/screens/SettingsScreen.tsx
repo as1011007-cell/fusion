@@ -107,39 +107,6 @@ export default function SettingsScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(200).springify()}>
-          <ThemedText style={styles.sectionTitle}>Game Data</ThemedText>
-
-          <View style={styles.settingCard}>
-            <View style={styles.infoRow}>
-              <View style={[styles.settingIcon, { backgroundColor: GameColors.primary + "20" }]}>
-                <Feather name="help-circle" size={20} color={GameColors.primary} />
-              </View>
-              <View style={styles.settingContent}>
-                <ThemedText style={styles.settingTitle}>Questions Answered</ThemedText>
-                <ThemedText style={styles.settingDesc}>
-                  {answeredQuestions.size} unique questions completed
-                </ThemedText>
-              </View>
-            </View>
-
-            <View style={styles.divider} />
-
-            <Pressable style={styles.settingRow} onPress={handleResetQuestions}>
-              <View style={[styles.settingIcon, { backgroundColor: GameColors.wrong + "20" }]}>
-                <Feather name="refresh-cw" size={20} color={GameColors.wrong} />
-              </View>
-              <View style={styles.settingContent}>
-                <ThemedText style={styles.settingTitle}>Reset Question History</ThemedText>
-                <ThemedText style={styles.settingDesc}>
-                  Start fresh with all questions available again
-                </ThemedText>
-              </View>
-              <Feather name="chevron-right" size={20} color={GameColors.textSecondary} />
-            </Pressable>
-          </View>
-        </Animated.View>
-
-        <Animated.View entering={FadeInDown.delay(300).springify()}>
           <ThemedText style={styles.sectionTitle}>About</ThemedText>
 
           <View style={styles.settingCard}>

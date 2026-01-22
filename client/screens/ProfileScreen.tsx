@@ -334,6 +334,38 @@ export default function ProfileScreen() {
           <>
             {renderCurrentProfile()}
 
+            {!currentProfile?.socialProvider ? (
+              <Animated.View entering={FadeInUp.delay(150).springify()} style={styles.connectAccountSection}>
+                <ThemedText style={styles.connectTitle}>Connect Account</ThemedText>
+                <ThemedText style={styles.connectSubtitle}>
+                  Link your social account to sync your profile
+                </ThemedText>
+
+                {authError ? (
+                  <View style={styles.errorContainer}>
+                    <Feather name="alert-circle" size={16} color={GameColors.wrong} />
+                    <ThemedText style={styles.errorText}>{authError}</ThemedText>
+                  </View>
+                ) : null}
+
+                {authLoading ? (
+                  <ActivityIndicator size="small" color={GameColors.primary} style={styles.loader} />
+                ) : (
+                  <View style={styles.connectButtons}>
+                    <Pressable style={styles.googleConnectButton} onPress={handleGoogleLogin}>
+                      <Feather name="mail" size={18} color="#ffffff" />
+                      <ThemedText style={styles.connectButtonText}>Google</ThemedText>
+                    </Pressable>
+
+                    <Pressable style={styles.facebookConnectButton} onPress={handleFacebookLogin}>
+                      <Feather name="facebook" size={18} color="#ffffff" />
+                      <ThemedText style={styles.connectButtonText}>Facebook</ThemedText>
+                    </Pressable>
+                  </View>
+                )}
+              </Animated.View>
+            ) : null}
+
             <Animated.View entering={FadeInUp.delay(200).springify()}>
               <Pressable
                 style={styles.actionCard}
@@ -744,5 +776,50 @@ const styles = StyleSheet.create({
     ...Typography.body,
     color: GameColors.wrong,
     marginLeft: Spacing.sm,
+  },
+  connectAccountSection: {
+    backgroundColor: GameColors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+  },
+  connectTitle: {
+    ...Typography.h4,
+    color: GameColors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+  connectSubtitle: {
+    ...Typography.caption,
+    color: GameColors.textSecondary,
+    marginBottom: Spacing.md,
+  },
+  connectButtons: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  googleConnectButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#DB4437",
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
+    gap: Spacing.sm,
+  },
+  facebookConnectButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#4267B2",
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
+    gap: Spacing.sm,
+  },
+  connectButtonText: {
+    ...Typography.body,
+    color: "#ffffff",
+    fontWeight: "600",
   },
 });
