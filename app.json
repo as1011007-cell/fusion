@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.feudfusionwhatwouldtheysay.app"
+      "bundleIdentifier": "com.feudfusionwhatwouldtheysay.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +22,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.feudfusionwhatwouldtheysay.app"
+      "package": "com.feudfusionwhatwouldtheysay.app",
+      "versionCode": 1
     },
     "web": {
       "output": "single",
