@@ -1,16 +1,9 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { allQuestions, getQuestionsForPanel, getDailyChallenge, Question, AnswerLayer } from "@/data/questions";
+import { allPanels, Panel } from "@/data/panels";
 
-export type { Question, AnswerLayer };
-
-export type Panel = {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  color: string;
-};
+export type { Question, AnswerLayer, Panel };
 
 export type PowerCard = {
   id: string;
@@ -59,6 +52,7 @@ export type GameState = {
   dailyChallengeCompleted: boolean;
   dailyChallengeDate: string | null;
   doubleBluffActive: boolean;
+  answeredQuestionIds: Set<string>;
 };
 
 type GameContextType = {
@@ -79,52 +73,9 @@ type GameContextType = {
   removePartyPlayer: (playerId: string) => void;
   updatePlayerRole: (playerId: string, role: PartyRole) => void;
   switchTeam: () => void;
+  getAnsweredCount: () => number;
+  getTotalQuestionCount: () => number;
 };
-
-const panels: Panel[] = [
-  {
-    id: "gen-z",
-    name: "Gen Z",
-    description: "Digital natives with main character energy",
-    icon: "zap",
-    color: "#FF006E",
-  },
-  {
-    id: "desi-parents",
-    name: "Desi Parents",
-    description: "Traditional values meet modern concerns",
-    icon: "heart",
-    color: "#FFD700",
-  },
-  {
-    id: "hustlers",
-    name: "Hustlers",
-    description: "Grind culture and entrepreneurial spirit",
-    icon: "trending-up",
-    color: "#00FF87",
-  },
-  {
-    id: "artists",
-    name: "Artists",
-    description: "Creative souls seeing the world differently",
-    icon: "feather",
-    color: "#00F5FF",
-  },
-  {
-    id: "office-workers",
-    name: "Office Workers",
-    description: "Corporate life and water cooler wisdom",
-    icon: "briefcase",
-    color: "#A0A8C0",
-  },
-  {
-    id: "small-town",
-    name: "Small Town Families",
-    description: "Close-knit communities with traditional values",
-    icon: "home",
-    color: "#FF8C00",
-  },
-];
 
 const initialPowerCards: PowerCard[] = [
   {
@@ -173,6 +124,7 @@ const initialGameState: GameState = {
   dailyChallengeCompleted: false,
   dailyChallengeDate: null,
   doubleBluffActive: false,
+  answeredQuestionIds: new Set(),
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -193,15 +145,21 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const games = await AsyncStorage.getItem("totalGamesPlayed");
       const high = await AsyncStorage.getItem("highScore");
       const dailyDate = await AsyncStorage.getItem("dailyChallengeDate");
+      const answeredIds = await AsyncStorage.getItem("answeredQuestionIds");
 
       if (coins) setTotalCoins(parseInt(coins, 10));
       if (games) setTotalGamesPlayed(parseInt(games, 10));
       if (high) setHighScore(parseInt(high, 10));
       
       const today = new Date().toISOString().split("T")[0];
-      if (dailyDate === today) {
-        setGameState(prev => ({ ...prev, dailyChallengeCompleted: true, dailyChallengeDate: today }));
-      }
+      const answered = answeredIds ? new Set<string>(JSON.parse(answeredIds)) : new Set<string>();
+      
+      setGameState(prev => ({
+        ...prev,
+        dailyChallengeCompleted: dailyDate === today,
+        dailyChallengeDate: dailyDate || null,
+        answeredQuestionIds: answered,
+      }));
     } catch (error) {
       console.error("Error loading player data:", error);
     }
@@ -212,6 +170,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       await AsyncStorage.setItem("totalCoins", totalCoins.toString());
       await AsyncStorage.setItem("totalGamesPlayed", totalGamesPlayed.toString());
       await AsyncStorage.setItem("highScore", highScore.toString());
+      await AsyncStorage.setItem(
+        "answeredQuestionIds",
+        JSON.stringify([...gameState.answeredQuestionIds])
+      );
     } catch (error) {
       console.error("Error saving player data:", error);
     }
@@ -219,7 +181,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     savePlayerData();
-  }, [totalCoins, totalGamesPlayed, highScore]);
+  }, [totalCoins, totalGamesPlayed, highScore, gameState.answeredQuestionIds]);
 
   const setSelectedPanel = (panel: Panel) => {
     setGameState((prev) => ({ ...prev, selectedPanel: panel }));
@@ -237,13 +199,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
       questions = getDailyChallenge();
       totalRounds = questions.length;
     } else if (mode === "party") {
-      questions = allQuestions.sort(() => Math.random() - 0.5).slice(0, 10);
+      const unanswered = allQuestions.filter(q => !gameState.answeredQuestionIds.has(q.id));
+      const source = unanswered.length >= 10 ? unanswered : allQuestions;
+      questions = source.sort(() => Math.random() - 0.5).slice(0, 10);
       totalRounds = 10;
     } else if (gameState.selectedPanel) {
       questions = getQuestionsForPanel(
         gameState.selectedPanel.id,
         gameState.selectedLayer,
-        5
+        5,
+        gameState.answeredQuestionIds
       );
       totalRounds = 5;
     }
@@ -307,6 +272,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    const newAnsweredIds = new Set(gameState.answeredQuestionIds);
+    newAnsweredIds.add(gameState.currentQuestion.id);
+
     setGameState((prev) => ({
       ...prev,
       selectedOptionIndex: optionIndex,
@@ -317,6 +285,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       redScore: newRedScore,
       blueScore: newBlueScore,
       doubleBluffActive: false,
+      answeredQuestionIds: newAnsweredIds,
       lastResult: {
         correct: isCorrect,
         points,
@@ -432,12 +401,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
   };
 
   const resetGame = () => {
-    setGameState({
+    setGameState(prev => ({
       ...initialGameState,
-      dailyChallengeCompleted: gameState.dailyChallengeCompleted,
-      dailyChallengeDate: gameState.dailyChallengeDate,
+      dailyChallengeCompleted: prev.dailyChallengeCompleted,
+      dailyChallengeDate: prev.dailyChallengeDate,
+      answeredQuestionIds: prev.answeredQuestionIds,
       partyPlayers: [],
-    });
+    }));
   };
 
   const addCoins = (amount: number) => {
@@ -481,11 +451,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }));
   };
 
+  const getAnsweredCount = () => gameState.answeredQuestionIds.size;
+  
+  const getTotalQuestionCount = () => allQuestions.length;
+
   return (
     <GameContext.Provider
       value={{
         gameState,
-        panels,
+        panels: allPanels,
         setSelectedPanel,
         setSelectedLayer,
         startGame,
@@ -501,6 +475,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         removePartyPlayer,
         updatePlayerRole,
         switchTeam,
+        getAnsweredCount,
+        getTotalQuestionCount,
       }}
     >
       {children}
