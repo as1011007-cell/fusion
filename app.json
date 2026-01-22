@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "Feud Fusion",
-    "slug": "feud-fusion",
+    "name": "Feud Fusion: What Would They Say",
+    "slug": "feudfusionwhatwouldtheysay",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "feudfusion",
+    "scheme": "feudfusionwhatwouldtheysay",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.feudfusion.app"
+      "bundleIdentifier": "com.feudfusionwhatwouldtheysay.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +19,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.feudfusion.app"
+      "package": "com.feudfusionwhatwouldtheysay.app"
     },
     "web": {
       "output": "single",
