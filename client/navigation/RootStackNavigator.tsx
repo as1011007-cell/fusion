@@ -5,6 +5,8 @@ import GameSetupScreen from "@/screens/GameSetupScreen";
 import GamePlayScreen from "@/screens/GamePlayScreen";
 import ResultsScreen from "@/screens/ResultsScreen";
 import ProfileScreen from "@/screens/ProfileScreen";
+import ShopScreen from "@/screens/ShopScreen";
+import SettingsScreen from "@/screens/SettingsScreen";
 import PartySetupScreen from "@/screens/PartySetupScreen";
 import DailyChallengeScreen from "@/screens/DailyChallengeScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
@@ -16,6 +18,8 @@ export type RootStackParamList = {
   GamePlay: undefined;
   Results: undefined;
   Profile: undefined;
+  Shop: undefined;
+  Settings: undefined;
   PartySetup: undefined;
   DailyChallenge: undefined;
 };
@@ -46,6 +50,16 @@ export default function RootStackNavigator() {
       <Stack.Screen
         name="Profile"
         component={ProfileScreen}
+        options={{ presentation: "modal" }}
+      />
+      <Stack.Screen
+        name="Shop"
+        component={ShopScreen}
+        options={{ presentation: "modal" }}
+      />
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
         options={{ presentation: "modal" }}
       />
       <Stack.Screen name="PartySetup" component={PartySetupScreen} />

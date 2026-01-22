@@ -1,154 +1,343 @@
-import React from "react";
-import { StyleSheet, View, Pressable, ScrollView, Image } from "react-native";
+import React, { useState } from "react";
+import { StyleSheet, View, ScrollView, Pressable, TextInput, Image, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
 
 import { ThemedText } from "@/components/ThemedText";
+import { GradientButton } from "@/components/GradientButton";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
+import { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { useProfile } from "@/context/ProfileContext";
 import { useGame } from "@/context/GameContext";
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Profile">;
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
+  const { currentProfile, profiles, avatars, createProfile, updateProfile, selectProfile, deleteProfile } = useProfile();
   const { totalCoins } = useGame();
 
-  const handleClose = () => {
+  const [showCreateForm, setShowCreateForm] = useState(!currentProfile && profiles.length === 0);
+  const [profileName, setProfileName] = useState("");
+  const [selectedAvatarId, setSelectedAvatarId] = useState(avatars[0]?.id || "");
+  const [customPhoto, setCustomPhoto] = useState<string | null>(null);
+  const [editingProfile, setEditingProfile] = useState(false);
+
+  const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.goBack();
   };
 
-  const stats = [
-    { icon: "award", label: "Games Played", value: "12", color: GameColors.primary },
-    { icon: "target", label: "Accuracy", value: "68%", color: GameColors.secondary },
-    { icon: "zap", label: "Best Streak", value: "5", color: GameColors.accent },
-    { icon: "trophy", label: "High Score", value: "2,450", color: GameColors.correct },
-  ];
+  const handlePickImage = async () => {
+    if (Platform.OS === "web") {
+      return;
+    }
 
-  const menuItems = [
-    { icon: "settings", label: "Settings", onPress: () => {} },
-    { icon: "help-circle", label: "How to Play", onPress: () => {} },
-    { icon: "star", label: "Rate App", onPress: () => {} },
-    { icon: "share-2", label: "Share with Friends", onPress: () => {} },
-  ];
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setCustomPhoto(result.assets[0].uri);
+      setSelectedAvatarId("");
+    }
+  };
+
+  const handleCreateProfile = () => {
+    if (profileName.trim()) {
+      createProfile(profileName.trim(), selectedAvatarId, customPhoto || undefined);
+      setShowCreateForm(false);
+      setProfileName("");
+      setCustomPhoto(null);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
+
+  const handleUpdateProfile = () => {
+    if (currentProfile && profileName.trim()) {
+      updateProfile(currentProfile.id, {
+        name: profileName.trim(),
+        avatarId: selectedAvatarId,
+        customPhoto,
+      });
+      setEditingProfile(false);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
+
+  const handleStartEditing = () => {
+    if (currentProfile) {
+      setProfileName(currentProfile.name);
+      setSelectedAvatarId(currentProfile.avatarId);
+      setCustomPhoto(currentProfile.customPhoto);
+      setEditingProfile(true);
+    }
+  };
+
+  const handleSelectProfile = (profileId: string) => {
+    selectProfile(profileId);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const handleDeleteProfile = (profileId: string) => {
+    deleteProfile(profileId);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+  };
+
+  const ownedAvatars = avatars.filter((a) => a.owned);
+  const currentAvatar = avatars.find((a) => a.id === currentProfile?.avatarId);
+
+  const renderProfileForm = () => (
+    <Animated.View entering={FadeInDown.springify()} style={styles.formContainer}>
+      <ThemedText style={styles.formTitle}>
+        {editingProfile ? "Edit Profile" : "Create Profile"}
+      </ThemedText>
+
+      <View style={styles.photoSection}>
+        <Pressable onPress={handlePickImage} style={styles.photoButton}>
+          {customPhoto ? (
+            <Image source={{ uri: customPhoto }} style={styles.photoPreview} />
+          ) : (
+            <View style={styles.photoPlaceholder}>
+              <Feather name="camera" size={32} color={GameColors.textSecondary} />
+              <ThemedText style={styles.photoText}>Add Photo</ThemedText>
+            </View>
+          )}
+        </Pressable>
+        {Platform.OS === "web" ? (
+          <ThemedText style={styles.webNote}>
+            Photo upload available in Expo Go
+          </ThemedText>
+        ) : null}
+      </View>
+
+      <ThemedText style={styles.orText}>- or choose an avatar -</ThemedText>
+
+      <View style={styles.avatarGrid}>
+        {ownedAvatars.map((avatar) => (
+          <Pressable
+            key={avatar.id}
+            style={[
+              styles.avatarOption,
+              selectedAvatarId === avatar.id && styles.avatarSelected,
+              { borderColor: avatar.color },
+            ]}
+            onPress={() => {
+              setSelectedAvatarId(avatar.id);
+              setCustomPhoto(null);
+            }}
+          >
+            <View style={[styles.avatarIcon, { backgroundColor: avatar.color + "30" }]}>
+              <Feather name={avatar.icon as any} size={24} color={avatar.color} />
+            </View>
+          </Pressable>
+        ))}
+      </View>
+
+      <TextInput
+        style={styles.nameInput}
+        placeholder="Enter your name..."
+        placeholderTextColor={GameColors.textSecondary}
+        value={profileName}
+        onChangeText={setProfileName}
+        maxLength={20}
+      />
+
+      <View style={styles.formButtons}>
+        <GradientButton
+          onPress={editingProfile ? handleUpdateProfile : handleCreateProfile}
+          disabled={!profileName.trim()}
+          variant="secondary"
+        >
+          {editingProfile ? "Save Changes" : "Create Profile"}
+        </GradientButton>
+
+        {editingProfile || profiles.length > 0 ? (
+          <Pressable
+            style={styles.cancelButton}
+            onPress={() => {
+              setShowCreateForm(false);
+              setEditingProfile(false);
+              setProfileName("");
+              setCustomPhoto(null);
+            }}
+          >
+            <ThemedText style={styles.cancelText}>Cancel</ThemedText>
+          </Pressable>
+        ) : null}
+      </View>
+    </Animated.View>
+  );
+
+  const renderCurrentProfile = () => (
+    <Animated.View entering={FadeInUp.springify()} style={styles.currentProfileCard}>
+      <View style={styles.profileHeader}>
+        {currentProfile?.customPhoto ? (
+          <Image
+            source={{ uri: currentProfile.customPhoto }}
+            style={styles.profilePhoto}
+          />
+        ) : currentAvatar ? (
+          <View
+            style={[
+              styles.profileAvatar,
+              { backgroundColor: currentAvatar.color + "30" },
+            ]}
+          >
+            <Feather
+              name={currentAvatar.icon as any}
+              size={40}
+              color={currentAvatar.color}
+            />
+          </View>
+        ) : null}
+
+        <View style={styles.profileInfo}>
+          <ThemedText style={styles.profileName}>{currentProfile?.name}</ThemedText>
+          <ThemedText style={styles.profileStats}>
+            {totalCoins} coins earned
+          </ThemedText>
+        </View>
+
+        <Pressable onPress={handleStartEditing} style={styles.editButton}>
+          <Feather name="edit-2" size={20} color={GameColors.textPrimary} />
+        </Pressable>
+      </View>
+    </Animated.View>
+  );
 
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-        <View style={styles.headerSpacer} />
-        <ThemedText style={styles.headerTitle}>Profile</ThemedText>
-        <Pressable onPress={handleClose} style={styles.closeButton}>
-          <Feather name="x" size={24} color={GameColors.textPrimary} />
+        <Pressable onPress={handleBack} style={styles.backButton}>
+          <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
         </Pressable>
+        <ThemedText style={styles.headerTitle}>Profile</ThemedText>
+        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + Spacing["3xl"] },
-        ]}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View
-          entering={FadeInDown.delay(100).springify()}
-          style={styles.profileCard}
-        >
-          <View style={styles.avatarContainer}>
-            <Image
-              source={require("../../assets/images/icon.png")}
-              style={styles.avatar}
-              resizeMode="contain"
-            />
-          </View>
-          <ThemedText style={styles.username}>Player One</ThemedText>
-          <ThemedText style={styles.userTitle}>Perspective Master</ThemedText>
+        {showCreateForm || editingProfile ? (
+          renderProfileForm()
+        ) : currentProfile ? (
+          <>
+            {renderCurrentProfile()}
 
-          <View style={styles.coinsDisplay}>
-            <Feather name="star" size={20} color={GameColors.accent} />
-            <ThemedText style={styles.coinsValue}>{totalCoins}</ThemedText>
-            <ThemedText style={styles.coinsLabel}>coins</ThemedText>
-          </View>
-        </Animated.View>
-
-        <Animated.View
-          entering={FadeInUp.delay(200).springify()}
-          style={styles.statsGrid}
-        >
-          {stats.map((stat, index) => (
-            <View key={stat.label} style={styles.statCard}>
-              <View
-                style={[
-                  styles.statIcon,
-                  { backgroundColor: stat.color + "20" },
-                ]}
+            <Animated.View entering={FadeInUp.delay(200).springify()}>
+              <Pressable
+                style={styles.actionCard}
+                onPress={() => navigation.navigate("Shop")}
               >
-                <Feather name={stat.icon as any} size={20} color={stat.color} />
-              </View>
-              <ThemedText style={styles.statValue}>{stat.value}</ThemedText>
-              <ThemedText style={styles.statLabel}>{stat.label}</ThemedText>
-            </View>
-          ))}
-        </Animated.View>
+                <View style={[styles.actionIcon, { backgroundColor: GameColors.accent + "20" }]}>
+                  <Feather name="shopping-bag" size={24} color={GameColors.accent} />
+                </View>
+                <View style={styles.actionContent}>
+                  <ThemedText style={styles.actionTitle}>Avatar Shop</ThemedText>
+                  <ThemedText style={styles.actionDesc}>
+                    Purchase new avatars with your coins
+                  </ThemedText>
+                </View>
+                <Feather name="chevron-right" size={20} color={GameColors.textSecondary} />
+              </Pressable>
 
-        <Animated.View entering={FadeInUp.delay(300).springify()}>
-          <ThemedText style={styles.sectionTitle}>Power Cards</ThemedText>
-          <View style={styles.powerCardsContainer}>
-            <View style={styles.powerCard}>
-              <View style={[styles.powerCardIcon, { backgroundColor: GameColors.textSecondary + "20" }]}>
-                <Feather name="volume-x" size={24} color={GameColors.textSecondary} />
-              </View>
-              <ThemedText style={styles.powerCardName}>Mute</ThemedText>
-              <ThemedText style={styles.powerCardCount}>x2</ThemedText>
-            </View>
-            <View style={styles.powerCard}>
-              <View style={[styles.powerCardIcon, { backgroundColor: GameColors.accent + "20" }]}>
-                <Feather name="copy" size={24} color={GameColors.accent} />
-              </View>
-              <ThemedText style={styles.powerCardName}>Steal</ThemedText>
-              <ThemedText style={styles.powerCardCount}>x1</ThemedText>
-            </View>
-            <View style={styles.powerCard}>
-              <View style={[styles.powerCardIcon, { backgroundColor: GameColors.primary + "20" }]}>
-                <Feather name="zap" size={24} color={GameColors.primary} />
-              </View>
-              <ThemedText style={styles.powerCardName}>Bluff</ThemedText>
-              <ThemedText style={styles.powerCardCount}>x1</ThemedText>
-            </View>
-          </View>
-        </Animated.View>
+              <Pressable
+                style={styles.actionCard}
+                onPress={() => navigation.navigate("Settings")}
+              >
+                <View style={[styles.actionIcon, { backgroundColor: GameColors.secondary + "20" }]}>
+                  <Feather name="settings" size={24} color={GameColors.secondary} />
+                </View>
+                <View style={styles.actionContent}>
+                  <ThemedText style={styles.actionTitle}>Settings</ThemedText>
+                  <ThemedText style={styles.actionDesc}>
+                    Music, haptics, and preferences
+                  </ThemedText>
+                </View>
+                <Feather name="chevron-right" size={20} color={GameColors.textSecondary} />
+              </Pressable>
+            </Animated.View>
 
-        <Animated.View
-          entering={FadeInUp.delay(400).springify()}
-          style={styles.menuContainer}
-        >
-          {menuItems.map((item, index) => (
+            {profiles.length > 1 ? (
+              <Animated.View entering={FadeInUp.delay(300).springify()} style={styles.switchSection}>
+                <ThemedText style={styles.sectionTitle}>Switch Profile</ThemedText>
+                {profiles
+                  .filter((p) => p.id !== currentProfile?.id)
+                  .map((profile) => {
+                    const avatar = avatars.find((a) => a.id === profile.avatarId);
+                    return (
+                      <Pressable
+                        key={profile.id}
+                        style={styles.profileItem}
+                        onPress={() => handleSelectProfile(profile.id)}
+                      >
+                        {profile.customPhoto ? (
+                          <Image
+                            source={{ uri: profile.customPhoto }}
+                            style={styles.profileItemPhoto}
+                          />
+                        ) : avatar ? (
+                          <View
+                            style={[
+                              styles.profileItemAvatar,
+                              { backgroundColor: avatar.color + "30" },
+                            ]}
+                          >
+                            <Feather
+                              name={avatar.icon as any}
+                              size={20}
+                              color={avatar.color}
+                            />
+                          </View>
+                        ) : null}
+                        <ThemedText style={styles.profileItemName}>
+                          {profile.name}
+                        </ThemedText>
+                        <Pressable
+                          onPress={() => handleDeleteProfile(profile.id)}
+                          style={styles.deleteButton}
+                        >
+                          <Feather name="trash-2" size={16} color={GameColors.wrong} />
+                        </Pressable>
+                      </Pressable>
+                    );
+                  })}
+              </Animated.View>
+            ) : null}
+
             <Pressable
-              key={item.label}
-              style={styles.menuItem}
+              style={styles.addProfileButton}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                item.onPress();
+                setShowCreateForm(true);
+                setProfileName("");
+                setSelectedAvatarId(avatars[0]?.id || "");
+                setCustomPhoto(null);
               }}
             >
-              <View style={styles.menuItemIcon}>
-                <Feather
-                  name={item.icon as any}
-                  size={20}
-                  color={GameColors.textSecondary}
-                />
-              </View>
-              <ThemedText style={styles.menuItemLabel}>{item.label}</ThemedText>
-              <Feather
-                name="chevron-right"
-                size={20}
-                color={GameColors.textSecondary}
-              />
+              <Feather name="plus" size={20} color={GameColors.primary} />
+              <ThemedText style={styles.addProfileText}>Add New Profile</ThemedText>
             </Pressable>
-          ))}
-        </Animated.View>
+          </>
+        ) : (
+          renderProfileForm()
+        )}
       </ScrollView>
     </View>
   );
@@ -166,14 +355,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.md,
   },
-  headerSpacer: {
-    width: 44,
-  },
-  headerTitle: {
-    ...Typography.h4,
-    color: GameColors.textPrimary,
-  },
-  closeButton: {
+  backButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -181,151 +363,241 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  headerTitle: {
+    ...Typography.h4,
+    color: GameColors.textPrimary,
+  },
+  headerSpacer: {
+    width: 44,
+  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing["3xl"],
   },
-  profileCard: {
-    backgroundColor: GameColors.surface,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.xl,
-    alignItems: "center",
-    marginBottom: Spacing.xl,
-  },
-  avatarContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: GameColors.primary + "20",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: Spacing.md,
-  },
-  avatar: {
-    width: 60,
-    height: 60,
-  },
-  username: {
-    ...Typography.h3,
-    color: GameColors.textPrimary,
-    marginBottom: Spacing.xs,
-  },
-  userTitle: {
-    ...Typography.small,
-    color: GameColors.textSecondary,
-    marginBottom: Spacing.lg,
-  },
-  coinsDisplay: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: GameColors.accent + "20",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-  },
-  coinsValue: {
-    ...Typography.h4,
-    color: GameColors.accent,
-    marginLeft: Spacing.sm,
-  },
-  coinsLabel: {
-    ...Typography.small,
-    color: GameColors.textSecondary,
-    marginLeft: Spacing.xs,
-  },
-  statsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginBottom: Spacing.xl,
-  },
-  statCard: {
-    width: "48%",
+  formContainer: {
     backgroundColor: GameColors.surface,
     borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    alignItems: "center",
-    marginBottom: Spacing.md,
+    padding: Spacing.xl,
   },
-  statIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.sm,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: Spacing.sm,
-  },
-  statValue: {
+  formTitle: {
     ...Typography.h3,
     color: GameColors.textPrimary,
-    marginBottom: Spacing.xs,
+    textAlign: "center",
+    marginBottom: Spacing.xl,
   },
-  statLabel: {
+  photoSection: {
+    alignItems: "center",
+    marginBottom: Spacing.lg,
+  },
+  photoButton: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    overflow: "hidden",
+  },
+  photoPreview: {
+    width: 100,
+    height: 100,
+  },
+  photoPlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: GameColors.backgroundDark,
+    borderWidth: 2,
+    borderColor: GameColors.textSecondary,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  photoText: {
+    ...Typography.caption,
+    color: GameColors.textSecondary,
+    marginTop: Spacing.xs,
+  },
+  webNote: {
+    ...Typography.caption,
+    color: GameColors.textSecondary,
+    marginTop: Spacing.sm,
+  },
+  orText: {
     ...Typography.caption,
     color: GameColors.textSecondary,
     textAlign: "center",
+    marginBottom: Spacing.md,
+  },
+  avatarGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    marginBottom: Spacing.xl,
+  },
+  avatarOption: {
+    width: 60,
+    height: 60,
+    borderRadius: BorderRadius.md,
+    backgroundColor: GameColors.backgroundDark,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  avatarSelected: {
+    borderWidth: 3,
+  },
+  avatarIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  nameInput: {
+    backgroundColor: GameColors.backgroundDark,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    color: GameColors.textPrimary,
+    ...Typography.body,
+    marginBottom: Spacing.lg,
+  },
+  formButtons: {
+    gap: Spacing.md,
+  },
+  cancelButton: {
+    alignItems: "center",
+    paddingVertical: Spacing.md,
+  },
+  cancelText: {
+    ...Typography.body,
+    color: GameColors.textSecondary,
+  },
+  currentProfileCard: {
+    backgroundColor: GameColors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+    marginBottom: Spacing.lg,
+  },
+  profileHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  profilePhoto: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+  },
+  profileAvatar: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileInfo: {
+    flex: 1,
+    marginLeft: Spacing.lg,
+  },
+  profileName: {
+    ...Typography.h3,
+    color: GameColors.textPrimary,
+  },
+  profileStats: {
+    ...Typography.body,
+    color: GameColors.textSecondary,
+  },
+  editButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: GameColors.backgroundDark,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: GameColors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  actionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actionContent: {
+    flex: 1,
+    marginLeft: Spacing.md,
+  },
+  actionTitle: {
+    ...Typography.body,
+    color: GameColors.textPrimary,
+    fontWeight: "600",
+  },
+  actionDesc: {
+    ...Typography.caption,
+    color: GameColors.textSecondary,
+  },
+  switchSection: {
+    marginTop: Spacing.lg,
   },
   sectionTitle: {
     ...Typography.h4,
     color: GameColors.textPrimary,
     marginBottom: Spacing.md,
   },
-  powerCardsContainer: {
+  profileItem: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: Spacing.xl,
-  },
-  powerCard: {
-    flex: 1,
+    alignItems: "center",
     backgroundColor: GameColors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    alignItems: "center",
-    marginHorizontal: Spacing.xs,
-  },
-  powerCardIcon: {
-    width: 48,
-    height: 48,
     borderRadius: BorderRadius.md,
-    alignItems: "center",
-    justifyContent: "center",
+    padding: Spacing.md,
     marginBottom: Spacing.sm,
   },
-  powerCardName: {
-    ...Typography.caption,
-    color: GameColors.textPrimary,
-    fontWeight: "600",
-  },
-  powerCardCount: {
-    ...Typography.caption,
-    color: GameColors.textSecondary,
-  },
-  menuContainer: {
-    backgroundColor: GameColors.surface,
-    borderRadius: BorderRadius.lg,
-    overflow: "hidden",
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.05)",
-  },
-  menuItemIcon: {
+  profileItemPhoto: {
     width: 40,
     height: 40,
-    borderRadius: BorderRadius.sm,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    borderRadius: 20,
+  },
+  profileItemAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: Spacing.md,
   },
-  menuItemLabel: {
+  profileItemName: {
     ...Typography.body,
     color: GameColors.textPrimary,
     flex: 1,
+    marginLeft: Spacing.md,
+  },
+  deleteButton: {
+    padding: Spacing.sm,
+  },
+  addProfileButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.lg,
+    marginTop: Spacing.lg,
+    borderWidth: 1,
+    borderColor: GameColors.primary,
+    borderRadius: BorderRadius.md,
+    borderStyle: "dashed",
+  },
+  addProfileText: {
+    ...Typography.body,
+    color: GameColors.primary,
+    marginLeft: Spacing.sm,
   },
 });
