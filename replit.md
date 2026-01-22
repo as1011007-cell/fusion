@@ -20,6 +20,14 @@ The game features a vibrant "Electric Collision" aesthetic with neon accents, pe
 - No-repeat question tracking until all answered, persisted in AsyncStorage
 - Panels: Gen Z, Desi Parents, Hustlers, Artists, Office Workers, Small Town, Blonde, Elder Sister, Endo Warriors, Millennials, Boomers, Teachers, Nurses, Gamers, Introverts, Extroverts, Pet Parents, Fitness Buffs, Foodies, Remote Workers, New Parents, College Students, Travelers, Music Lovers, Bookworms, Tech Workers, Only Child, Middle Child
 
+### Social Login (January 2026)
+- Google OAuth login integration using expo-auth-session
+- Facebook OAuth login integration using expo-auth-session
+- Profile sync from social accounts (name, profile picture, email)
+- Connected account badges shown on profile
+- Sign out functionality for social accounts
+- AuthContext manages authentication state with AuthProvider wrapper
+
 ### Settings
 - Background music toggle
 - Haptic feedback toggle
