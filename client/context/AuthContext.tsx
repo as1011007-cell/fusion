@@ -102,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         scopes: ["openid", "profile", "email"],
         redirectUri,
         responseType: AuthSession.ResponseType.Token,
+        usePKCE: false,
       });
 
       const result = await request.promptAsync(googleDiscovery);
@@ -149,6 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         scopes: ["public_profile", "email"],
         redirectUri,
         responseType: AuthSession.ResponseType.Token,
+        usePKCE: false,
       });
 
       const result = await request.promptAsync(facebookDiscovery);
