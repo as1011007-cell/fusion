@@ -1,30 +1,41 @@
 import { Platform } from "react-native";
 
-const tintColorLight = "#007AFF";
-const tintColorDark = "#0A84FF";
+export const GameColors = {
+  primary: "#FF006E",
+  secondary: "#00F5FF",
+  accent: "#FFD700",
+  backgroundDark: "#0A0E27",
+  backgroundLight: "#F8F9FA",
+  surface: "#1C1F3A",
+  correct: "#00FF87",
+  wrong: "#FF0044",
+  warning: "#FFAA00",
+  textPrimary: "#FFFFFF",
+  textSecondary: "#A0A8C0",
+};
 
 export const Colors = {
   light: {
     text: "#11181C",
     buttonText: "#FFFFFF",
     tabIconDefault: "#687076",
-    tabIconSelected: tintColorLight,
-    link: "#007AFF",
-    backgroundRoot: "#FFFFFF", // Elevation 0
-    backgroundDefault: "#F2F2F2", // Elevation 1
-    backgroundSecondary: "#E6E6E6", // Elevation 2
-    backgroundTertiary: "#D9D9D9", // Elevation 3
+    tabIconSelected: GameColors.primary,
+    link: GameColors.primary,
+    backgroundRoot: GameColors.backgroundLight,
+    backgroundDefault: "#E8E8E8",
+    backgroundSecondary: "#DCDCDC",
+    backgroundTertiary: "#D0D0D0",
   },
   dark: {
-    text: "#ECEDEE",
+    text: GameColors.textPrimary,
     buttonText: "#FFFFFF",
-    tabIconDefault: "#9BA1A6",
-    tabIconSelected: tintColorDark,
-    link: "#0A84FF",
-    backgroundRoot: "#1F2123", // Elevation 0
-    backgroundDefault: "#2A2C2E", // Elevation 1
-    backgroundSecondary: "#353739", // Elevation 2
-    backgroundTertiary: "#404244", // Elevation 3
+    tabIconDefault: GameColors.textSecondary,
+    tabIconSelected: GameColors.secondary,
+    link: GameColors.secondary,
+    backgroundRoot: GameColors.backgroundDark,
+    backgroundDefault: GameColors.surface,
+    backgroundSecondary: "#252945",
+    backgroundTertiary: "#2E3350",
   },
 };
 
@@ -39,7 +50,7 @@ export const Spacing = {
   "4xl": 40,
   "5xl": 48,
   inputHeight: 48,
-  buttonHeight: 52,
+  buttonHeight: 56,
 };
 
 export const BorderRadius = {
@@ -54,52 +65,114 @@ export const BorderRadius = {
 };
 
 export const Typography = {
+  display: {
+    fontSize: 28,
+    lineHeight: 36,
+    fontWeight: "700" as const,
+    fontFamily: Platform.select({
+      ios: "Poppins_700Bold",
+      android: "Poppins_700Bold",
+      default: "Poppins_700Bold",
+    }),
+  },
   h1: {
     fontSize: 32,
     lineHeight: 40,
     fontWeight: "700" as const,
+    fontFamily: Platform.select({
+      ios: "Poppins_700Bold",
+      android: "Poppins_700Bold",
+      default: "Poppins_700Bold",
+    }),
   },
   h2: {
     fontSize: 28,
     lineHeight: 36,
     fontWeight: "700" as const,
+    fontFamily: Platform.select({
+      ios: "Poppins_700Bold",
+      android: "Poppins_700Bold",
+      default: "Poppins_700Bold",
+    }),
   },
   h3: {
     fontSize: 24,
     lineHeight: 32,
     fontWeight: "600" as const,
+    fontFamily: Platform.select({
+      ios: "Poppins_600SemiBold",
+      android: "Poppins_600SemiBold",
+      default: "Poppins_600SemiBold",
+    }),
   },
   h4: {
     fontSize: 20,
     lineHeight: 28,
     fontWeight: "600" as const,
+    fontFamily: Platform.select({
+      ios: "Poppins_600SemiBold",
+      android: "Poppins_600SemiBold",
+      default: "Poppins_600SemiBold",
+    }),
   },
   body: {
     fontSize: 16,
     lineHeight: 24,
     fontWeight: "400" as const,
+    fontFamily: Platform.select({
+      ios: "Inter_400Regular",
+      android: "Inter_400Regular",
+      default: "Inter_400Regular",
+    }),
   },
   small: {
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "400" as const,
+    fontFamily: Platform.select({
+      ios: "Inter_400Regular",
+      android: "Inter_400Regular",
+      default: "Inter_400Regular",
+    }),
+  },
+  caption: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "500" as const,
+    fontFamily: Platform.select({
+      ios: "Inter_500Medium",
+      android: "Inter_500Medium",
+      default: "Inter_500Medium",
+    }),
+  },
+  button: {
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: "700" as const,
+    fontFamily: Platform.select({
+      ios: "Poppins_700Bold",
+      android: "Poppins_700Bold",
+      default: "Poppins_700Bold",
+    }),
+    textTransform: "uppercase" as const,
   },
   link: {
     fontSize: 16,
     lineHeight: 24,
     fontWeight: "400" as const,
+    fontFamily: Platform.select({
+      ios: "Inter_400Regular",
+      android: "Inter_400Regular",
+      default: "Inter_400Regular",
+    }),
   },
 };
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: "system-ui",
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: "ui-serif",
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: "ui-rounded",
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: "ui-monospace",
   },
   default: {

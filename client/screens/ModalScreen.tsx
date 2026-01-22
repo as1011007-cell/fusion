@@ -1,24 +1,33 @@
-import { ScrollView } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 
-import { useTheme } from "@/hooks/useTheme";
-import { Spacing } from "@/constants/theme";
+import { ThemedText } from "@/components/ThemedText";
+import { GameColors, Spacing } from "@/constants/theme";
 
 export default function ModalScreen() {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
-  const { theme } = useTheme();
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
-      contentContainerStyle={{
-        paddingTop: headerHeight + Spacing.xl,
-        paddingBottom: insets.bottom + Spacing.xl,
-        paddingHorizontal: Spacing.lg,
-      }}
-      scrollIndicatorInsets={{ bottom: insets.bottom }}
-    />
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: headerHeight + Spacing.xl,
+          paddingBottom: insets.bottom + Spacing.xl,
+        },
+      ]}
+    >
+      <ThemedText>Modal Screen</ThemedText>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: GameColors.backgroundDark,
+    paddingHorizontal: Spacing.lg,
+  },
+});
