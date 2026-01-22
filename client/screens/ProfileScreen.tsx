@@ -314,9 +314,9 @@ export default function ProfileScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-        <Pressable onPress={handleBack} style={styles.backButton}>
+        <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: GameColors.surface }]}>
           <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
         </Pressable>
         <ThemedText style={styles.headerTitle}>Profile</ThemedText>

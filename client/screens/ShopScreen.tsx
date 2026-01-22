@@ -28,8 +28,13 @@ export default function ShopScreen() {
   const [activeTab, setActiveTab] = useState<TabType>("avatars");
   const [loading, setLoading] = useState<string | null>(null);
 
+  const { settings } = useProfile();
+  const colors = currentTheme.colors;
+
   const handleBack = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     navigation.goBack();
   };
 
@@ -38,58 +43,86 @@ export default function ShopScreen() {
       const success = purchaseAvatar(avatarId, totalCoins);
       if (success) {
         addCoins(-price);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        if (settings.hapticsEnabled) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
       }
     } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
     }
   };
 
   const handleEquipAvatar = (avatarId: string) => {
     if (currentProfile) {
       updateProfile(currentProfile.id, { avatarId, customPhoto: null });
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      if (settings.hapticsEnabled) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
     }
   };
 
   const handlePurchaseTheme = (themeId: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
     const success = purchaseTheme(themeId as any);
     if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
     } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
     }
   };
 
   const handleSelectTheme = (themeId: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     setCurrentTheme(themeId as any);
   };
 
   const handlePurchasePowerCards = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
     const success = spendStarPoints(500);
     if (success) {
       purchasePowerCards();
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
     } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
     }
   };
 
   const handleClaimWeeklyPowerCards = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
     const success = claimWeeklyPowerCards();
     if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
     } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
     }
   };
 
   const handlePurchaseStarPoints = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
     setLoading("starPoints");
     try {
       const apiUrl = getApiUrl();
@@ -121,19 +154,25 @@ export default function ShopScreen() {
         }
       } else {
         addStarPoints(5000);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        if (settings.hapticsEnabled) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
       }
     } catch (error) {
       console.error('Purchase error:', error);
       addStarPoints(5000);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
     } finally {
       setLoading(null);
     }
   };
 
   const handlePurchaseAdFree = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
     setLoading("adFree");
     try {
       const apiUrl = getApiUrl();
@@ -165,12 +204,16 @@ export default function ShopScreen() {
         }
       } else {
         setAdFree(true);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        if (settings.hapticsEnabled) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
       }
     } catch (error) {
       console.error('Purchase error:', error);
       setAdFree(true);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
     } finally {
       setLoading(null);
     }
@@ -459,9 +502,9 @@ export default function ShopScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-        <Pressable onPress={handleBack} style={styles.backButton}>
+        <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: colors.surface }]}>
           <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
         </Pressable>
         <ThemedText style={styles.headerTitle}>Shop</ThemedText>

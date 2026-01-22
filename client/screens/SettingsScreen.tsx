@@ -11,6 +11,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useProfile } from "@/context/ProfileContext";
+import { useTheme } from "@/context/ThemeContext";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Settings">;
 
@@ -18,6 +19,8 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { settings, updateSettings, resetAnsweredQuestions, answeredQuestions } = useProfile();
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
 
   const handleBack = () => {
     if (settings.hapticsEnabled) {
@@ -48,9 +51,9 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-        <Pressable onPress={handleBack} style={styles.backButton}>
+        <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: colors.surface }]}>
           <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
         </Pressable>
         <ThemedText style={styles.headerTitle}>Settings</ThemedText>

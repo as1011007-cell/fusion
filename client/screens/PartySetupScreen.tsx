@@ -12,6 +12,8 @@ import { GradientButton } from "@/components/GradientButton";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGame, PartyRole } from "@/context/GameContext";
+import { useTheme } from "@/context/ThemeContext";
+import { useProfile } from "@/context/ProfileContext";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "PartySetup">;
 
@@ -19,19 +21,26 @@ export default function PartySetupScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { gameState, addPartyPlayer, removePartyPlayer, updatePlayerRole, startGame } = useGame();
+  const { currentTheme } = useTheme();
+  const { settings } = useProfile();
+  const colors = currentTheme.colors;
   const [playerName, setPlayerName] = useState("");
   const [selectedTeam, setSelectedTeam] = useState<"red" | "blue">("red");
   const [roleModalVisible, setRoleModalVisible] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   const handleBack = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     navigation.goBack();
   };
 
   const handleAddPlayer = () => {
     if (playerName.trim()) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      if (settings.hapticsEnabled) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
       addPartyPlayer(playerName.trim(), selectedTeam);
       setPlayerName("");
     }
@@ -95,9 +104,9 @@ export default function PartySetupScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-        <Pressable onPress={handleBack} style={styles.backButton}>
+        <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: colors.surface }]}>
           <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
         </Pressable>
         <ThemedText style={styles.headerTitle}>Party Mode</ThemedText>

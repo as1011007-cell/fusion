@@ -14,6 +14,8 @@ import { LayerChip } from "@/components/LayerChip";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGame, AnswerLayer } from "@/context/GameContext";
+import { useTheme } from "@/context/ThemeContext";
+import { useProfile } from "@/context/ProfileContext";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "GameSetup">;
 
@@ -27,15 +29,20 @@ export default function GameSetupScreen() {
     setSelectedLayer,
     startGame,
   } = useGame();
+  const { currentTheme } = useTheme();
+  const { settings } = useProfile();
+  const colors = currentTheme.colors;
 
   const handleBack = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     navigation.goBack();
   };
 
   const handleStartGame = () => {
     if (gameState.selectedPanel) {
-      startGame();
+      startGame("solo");
       navigation.navigate("GamePlay");
     }
   };
@@ -43,9 +50,9 @@ export default function GameSetupScreen() {
   const canStart = gameState.selectedPanel !== null;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-        <Pressable onPress={handleBack} style={styles.backButton}>
+        <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: colors.surface }]}>
           <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
         </Pressable>
         <ThemedText style={styles.headerTitle}>Choose Your Feud</ThemedText>

@@ -20,6 +20,8 @@ import { GradientButton } from "@/components/GradientButton";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGame } from "@/context/GameContext";
+import { useTheme } from "@/context/ThemeContext";
+import { useProfile } from "@/context/ProfileContext";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Results">;
 
@@ -27,11 +29,16 @@ export default function ResultsScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { gameState, resetGame, totalCoins } = useGame();
+  const { currentTheme } = useTheme();
+  const { settings } = useProfile();
+  const colors = currentTheme.colors;
 
   const scoreScale = useSharedValue(0);
 
   useEffect(() => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (settings.hapticsEnabled) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
     scoreScale.value = withDelay(
       300,
       withSequence(
@@ -74,7 +81,7 @@ export default function ResultsScreen() {
   const isTie = gameState.redScore === gameState.blueScore;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
