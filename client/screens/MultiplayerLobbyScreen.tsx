@@ -35,6 +35,7 @@ export default function MultiplayerLobbyScreen() {
     createRoom,
     joinRoom,
     setReady,
+    selectPanel,
     startGame,
     leaveRoom,
     clearError,
@@ -208,6 +209,9 @@ export default function MultiplayerLobbyScreen() {
 
   const handlePanelSelect = (panelId: string) => {
     setSelectedPanelId(panelId);
+    const panel = panels.find(p => p.id === panelId);
+    const panelName = panelId === "mixed" ? "Mixed" : (panel?.name || panelId);
+    selectPanel(panelId, panelName);
     if (settings.hapticsEnabled) {
       Haptics.selectionAsync();
     }
@@ -503,10 +507,20 @@ export default function MultiplayerLobbyScreen() {
         </View>
       ) : (
         <View style={[styles.feudInfoSection, { backgroundColor: GameColors.surface }]}>
-          <Feather name="info" size={16} color={GameColors.textSecondary} />
-          <ThemedText style={[styles.feudInfoText, { color: GameColors.textSecondary }]}>
-            Host is selecting the feud...
-          </ThemedText>
+          <View style={styles.feudInfoHeader}>
+            <Feather name="target" size={18} color={GameColors.accent} />
+            <ThemedText style={styles.feudInfoLabel}>Selected Feud</ThemedText>
+          </View>
+          <View style={[styles.selectedFeudDisplay, { backgroundColor: GameColors.backgroundDark }]}>
+            <Feather 
+              name={room?.selectedPanelId === "mixed" ? "shuffle" : (panels.find(p => p.id === room?.selectedPanelId)?.icon as any || "users")} 
+              size={20} 
+              color={GameColors.accent} 
+            />
+            <ThemedText style={[styles.selectedFeudText, { color: GameColors.textPrimary }]}>
+              {room?.selectedPanelName || "Mixed"}
+            </ThemedText>
+          </View>
         </View>
       )}
 
@@ -826,15 +840,34 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   feudInfoSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.lg,
     padding: Spacing.md,
     marginBottom: Spacing.lg,
   },
+  feudInfoHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  feudInfoLabel: {
+    ...Typography.caption,
+    color: GameColors.textSecondary,
+    textTransform: "uppercase",
+  },
   feudInfoText: {
     ...Typography.body,
+  },
+  selectedFeudDisplay: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+  },
+  selectedFeudText: {
+    ...Typography.h4,
+    fontWeight: "bold",
   },
   playerCard: {
     flexDirection: "row",

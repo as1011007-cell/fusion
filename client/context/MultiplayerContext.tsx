@@ -16,6 +16,8 @@ export interface RoomState {
   status: "waiting" | "playing" | "finished";
   currentQuestion: number;
   currentPanel: string;
+  selectedPanelId: string;
+  selectedPanelName: string;
   maxPlayers: number;
   players: MultiplayerPlayer[];
 }
@@ -43,6 +45,7 @@ interface MultiplayerContextType {
   createRoom: (playerName: string, avatarId: string, maxPlayers?: number) => void;
   joinRoom: (roomCode: string, playerName: string, avatarId: string) => void;
   setReady: (ready: boolean) => void;
+  selectPanel: (panelId: string, panelName: string) => void;
   startGame: (questions: any[], panel: string) => void;
   submitAnswer: (answer: string, correctAnswer: string, points: number) => void;
   nextQuestion: () => void;
@@ -132,6 +135,7 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
       case "PLAYER_JOINED":
       case "PLAYER_READY_UPDATE":
       case "PLAYER_LEFT":
+      case "PANEL_SELECTED":
         setRoom(message.room);
         break;
 
@@ -240,6 +244,10 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
     send({ type: "PLAYER_READY", ready });
   }, [send]);
 
+  const selectPanel = useCallback((panelId: string, panelName: string) => {
+    send({ type: "SELECT_PANEL", panelId, panelName });
+  }, [send]);
+
   const startGame = useCallback((questions: any[], panel: string) => {
     send({ type: "START_GAME", questions, panel });
   }, [send]);
@@ -303,6 +311,7 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
         createRoom,
         joinRoom,
         setReady,
+        selectPanel,
         startGame,
         submitAnswer,
         nextQuestion,

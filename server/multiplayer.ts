@@ -19,6 +19,8 @@ interface GameRoom {
   currentQuestion: number;
   questions: any[];
   currentPanel: string;
+  selectedPanelId: string;
+  selectedPanelName: string;
   roundAnswers: Map<string, { answer: string; timestamp: number }>;
   maxPlayers: number;
   createdAt: Date;
@@ -56,6 +58,8 @@ function getRoomState(room: GameRoom) {
     status: room.status,
     currentQuestion: room.currentQuestion,
     currentPanel: room.currentPanel,
+    selectedPanelId: room.selectedPanelId,
+    selectedPanelName: room.selectedPanelName,
     maxPlayers: room.maxPlayers,
     players: Array.from(room.players.values()).map(p => ({
       id: p.id,
@@ -95,6 +99,8 @@ export function setupMultiplayer(server: Server) {
               currentQuestion: 0,
               questions: [],
               currentPanel: '',
+              selectedPanelId: 'mixed',
+              selectedPanelName: 'Mixed',
               roundAnswers: new Map(),
               maxPlayers: message.maxPlayers || 8,
               createdAt: new Date(),
@@ -184,6 +190,23 @@ export function setupMultiplayer(server: Server) {
                 room: getRoomState(room),
               });
             }
+            break;
+          }
+
+          case 'SELECT_PANEL': {
+            if (!currentRoomCode || !playerId) return;
+            const room = rooms.get(currentRoomCode);
+            if (!room || room.hostId !== playerId) return;
+
+            room.selectedPanelId = message.panelId || 'mixed';
+            room.selectedPanelName = message.panelName || 'Mixed';
+
+            broadcastToRoom(room, {
+              type: 'PANEL_SELECTED',
+              panelId: room.selectedPanelId,
+              panelName: room.selectedPanelName,
+              room: getRoomState(room),
+            });
             break;
           }
 
