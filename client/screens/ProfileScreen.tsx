@@ -24,7 +24,7 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { currentProfile, profiles, avatars, createProfile, createSocialProfile, updateProfile, selectProfile, deleteProfile, levelInfo, experiencePoints, syncToCloud, loadFromCloud } = useProfile();
-  const { totalCoins } = useGame();
+  const { totalCoins, reloadPlayerData } = useGame();
   const { starPoints } = useTheme();
   const { socialUser, isAuthenticated, loginWithGoogle, logout, isLoading: authLoading, error: authError } = useAuth();
 
@@ -154,6 +154,8 @@ export default function ProfileScreen() {
     console.log("Attempting to load from cloud with socialUser.id:", socialUser.id);
     const success = await loadFromCloud(socialUser.id);
     if (success) {
+      // Also reload game data (coins, power cards, answered questions) from AsyncStorage
+      await reloadPlayerData();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setSyncMessage("Progress loaded from cloud!");
     } else {

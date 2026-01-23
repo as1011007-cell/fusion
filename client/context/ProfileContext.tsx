@@ -421,9 +421,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           await AsyncStorage.setItem("profiles", JSON.stringify(parsed.profiles));
         }
         if (parsed.avatars) {
-          setAvatars(parsed.avatars);
+          // Restore avatar images from local avatarImages since they can't be serialized
+          const restoredAvatars = parsed.avatars.map((avatar: Avatar) => ({
+            ...avatar,
+            image: avatarImages[avatar.id] || avatarImages["avatar-1"],
+          }));
+          setAvatars(restoredAvatars);
           // Save avatars to AsyncStorage
-          await AsyncStorage.setItem("avatars", JSON.stringify(parsed.avatars));
+          await AsyncStorage.setItem("avatars", JSON.stringify(restoredAvatars));
         }
         if (parsed.settings) {
           setSettings(parsed.settings);

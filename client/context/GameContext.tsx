@@ -87,6 +87,7 @@ type GameContextType = {
   multiplayerAnsweredQuestionIds: Set<string>;
   addMultiplayerAnsweredQuestions: (questionIds: string[]) => void;
   getMultiplayerUnansweredQuestions: (questions: any[]) => any[];
+  reloadPlayerData: () => Promise<void>;
 };
 
 const initialPowerCards: PowerCard[] = [
@@ -172,6 +173,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const answeredIds = await AsyncStorage.getItem("answeredQuestionIds");
       const weeklyClaimDate = await AsyncStorage.getItem("lastWeeklyClaimDate");
       const multiplayerAnsweredIds = await AsyncStorage.getItem("multiplayerAnsweredQuestionIds");
+      const savedPowerCards = await AsyncStorage.getItem("powerCards");
 
       if (coins) setTotalCoins(parseInt(coins, 10));
       if (games) setTotalGamesPlayed(parseInt(games, 10));
@@ -181,6 +183,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const today = new Date().toISOString().split("T")[0];
       const answered = answeredIds ? new Set<string>(JSON.parse(answeredIds)) : new Set<string>();
       const multiplayerAnswered = multiplayerAnsweredIds ? new Set<string>(JSON.parse(multiplayerAnsweredIds)) : new Set<string>();
+      const powerCards = savedPowerCards ? JSON.parse(savedPowerCards) : initialPowerCards;
       
       setGameState(prev => ({
         ...prev,
@@ -188,6 +191,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         dailyChallengeDate: dailyDate || null,
         answeredQuestionIds: answered,
         multiplayerAnsweredQuestionIds: multiplayerAnswered,
+        powerCards,
       }));
     } catch (error) {
       console.error("Error loading player data:", error);
@@ -207,6 +211,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
         "multiplayerAnsweredQuestionIds",
         JSON.stringify([...gameState.multiplayerAnsweredQuestionIds])
       );
+      await AsyncStorage.setItem(
+        "powerCards",
+        JSON.stringify(gameState.powerCards)
+      );
       if (lastWeeklyClaimDate) {
         await AsyncStorage.setItem("lastWeeklyClaimDate", lastWeeklyClaimDate);
       }
@@ -217,7 +225,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     savePlayerData();
-  }, [totalCoins, totalGamesPlayed, highScore, gameState.answeredQuestionIds, gameState.multiplayerAnsweredQuestionIds, lastWeeklyClaimDate]);
+  }, [totalCoins, totalGamesPlayed, highScore, gameState.answeredQuestionIds, gameState.multiplayerAnsweredQuestionIds, gameState.powerCards, lastWeeklyClaimDate]);
 
   const canClaimWeeklyPowerCards = (): boolean => {
     if (!lastWeeklyClaimDate) return true;
@@ -590,6 +598,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         multiplayerAnsweredQuestionIds: gameState.multiplayerAnsweredQuestionIds,
         addMultiplayerAnsweredQuestions,
         getMultiplayerUnansweredQuestions,
+        reloadPlayerData: loadPlayerData,
       }}
     >
       {children}
