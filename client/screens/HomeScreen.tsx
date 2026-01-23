@@ -358,6 +358,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.sm,
+    marginTop: 3,
   },
   title: {
     ...Typography.h1,
