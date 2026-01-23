@@ -337,6 +337,55 @@ function setupErrorHandler(app: express.Application) {
     }
   });
 
+  // Payment success/cancel pages
+  app.get('/payment-success', (_req, res) => {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Payment Successful</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style>
+            body { font-family: -apple-system, sans-serif; background: #1a1a2e; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
+            .container { padding: 40px; }
+            h1 { color: #00ff88; font-size: 28px; }
+            p { color: #ccc; font-size: 16px; margin-top: 10px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>Payment Successful!</h1>
+            <p>Thank you for your purchase. You can close this window and return to the app.</p>
+          </div>
+        </body>
+      </html>
+    `);
+  });
+
+  app.get('/payment-cancel', (_req, res) => {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Payment Cancelled</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style>
+            body { font-family: -apple-system, sans-serif; background: #1a1a2e; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
+            .container { padding: 40px; }
+            h1 { color: #ff6b6b; font-size: 28px; }
+            p { color: #ccc; font-size: 16px; margin-top: 10px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>Payment Cancelled</h1>
+            <p>Your payment was not completed. You can close this window and return to the app.</p>
+          </div>
+        </body>
+      </html>
+    `);
+  });
+
   // Privacy Policy page
   app.get('/privacy', (_req, res) => {
     const privacyPath = path.resolve(
