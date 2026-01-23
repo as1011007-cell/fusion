@@ -139,21 +139,12 @@ export default function SettingsScreen() {
           </View>
         </Animated.View>
 
-        {Platform.OS !== "web" ? (
-          <Animated.View entering={FadeInDown.delay(400).springify()} style={styles.noteContainer}>
-            <Feather name="volume-2" size={16} color={GameColors.textSecondary} />
-            <ThemedText style={styles.noteText}>
-              Music plays during gameplay when enabled. Haptics provide tactile feedback for game events.
-            </ThemedText>
-          </Animated.View>
-        ) : (
-          <Animated.View entering={FadeInDown.delay(400).springify()} style={styles.noteContainer}>
-            <Feather name="info" size={16} color={GameColors.textSecondary} />
-            <ThemedText style={styles.noteText}>
-              Some features like haptic feedback work best in Expo Go on a real device.
-            </ThemedText>
-          </Animated.View>
-        )}
+        <Animated.View entering={FadeInDown.delay(400).springify()} style={styles.noteContainer}>
+          <Feather name="volume-2" size={16} color={GameColors.textSecondary} />
+          <ThemedText style={styles.noteText}>
+            Music plays during gameplay when enabled. Haptics provide tactile feedback for game events.
+          </ThemedText>
+        </Animated.View>
       </ScrollView>
     </View>
   );
