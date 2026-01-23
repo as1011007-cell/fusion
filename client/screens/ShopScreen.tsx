@@ -187,8 +187,9 @@ export default function ShopScreen() {
             Alert.alert(
               "Payment Incomplete",
               "Your payment was not completed. Please try again.",
-              [{ text: "OK", onPress: () => navigation.navigate("Home") }]
+              [{ text: "OK" }]
             );
+            navigation.navigate("Home");
           }
         }
       } else {
@@ -255,8 +256,9 @@ export default function ShopScreen() {
             Alert.alert(
               "Payment Incomplete",
               "Your payment was not completed. Please try again.",
-              [{ text: "OK", onPress: () => navigation.navigate("Home") }]
+              [{ text: "OK" }]
             );
+            navigation.navigate("Home");
           }
         }
       } else {
@@ -325,8 +327,9 @@ export default function ShopScreen() {
             Alert.alert(
               "Payment Incomplete",
               "Your payment was not completed. Please try again.",
-              [{ text: "OK", onPress: () => navigation.navigate("Home") }]
+              [{ text: "OK" }]
             );
+            navigation.navigate("Home");
           }
         }
       } else {
