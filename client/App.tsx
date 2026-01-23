@@ -28,6 +28,7 @@ import { GameProvider } from "@/context/GameContext";
 import { ProfileProvider } from "@/context/ProfileContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { MultiplayerProvider } from "@/context/MultiplayerContext";
+import { AuthProvider } from "@/context/AuthContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -54,10 +55,11 @@ export default function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <ProfileProvider>
-          <ThemeProvider>
-            <GameProvider>
-              <MultiplayerProvider>
+        <AuthProvider>
+          <ProfileProvider>
+            <ThemeProvider>
+              <GameProvider>
+                <MultiplayerProvider>
                 <SafeAreaProvider>
                   <GestureHandlerRootView style={styles.root}>
                     <KeyboardProvider>
@@ -69,10 +71,11 @@ export default function App() {
                     </KeyboardProvider>
                   </GestureHandlerRootView>
                 </SafeAreaProvider>
-              </MultiplayerProvider>
-            </GameProvider>
-          </ThemeProvider>
-        </ProfileProvider>
+                </MultiplayerProvider>
+              </GameProvider>
+            </ThemeProvider>
+          </ProfileProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );
