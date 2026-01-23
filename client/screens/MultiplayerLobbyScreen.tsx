@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Pressable, TextInput, ScrollView, Share, Alert, Platform } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { StyleSheet, View, Pressable, TextInput, ScrollView, Share, Alert, Platform, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import Animated, { FadeIn, FadeInDown, SlideInUp } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, SlideInUp, FadeInUp, useAnimatedStyle, useSharedValue, withSpring, withRepeat, withSequence, withTiming } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
@@ -42,6 +42,8 @@ export default function MultiplayerLobbyScreen() {
   const [mode, setMode] = useState<"select" | "create" | "join" | "lobby">("select");
   const [joinCode, setJoinCode] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
+  const codeInputRef = useRef<TextInput>(null);
+  const pulseScale = useSharedValue(1);
 
   useEffect(() => {
     if (room) {
@@ -63,6 +65,31 @@ export default function MultiplayerLobbyScreen() {
       navigation.navigate("MultiplayerGame");
     }
   }, [gameStarted, room?.status]);
+
+  useEffect(() => {
+    if (mode === "join") {
+      setTimeout(() => codeInputRef.current?.focus(), 100);
+    }
+  }, [mode]);
+
+  useEffect(() => {
+    if (isConnecting) {
+      pulseScale.value = withRepeat(
+        withSequence(
+          withTiming(1.05, { duration: 600 }),
+          withTiming(1, { duration: 600 })
+        ),
+        -1,
+        true
+      );
+    } else {
+      pulseScale.value = withSpring(1);
+    }
+  }, [isConnecting]);
+
+  const pulseAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+  }));
 
   const handleBack = () => {
     if (settings.hapticsEnabled) {
@@ -86,8 +113,9 @@ export default function MultiplayerLobbyScreen() {
     createRoom(currentProfile?.name || "Player", currentProfile?.avatarId || "avatar-1");
   };
 
-  const handleJoinRoom = () => {
-    if (joinCode.length !== 6) {
+  const handleJoinRoom = (code?: string) => {
+    const codeToUse = code || joinCode;
+    if (codeToUse.length !== 6) {
       Alert.alert("Invalid Code", "Please enter a 6-character room code");
       return;
     }
@@ -95,7 +123,21 @@ export default function MultiplayerLobbyScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     setIsConnecting(true);
-    joinRoom(joinCode.toUpperCase(), currentProfile?.name || "Player", currentProfile?.avatarId || "avatar-1");
+    joinRoom(codeToUse.toUpperCase(), currentProfile?.name || "Player", currentProfile?.avatarId || "avatar-1");
+  };
+
+  const handleCodeChange = (text: string) => {
+    const cleanText = text.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    setJoinCode(cleanText);
+    
+    if (cleanText.length === 6 && !isConnecting) {
+      if (settings.hapticsEnabled) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      setTimeout(() => handleJoinRoom(cleanText), 300);
+    } else if (cleanText.length > 0 && settings.hapticsEnabled) {
+      Haptics.selectionAsync();
+    }
   };
 
   const handleCopyCode = async () => {
@@ -196,49 +238,146 @@ export default function MultiplayerLobbyScreen() {
 
   const renderCreateRoom = () => (
     <Animated.View entering={SlideInUp.duration(300)} style={styles.actionContainer}>
-      <ThemedText style={styles.title}>Create Room</ThemedText>
-      <ThemedText style={[styles.subtitle, { color: GameColors.textSecondary }]}>
-        A room code will be generated for your friends to join
-      </ThemedText>
+      <View style={styles.createHeader}>
+        <Feather name="plus-circle" size={48} color={GameColors.accent} style={{ marginBottom: Spacing.md }} />
+        <ThemedText style={styles.title}>Create Room</ThemedText>
+        <ThemedText style={[styles.subtitle, { color: GameColors.textSecondary }]}>
+          A unique room code will be generated for your friends to join
+        </ThemedText>
+      </View>
+
+      {isConnecting ? (
+        <Animated.View style={[styles.connectingContainer, pulseAnimatedStyle]}>
+          <ActivityIndicator size="large" color={GameColors.accent} />
+          <ThemedText style={[styles.connectingText, { color: GameColors.textSecondary }]}>
+            Creating your room...
+          </ThemedText>
+        </Animated.View>
+      ) : (
+        <View style={styles.createInfo}>
+          <View style={styles.infoRow}>
+            <Feather name="users" size={20} color={GameColors.secondary} />
+            <ThemedText style={[styles.infoText, { color: GameColors.textSecondary }]}>
+              Up to 8 players can join
+            </ThemedText>
+          </View>
+          <View style={styles.infoRow}>
+            <Feather name="share-2" size={20} color={GameColors.secondary} />
+            <ThemedText style={[styles.infoText, { color: GameColors.textSecondary }]}>
+              Share the code with friends
+            </ThemedText>
+          </View>
+          <View style={styles.infoRow}>
+            <Feather name="zap" size={20} color={GameColors.secondary} />
+            <ThemedText style={[styles.infoText, { color: GameColors.textSecondary }]}>
+              10 rapid-fire questions
+            </ThemedText>
+          </View>
+        </View>
+      )}
 
       <GradientButton
         onPress={handleCreateRoom}
         disabled={isConnecting}
-        style={styles.actionButton}
+        style={styles.createButton}
       >
-        <ThemedText style={styles.buttonText}>
-          {isConnecting ? "Creating..." : "Create Room"}
-        </ThemedText>
+        <View style={styles.buttonContent}>
+          {isConnecting ? null : <Feather name="play" size={20} color={GameColors.textPrimary} />}
+          <ThemedText style={styles.buttonText}>
+            {isConnecting ? "Creating..." : "Create Room"}
+          </ThemedText>
+        </View>
       </GradientButton>
     </Animated.View>
   );
 
+  const renderCodeBoxes = () => {
+    const boxes = [];
+    for (let i = 0; i < 6; i++) {
+      const char = joinCode[i] || '';
+      const isFilled = char !== '';
+      const isNext = i === joinCode.length;
+      
+      boxes.push(
+        <Animated.View
+          key={i}
+          entering={FadeInUp.delay(i * 50).duration(200)}
+          style={[
+            styles.codeBox,
+            { 
+              backgroundColor: isFilled ? GameColors.accent + '20' : GameColors.surface,
+              borderColor: isNext ? GameColors.accent : (isFilled ? GameColors.accent : GameColors.surface),
+            }
+          ]}
+        >
+          <ThemedText style={[styles.codeBoxText, { color: isFilled ? GameColors.accent : GameColors.textSecondary }]}>
+            {char || (isNext ? '_' : '')}
+          </ThemedText>
+        </Animated.View>
+      );
+    }
+    return boxes;
+  };
+
   const renderJoinRoom = () => (
     <Animated.View entering={SlideInUp.duration(300)} style={styles.actionContainer}>
-      <ThemedText style={styles.title}>Join Room</ThemedText>
-      <ThemedText style={[styles.subtitle, { color: GameColors.textSecondary }]}>
-        Enter the 6-character room code
-      </ThemedText>
+      <View style={styles.joinHeader}>
+        <Feather name="log-in" size={48} color={GameColors.secondary} style={{ marginBottom: Spacing.md }} />
+        <ThemedText style={styles.title}>Join Room</ThemedText>
+        <ThemedText style={[styles.subtitle, { color: GameColors.textSecondary }]}>
+          Enter the 6-character room code from your friend
+        </ThemedText>
+      </View>
+
+      <Pressable 
+        style={styles.codeBoxContainer} 
+        onPress={() => codeInputRef.current?.focus()}
+      >
+        {renderCodeBoxes()}
+      </Pressable>
 
       <TextInput
-        style={[styles.codeInput, { backgroundColor: GameColors.surface, color: GameColors.textPrimary }]}
-        placeholder="ABCDEF"
-        placeholderTextColor={GameColors.textSecondary}
+        ref={codeInputRef}
+        style={styles.hiddenInput}
         value={joinCode}
-        onChangeText={(text) => setJoinCode(text.toUpperCase().slice(0, 6))}
+        onChangeText={handleCodeChange}
         autoCapitalize="characters"
         maxLength={6}
+        autoCorrect={false}
+        autoComplete="off"
+        keyboardType="default"
       />
 
-      <GradientButton
-        onPress={handleJoinRoom}
-        disabled={isConnecting || joinCode.length !== 6}
-        style={styles.actionButton}
-      >
-        <ThemedText style={styles.buttonText}>
-          {isConnecting ? "Joining..." : "Join Room"}
-        </ThemedText>
-      </GradientButton>
+      {isConnecting ? (
+        <Animated.View style={[styles.connectingContainer, pulseAnimatedStyle]}>
+          <ActivityIndicator size="large" color={GameColors.accent} />
+          <ThemedText style={[styles.connectingText, { color: GameColors.textSecondary }]}>
+            Connecting to room...
+          </ThemedText>
+        </Animated.View>
+      ) : (
+        <View style={styles.joinHint}>
+          <Feather name="info" size={16} color={GameColors.textSecondary} />
+          <ThemedText style={[styles.hintText, { color: GameColors.textSecondary }]}>
+            Game will auto-join when code is complete
+          </ThemedText>
+        </View>
+      )}
+
+      {joinCode.length > 0 && !isConnecting ? (
+        <Pressable 
+          style={styles.clearButton}
+          onPress={() => {
+            setJoinCode('');
+            codeInputRef.current?.focus();
+          }}
+        >
+          <Feather name="x" size={18} color={GameColors.textSecondary} />
+          <ThemedText style={[styles.clearButtonText, { color: GameColors.textSecondary }]}>
+            Clear
+          </ThemedText>
+        </Pressable>
+      ) : null}
     </Animated.View>
   );
 
@@ -437,6 +576,62 @@ const styles = StyleSheet.create({
   actionContainer: {
     alignItems: "center",
   },
+  joinHeader: {
+    alignItems: "center",
+    marginBottom: Spacing.xl,
+  },
+  codeBoxContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    marginBottom: Spacing.xl,
+  },
+  codeBox: {
+    width: 48,
+    height: 60,
+    borderRadius: BorderRadius.md,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  codeBoxText: {
+    fontSize: 28,
+    fontWeight: "bold",
+  },
+  hiddenInput: {
+    position: "absolute",
+    opacity: 0,
+    height: 0,
+    width: 0,
+  },
+  connectingContainer: {
+    alignItems: "center",
+    padding: Spacing.lg,
+    gap: Spacing.md,
+  },
+  connectingText: {
+    ...Typography.body,
+    marginTop: Spacing.sm,
+  },
+  joinHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    opacity: 0.7,
+  },
+  hintText: {
+    ...Typography.caption,
+  },
+  clearButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    marginTop: Spacing.lg,
+    padding: Spacing.sm,
+  },
+  clearButtonText: {
+    ...Typography.caption,
+  },
   codeInput: {
     width: "100%",
     height: 60,
@@ -450,6 +645,33 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     width: "100%",
+  },
+  createHeader: {
+    alignItems: "center",
+    marginBottom: Spacing.lg,
+  },
+  createInfo: {
+    gap: Spacing.md,
+    marginBottom: Spacing.xl,
+    width: "100%",
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.md,
+  },
+  infoText: {
+    ...Typography.body,
+  },
+  createButton: {
+    width: "100%",
+    marginTop: Spacing.md,
+  },
+  buttonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
   },
   buttonText: {
     ...Typography.button,
