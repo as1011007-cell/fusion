@@ -408,7 +408,7 @@ export default function ShopScreen() {
                         onPress={() => canAffordStars && handlePurchaseAvatar(avatar.id, avatar.price, true)}
                         disabled={!canAffordStars}
                       >
-                        <Feather name="star" size={12} color={canAffordStars ? "#4A90D9" : GameColors.textSecondary} />
+                        <Feather name="star" size={12} color={canAffordStars ? "#00D4FF" : GameColors.textSecondary} />
                         <ThemedText style={[styles.avatarBuyText, !canAffordStars && styles.textDisabled]}>
                           {avatar.price}
                         </ThemedText>
