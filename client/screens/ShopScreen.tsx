@@ -176,6 +176,8 @@ export default function ShopScreen() {
             if (settings.hapticsEnabled) {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             }
+          } else if (settings.hapticsEnabled) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
           }
         }
       } else {
@@ -231,6 +233,8 @@ export default function ShopScreen() {
             if (settings.hapticsEnabled) {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             }
+          } else if (settings.hapticsEnabled) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
           }
         }
       } else {
@@ -288,6 +292,8 @@ export default function ShopScreen() {
             if (settings.hapticsEnabled) {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             }
+          } else if (settings.hapticsEnabled) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
           }
         }
       } else {
