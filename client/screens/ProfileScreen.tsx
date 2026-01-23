@@ -155,6 +155,38 @@ export default function ProfileScreen() {
         {editingProfile ? "Edit Profile" : "Create Profile"}
       </ThemedText>
 
+      {!editingProfile && !isAuthenticated ? (
+        <View style={styles.googleSignInSection}>
+          <Pressable
+            style={styles.googleSignInButton}
+            onPress={handleGoogleLogin}
+            disabled={authLoading}
+          >
+            <Feather name="user" size={20} color="#4285F4" />
+            <ThemedText style={styles.googleSignInText}>
+              {authLoading ? "Connecting..." : "Sign in with Google"}
+            </ThemedText>
+          </Pressable>
+          <ThemedText style={styles.googleSignInDesc}>
+            Sign in to save your progress to the cloud
+          </ThemedText>
+          <View style={styles.dividerContainer}>
+            <View style={styles.divider} />
+            <ThemedText style={styles.dividerText}>or create manually</ThemedText>
+            <View style={styles.divider} />
+          </View>
+        </View>
+      ) : null}
+
+      {isAuthenticated && socialUser && !editingProfile ? (
+        <View style={styles.connectedSection}>
+          <Feather name="check-circle" size={18} color={GameColors.correct} />
+          <ThemedText style={styles.connectedText}>
+            Signed in as {socialUser.name}
+          </ThemedText>
+        </View>
+      ) : null}
+
       <View style={styles.photoSection}>
         <Pressable onPress={handlePickImage} style={styles.photoButton}>
           {customPhoto ? (
@@ -495,6 +527,63 @@ const styles = StyleSheet.create({
     color: GameColors.textPrimary,
     textAlign: "center",
     marginBottom: Spacing.xl,
+  },
+  googleSignInSection: {
+    marginBottom: Spacing.lg,
+  },
+  googleSignInButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#4285F4" + "15",
+    borderWidth: 1,
+    borderColor: "#4285F4" + "40",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  googleSignInText: {
+    ...Typography.body,
+    color: "#4285F4",
+    fontWeight: "600",
+  },
+  googleSignInDesc: {
+    ...Typography.caption,
+    color: GameColors.textSecondary,
+    textAlign: "center",
+    marginBottom: Spacing.lg,
+  },
+  dividerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: GameColors.textSecondary + "30",
+  },
+  dividerText: {
+    ...Typography.caption,
+    color: GameColors.textSecondary,
+  },
+  connectedSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: GameColors.correct + "15",
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.xs,
+    marginBottom: Spacing.lg,
+  },
+  connectedText: {
+    ...Typography.caption,
+    color: GameColors.correct,
+    fontWeight: "600",
   },
   photoSection: {
     alignItems: "center",
@@ -927,21 +1016,6 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "center",
   },
-  dividerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: Spacing.md,
-  },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: GameColors.textSecondary + "40",
-  },
-  dividerText: {
-    ...Typography.caption,
-    color: GameColors.textSecondary,
-    marginHorizontal: Spacing.md,
-  },
   errorContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -961,11 +1035,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
     paddingHorizontal: Spacing.sm,
     marginTop: Spacing.xs,
-  },
-  connectedText: {
-    ...Typography.caption,
-    color: GameColors.correct,
-    marginLeft: Spacing.xs,
   },
   logoutButton: {
     flexDirection: "row",
