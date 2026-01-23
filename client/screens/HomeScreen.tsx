@@ -174,8 +174,20 @@ export default function HomeScreen() {
           style={styles.titleContainer}
         >
           <View style={styles.titleRow}>
-            <ThemedText style={styles.title}>FEUD</ThemedText>
-            <ThemedText style={styles.titleAccent}>FUSION</ThemedText>
+            <ThemedText 
+              style={styles.title} 
+              adjustsFontSizeToFit 
+              numberOfLines={1}
+            >
+              FEUD
+            </ThemedText>
+            <ThemedText 
+              style={styles.titleAccent} 
+              adjustsFontSizeToFit 
+              numberOfLines={1}
+            >
+              FUSION
+            </ThemedText>
           </View>
           <ThemedText style={styles.subtitle}>What Would They Say?</ThemedText>
         </Animated.View>
@@ -357,8 +369,11 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: Spacing.sm,
     marginTop: 3,
+    paddingHorizontal: Spacing.md,
+    flexWrap: "nowrap",
   },
   title: {
     ...Typography.h1,
@@ -369,6 +384,7 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0, 0, 0, 0.5)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+    flexShrink: 1,
   },
   titleAccent: {
     ...Typography.h1,
@@ -379,6 +395,7 @@ const styles = StyleSheet.create({
     textShadowColor: GameColors.primary,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
+    flexShrink: 1,
   },
   subtitle: {
     ...Typography.body,
