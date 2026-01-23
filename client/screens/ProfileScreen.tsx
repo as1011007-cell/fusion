@@ -14,14 +14,17 @@ import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useProfile } from "@/context/ProfileContext";
 import { useGame } from "@/context/GameContext";
+import { useTheme } from "@/context/ThemeContext";
+import { LinearGradient } from "expo-linear-gradient";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Profile">;
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  const { currentProfile, profiles, avatars, createProfile, updateProfile, selectProfile, deleteProfile } = useProfile();
+  const { currentProfile, profiles, avatars, createProfile, updateProfile, selectProfile, deleteProfile, levelInfo, experiencePoints, syncToCloud, loadFromCloud } = useProfile();
   const { totalCoins } = useGame();
+  const { starPoints } = useTheme();
 
   const [showCreateForm, setShowCreateForm] = useState(!currentProfile && profiles.length === 0);
   const [profileName, setProfileName] = useState("");
@@ -182,38 +185,99 @@ export default function ProfileScreen() {
     </Animated.View>
   );
 
-  const renderCurrentProfile = () => (
-    <Animated.View entering={FadeInUp.springify()} style={styles.currentProfileCard}>
-      <View style={styles.profileHeader}>
-        {currentProfile?.customPhoto ? (
-          <Image
-            source={{ uri: currentProfile.customPhoto }}
-            style={styles.profilePhoto}
-          />
-        ) : currentAvatar ? (
-          <View
-            style={[
-              styles.profileAvatarContainer,
-              { borderColor: currentAvatar.color },
-            ]}
-          >
-            <Image source={currentAvatar.image} style={styles.profileAvatarImage} />
+  const renderCurrentProfile = () => {
+    const xpProgress = levelInfo.xpForNextLevel > 0 ? levelInfo.currentXP / levelInfo.xpForNextLevel : 0;
+    
+    return (
+      <Animated.View entering={FadeInUp.springify()} style={styles.currentProfileCard}>
+        <View style={styles.profileHeaderVertical}>
+          <View style={styles.avatarWithLevel}>
+            {currentProfile?.customPhoto ? (
+              <Image
+                source={{ uri: currentProfile.customPhoto }}
+                style={styles.profilePhoto}
+              />
+            ) : currentAvatar ? (
+              <View
+                style={[
+                  styles.profileAvatarContainer,
+                  { borderColor: currentAvatar.color },
+                ]}
+              >
+                <Image source={currentAvatar.image} style={styles.profileAvatarImage} />
+              </View>
+            ) : null}
+            
+            <LinearGradient
+              colors={[GameColors.primary, GameColors.accent]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.levelBadge}
+            >
+              <ThemedText style={styles.levelText}>Lvl {levelInfo.level}</ThemedText>
+            </LinearGradient>
           </View>
-        ) : null}
 
-        <View style={styles.profileInfo}>
-          <ThemedText style={styles.profileName}>{currentProfile?.name}</ThemedText>
-          <ThemedText style={styles.profileStats}>
-            {totalCoins} coins earned
-          </ThemedText>
+          <ThemedText style={styles.profileNameCentered}>{currentProfile?.name}</ThemedText>
+          <ThemedText style={styles.levelTitle}>{levelInfo.title}</ThemedText>
+
+          <View style={styles.xpContainer}>
+            <View style={styles.xpBarBackground}>
+              <LinearGradient
+                colors={[GameColors.primary, GameColors.accent]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[styles.xpBarFill, { width: `${Math.min(xpProgress * 100, 100)}%` }]}
+              />
+            </View>
+            <ThemedText style={styles.xpText}>
+              {levelInfo.currentXP} / {levelInfo.xpForNextLevel} XP
+            </ThemedText>
+          </View>
+
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Feather name="circle" size={16} color="#FFD700" />
+              <ThemedText style={styles.statValue}>{totalCoins}</ThemedText>
+              <ThemedText style={styles.statLabel}>Coins</ThemedText>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Feather name="star" size={16} color="#00D4FF" />
+              <ThemedText style={styles.statValue}>{starPoints}</ThemedText>
+              <ThemedText style={styles.statLabel}>Stars</ThemedText>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Feather name="zap" size={16} color={GameColors.accent} />
+              <ThemedText style={styles.statValue}>{experiencePoints}</ThemedText>
+              <ThemedText style={styles.statLabel}>Total XP</ThemedText>
+            </View>
+          </View>
+
+          <Pressable onPress={handleStartEditing} style={styles.editButtonCentered}>
+            <Feather name="edit-2" size={16} color={GameColors.textPrimary} />
+            <ThemedText style={styles.editButtonText}>Edit Profile</ThemedText>
+          </Pressable>
+
+          {currentProfile?.socialProvider ? (
+            <Pressable 
+              onPress={async () => {
+                const success = await syncToCloud();
+                if (success) {
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                }
+              }} 
+              style={styles.syncButton}
+            >
+              <Feather name="cloud" size={16} color={GameColors.correct} />
+              <ThemedText style={styles.syncButtonText}>Sync Progress</ThemedText>
+            </Pressable>
+          ) : null}
         </View>
-
-        <Pressable onPress={handleStartEditing} style={styles.editButton}>
-          <Feather name="edit-2" size={20} color={GameColors.textPrimary} />
-        </Pressable>
-      </View>
-    </Animated.View>
-  );
+      </Animated.View>
+    );
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
@@ -470,6 +534,111 @@ const styles = StyleSheet.create({
     backgroundColor: GameColors.backgroundDark,
     alignItems: "center",
     justifyContent: "center",
+  },
+  profileHeaderVertical: {
+    alignItems: "center",
+  },
+  avatarWithLevel: {
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  levelBadge: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.lg,
+    marginTop: -Spacing.sm,
+  },
+  levelText: {
+    ...Typography.caption,
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 12,
+  },
+  profileNameCentered: {
+    ...Typography.h3,
+    color: GameColors.textPrimary,
+    textAlign: "center",
+  },
+  levelTitle: {
+    ...Typography.body,
+    color: GameColors.accent,
+    fontWeight: "600",
+    marginBottom: Spacing.md,
+  },
+  xpContainer: {
+    width: "100%",
+    marginBottom: Spacing.lg,
+  },
+  xpBarBackground: {
+    height: 8,
+    backgroundColor: GameColors.backgroundDark,
+    borderRadius: 4,
+    overflow: "hidden",
+    marginBottom: Spacing.xs,
+  },
+  xpBarFill: {
+    height: "100%",
+    borderRadius: 4,
+  },
+  xpText: {
+    ...Typography.caption,
+    color: GameColors.textSecondary,
+    textAlign: "center",
+  },
+  statsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.lg,
+    width: "100%",
+  },
+  statItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  statValue: {
+    ...Typography.h4,
+    color: GameColors.textPrimary,
+    marginTop: 4,
+  },
+  statLabel: {
+    ...Typography.caption,
+    color: GameColors.textSecondary,
+    fontSize: 10,
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: GameColors.backgroundDark,
+  },
+  editButtonCentered: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: GameColors.backgroundDark,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  editButtonText: {
+    ...Typography.caption,
+    color: GameColors.textPrimary,
+    fontWeight: "600",
+  },
+  syncButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: GameColors.correct + "20",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.xs,
+  },
+  syncButtonText: {
+    ...Typography.caption,
+    color: GameColors.correct,
+    fontWeight: "600",
   },
   actionCard: {
     flexDirection: "row",
