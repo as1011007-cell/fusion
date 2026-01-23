@@ -825,13 +825,13 @@ const styles = StyleSheet.create({
   avatarGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: Spacing.sm,
+    justifyContent: "space-evenly",
+    gap: Spacing.md,
     marginBottom: Spacing.xl,
   },
   avatarCard: {
-    width: "48.5%",
-    minWidth: 155,
+    width: "44%",
+    minWidth: 145,
     backgroundColor: GameColors.surface,
     borderRadius: BorderRadius.xl,
     padding: Spacing.lg,
