@@ -260,21 +260,30 @@ export function setupMultiplayer(server: Server) {
           case 'NEXT_QUESTION': {
             if (!currentRoomCode || !playerId) return;
             const room = rooms.get(currentRoomCode);
-            if (!room) return;
+            if (!room || room.status !== 'playing') return;
 
-            room.currentQuestion++;
-            if (room.currentQuestion >= room.questions.length) {
+            const nextQuestionIndex = room.currentQuestion + 1;
+            
+            if (nextQuestionIndex >= room.questions.length) {
               room.status = 'finished';
+              room.currentQuestion = nextQuestionIndex;
+              
               const finalScores = Array.from(room.players.values())
-                .map(p => ({ id: p.id, name: p.name, score: p.score }))
+                .map(p => ({ id: p.id, name: p.name, score: p.score, avatarId: p.avatarId }))
                 .sort((a, b) => b.score - a.score);
+
+              console.log('Game finished! Final scores:', finalScores);
 
               broadcastToRoom(room, {
                 type: 'GAME_FINISHED',
                 finalScores,
                 winner: finalScores[0],
+                room: getRoomState(room),
               });
             } else {
+              room.currentQuestion = nextQuestionIndex;
+              room.roundAnswers.clear();
+              
               broadcastToRoom(room, {
                 type: 'NEW_QUESTION',
                 questionIndex: room.currentQuestion,

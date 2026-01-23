@@ -50,6 +50,7 @@ export default function MultiplayerGameScreen() {
   const [showResults, setShowResults] = useState(false);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [localQuestion, setLocalQuestion] = useState<any>(null);
+  const [isAdvancing, setIsAdvancing] = useState(false);
 
   const isHost = room?.hostId === playerId;
 
@@ -67,6 +68,7 @@ export default function MultiplayerGameScreen() {
       setSelectedIndex(null);
       setShowResults(false);
       setTimerActive(true);
+      setIsAdvancing(false);
     }
   }, [currentQuestion]);
 
@@ -120,6 +122,8 @@ export default function MultiplayerGameScreen() {
   };
 
   const handleNextRound = () => {
+    if (isAdvancing) return;
+    setIsAdvancing(true);
     clearResults();
     const nextIdx = questionIndex + 1;
     setQuestionIndex(nextIdx);
@@ -325,9 +329,9 @@ export default function MultiplayerGameScreen() {
               </View>
             </View>
 
-            <GradientButton onPress={handleNextRound} style={styles.nextButton}>
+            <GradientButton onPress={handleNextRound} disabled={isAdvancing} style={styles.nextButton}>
               <ThemedText style={styles.buttonText}>
-                {questionIndex + 1 >= TOTAL_ROUNDS ? "See Final Results" : "Next Question"}
+                {isAdvancing ? "Loading..." : (questionIndex + 1 >= TOTAL_ROUNDS ? "See Final Results" : "Next Question")}
               </ThemedText>
             </GradientButton>
           </Animated.View>
