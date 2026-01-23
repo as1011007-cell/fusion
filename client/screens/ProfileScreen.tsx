@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { StyleSheet, View, ScrollView, Pressable, TextInput, Image, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -26,7 +26,7 @@ export default function ProfileScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { currentProfile, profiles, avatars, createProfile, createSocialProfile, updateProfile, selectProfile, deleteProfile, levelInfo, experiencePoints, syncToCloud, loadFromCloud } = useProfile();
   const { totalCoins, reloadPlayerData } = useGame();
-  const { starPoints } = useTheme();
+  const { starPoints, reloadThemeData } = useTheme();
   const { socialUser, isAuthenticated, loginWithGoogle, logout, isLoading: authLoading, error: authError } = useAuth();
 
   const [showCreateForm, setShowCreateForm] = useState(!currentProfile && profiles.length === 0);
@@ -35,6 +35,41 @@ export default function ProfileScreen() {
   const [customPhoto, setCustomPhoto] = useState<string | null>(null);
   const [editingProfile, setEditingProfile] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const prevSocialUserRef = useRef<string | null>(null);
+
+  // Auto-sync from cloud when user logs in with Google
+  useEffect(() => {
+    const autoSyncOnLogin = async () => {
+      if (socialUser && socialUser.id && prevSocialUserRef.current !== socialUser.id) {
+        prevSocialUserRef.current = socialUser.id;
+        console.log("Auto-syncing from cloud after login for:", socialUser.id);
+        setIsSyncing(true);
+        
+        // Try to load existing cloud data
+        const loaded = await loadFromCloud(socialUser.id);
+        if (loaded) {
+          // Reload all context data from AsyncStorage
+          await reloadPlayerData();
+          await reloadThemeData();
+          console.log("Auto-sync: Loaded data from cloud");
+        } else {
+          // No cloud data exists, create/link social profile
+          createSocialProfile(
+            socialUser.name,
+            socialUser.picture,
+            socialUser.provider,
+            socialUser.id,
+            socialUser.email
+          );
+          console.log("Auto-sync: Created new social profile");
+        }
+        
+        setIsSyncing(false);
+      }
+    };
+    
+    autoSyncOnLogin();
+  }, [socialUser]);
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -155,8 +190,9 @@ export default function ProfileScreen() {
     console.log("Attempting to load from cloud with socialUser.id:", socialUser.id);
     const success = await loadFromCloud(socialUser.id);
     if (success) {
-      // Also reload game data (coins, power cards, answered questions) from AsyncStorage
+      // Reload all context data from AsyncStorage
       await reloadPlayerData();
+      await reloadThemeData();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setSyncMessage("Progress loaded from cloud!");
     } else {

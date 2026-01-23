@@ -115,6 +115,7 @@ type ThemeContextType = {
   setAdFree: (value: boolean) => void;
   hasSupported: boolean;
   setHasSupported: (value: boolean) => void;
+  reloadThemeData: () => Promise<void>;
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -239,6 +240,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         setAdFree,
         hasSupported,
         setHasSupported,
+        reloadThemeData: loadThemeData,
       }}
     >
       {children}
