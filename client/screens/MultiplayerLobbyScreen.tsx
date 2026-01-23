@@ -130,12 +130,7 @@ export default function MultiplayerLobbyScreen() {
     const cleanText = text.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
     setJoinCode(cleanText);
     
-    if (cleanText.length === 6 && !isConnecting) {
-      if (settings.hapticsEnabled) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
-      setTimeout(() => handleJoinRoom(cleanText), 300);
-    } else if (cleanText.length > 0 && settings.hapticsEnabled) {
+    if (cleanText.length > 0 && settings.hapticsEnabled) {
       Haptics.selectionAsync();
     }
   };
@@ -356,28 +351,33 @@ export default function MultiplayerLobbyScreen() {
           </ThemedText>
         </Animated.View>
       ) : (
-        <View style={styles.joinHint}>
-          <Feather name="info" size={16} color={GameColors.textSecondary} />
-          <ThemedText style={[styles.hintText, { color: GameColors.textSecondary }]}>
-            Game will auto-join when code is complete
-          </ThemedText>
-        </View>
-      )}
+        <>
+          <GradientButton
+            onPress={() => handleJoinRoom()}
+            disabled={joinCode.length !== 6}
+            style={[styles.joinButton, { opacity: joinCode.length === 6 ? 1 : 0.5 }]}
+          >
+            <ThemedText style={styles.buttonText}>
+              Join Room
+            </ThemedText>
+          </GradientButton>
 
-      {joinCode.length > 0 && !isConnecting ? (
-        <Pressable 
-          style={styles.clearButton}
-          onPress={() => {
-            setJoinCode('');
-            codeInputRef.current?.focus();
-          }}
-        >
-          <Feather name="x" size={18} color={GameColors.textSecondary} />
-          <ThemedText style={[styles.clearButtonText, { color: GameColors.textSecondary }]}>
-            Clear
-          </ThemedText>
-        </Pressable>
-      ) : null}
+          {joinCode.length > 0 ? (
+            <Pressable 
+              style={styles.clearButton}
+              onPress={() => {
+                setJoinCode('');
+                codeInputRef.current?.focus();
+              }}
+            >
+              <Feather name="x" size={18} color={GameColors.textSecondary} />
+              <ThemedText style={[styles.clearButtonText, { color: GameColors.textSecondary }]}>
+                Clear
+              </ThemedText>
+            </Pressable>
+          ) : null}
+        </>
+      )}
     </Animated.View>
   );
 
@@ -631,6 +631,10 @@ const styles = StyleSheet.create({
   },
   clearButtonText: {
     ...Typography.caption,
+  },
+  joinButton: {
+    width: "100%",
+    marginBottom: Spacing.md,
   },
   codeInput: {
     width: "100%",
