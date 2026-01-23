@@ -116,10 +116,13 @@ export default function ProfileScreen() {
     setIsSyncing(false);
   };
 
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+
   const handleSyncProgress = async () => {
     if (!socialUser) return;
     
     setIsSyncing(true);
+    setSyncMessage(null);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
     if (currentProfile && !currentProfile.socialId) {
@@ -129,20 +132,33 @@ export default function ProfileScreen() {
       });
     }
     
-    const success = await syncToCloud();
+    const success = await syncToCloud(socialUser.id);
     if (success) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setSyncMessage("Progress saved to cloud!");
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setSyncMessage("Failed to save progress");
     }
     setIsSyncing(false);
+    setTimeout(() => setSyncMessage(null), 3000);
   };
 
   const handleLoadFromCloud = async () => {
+    if (!socialUser) return;
+    
     setIsSyncing(true);
-    const success = await loadFromCloud();
+    setSyncMessage(null);
+    const success = await loadFromCloud(socialUser.id);
     if (success) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setSyncMessage("Progress loaded from cloud!");
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      setSyncMessage("No cloud data found");
     }
     setIsSyncing(false);
+    setTimeout(() => setSyncMessage(null), 3000);
   };
 
   const ownedAvatars = avatars.filter((a) => a.owned);
@@ -444,6 +460,21 @@ export default function ProfileScreen() {
                       </ThemedText>
                     </Pressable>
                   </View>
+                  {syncMessage ? (
+                    <View style={styles.syncMessageContainer}>
+                      <Feather 
+                        name={syncMessage.includes("saved") || syncMessage.includes("loaded") ? "check-circle" : "alert-circle"} 
+                        size={16} 
+                        color={syncMessage.includes("saved") || syncMessage.includes("loaded") ? GameColors.correct : GameColors.wrong} 
+                      />
+                      <ThemedText style={[
+                        styles.syncMessageText,
+                        { color: syncMessage.includes("saved") || syncMessage.includes("loaded") ? GameColors.correct : GameColors.wrong }
+                      ]}>
+                        {syncMessage}
+                      </ThemedText>
+                    </View>
+                  ) : null}
                   <Pressable style={styles.signOutButton} onPress={logout}>
                     <ThemedText style={styles.signOutText}>Sign Out</ThemedText>
                   </Pressable>
@@ -895,6 +926,17 @@ const styles = StyleSheet.create({
   cloudSyncButtonText: {
     ...Typography.caption,
     color: GameColors.primary,
+    fontWeight: "600",
+  },
+  syncMessageContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  syncMessageText: {
+    ...Typography.caption,
     fontWeight: "600",
   },
   signOutButton: {

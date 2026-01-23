@@ -109,8 +109,8 @@ type ProfileContextType = {
   getUnansweredCount: (totalQuestions: number) => number;
   findProfileBySocialId: (socialId: string) => Profile | undefined;
   addExperience: (xp: number) => void;
-  syncToCloud: () => Promise<boolean>;
-  loadFromCloud: () => Promise<boolean>;
+  syncToCloud: (overrideSocialId?: string) => Promise<boolean>;
+  loadFromCloud: (overrideSocialId?: string) => Promise<boolean>;
 };
 
 const defaultAvatars: Avatar[] = [
@@ -311,8 +311,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     setExperiencePoints((prev) => prev + xp);
   };
 
-  const syncToCloud = async (): Promise<boolean> => {
-    if (!currentProfile?.socialId) return false;
+  const syncToCloud = async (overrideSocialId?: string): Promise<boolean> => {
+    const socialId = overrideSocialId || currentProfile?.socialId;
+    if (!socialId) return false;
     
     try {
       const currentThemeId = await AsyncStorage.getItem("currentThemeId");
@@ -329,7 +330,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const powerCards = await AsyncStorage.getItem("powerCards");
 
       const cloudData = {
-        odId: currentProfile.socialId,
+        odId: socialId,
         profiles,
         avatars,
         settings,
@@ -353,7 +354,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         },
         lastSync: new Date().toISOString(),
       };
-      await AsyncStorage.setItem(`cloudSync_${currentProfile.socialId}`, JSON.stringify(cloudData));
+      await AsyncStorage.setItem(`cloudSync_${socialId}`, JSON.stringify(cloudData));
       return true;
     } catch (error) {
       console.error("Error syncing to cloud:", error);
@@ -361,11 +362,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const loadFromCloud = async (): Promise<boolean> => {
-    if (!currentProfile?.socialId) return false;
+  const loadFromCloud = async (overrideSocialId?: string): Promise<boolean> => {
+    const socialId = overrideSocialId || currentProfile?.socialId;
+    if (!socialId) return false;
     
     try {
-      const cloudData = await AsyncStorage.getItem(`cloudSync_${currentProfile.socialId}`);
+      const cloudData = await AsyncStorage.getItem(`cloudSync_${socialId}`);
       if (cloudData) {
         const parsed = JSON.parse(cloudData);
         if (parsed.profiles) setProfiles(parsed.profiles);
