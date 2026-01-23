@@ -260,7 +260,7 @@ export function setupMultiplayer(server: Server) {
           case 'NEXT_QUESTION': {
             if (!currentRoomCode || !playerId) return;
             const room = rooms.get(currentRoomCode);
-            if (!room || room.hostId !== playerId) return;
+            if (!room) return;
 
             room.currentQuestion++;
             if (room.currentQuestion >= room.questions.length) {

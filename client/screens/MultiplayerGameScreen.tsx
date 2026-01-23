@@ -120,17 +120,10 @@ export default function MultiplayerGameScreen() {
   };
 
   const handleNextRound = () => {
-    if (!isHost) return;
-    
     clearResults();
     const nextIdx = questionIndex + 1;
-    
-    if (nextIdx >= TOTAL_ROUNDS) {
-      nextQuestion();
-    } else {
-      setQuestionIndex(nextIdx);
-      nextQuestion();
-    }
+    setQuestionIndex(nextIdx);
+    nextQuestion();
   };
 
   const handlePlayAgain = () => {
@@ -332,19 +325,11 @@ export default function MultiplayerGameScreen() {
               </View>
             </View>
 
-            {isHost ? (
-              <GradientButton onPress={handleNextRound} style={styles.nextButton}>
-                <ThemedText style={styles.buttonText}>
-                  {questionIndex + 1 >= TOTAL_ROUNDS ? "See Final Results" : "Next Question"}
-                </ThemedText>
-              </GradientButton>
-            ) : (
-              <View style={styles.waitingContainer}>
-                <ThemedText style={[styles.waitingText, { color: GameColors.textSecondary }]}>
-                  Waiting for host to continue...
-                </ThemedText>
-              </View>
-            )}
+            <GradientButton onPress={handleNextRound} style={styles.nextButton}>
+              <ThemedText style={styles.buttonText}>
+                {questionIndex + 1 >= TOTAL_ROUNDS ? "See Final Results" : "Next Question"}
+              </ThemedText>
+            </GradientButton>
           </Animated.View>
         )}
       </ScrollView>
