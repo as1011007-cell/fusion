@@ -184,29 +184,57 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const createRoom = useCallback((playerName: string, avatarId: string, maxPlayers = 8) => {
-    connect();
-    setTimeout(() => {
+  const waitForConnection = useCallback((): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        resolve();
+        return;
+      }
+      
+      connect();
+      
+      let attempts = 0;
+      const maxAttempts = 20;
+      const checkConnection = setInterval(() => {
+        attempts++;
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+          clearInterval(checkConnection);
+          resolve();
+        } else if (attempts >= maxAttempts) {
+          clearInterval(checkConnection);
+          reject(new Error("Connection timeout"));
+        }
+      }, 100);
+    });
+  }, [connect]);
+
+  const createRoom = useCallback(async (playerName: string, avatarId: string, maxPlayers = 8) => {
+    try {
+      await waitForConnection();
       send({
         type: "CREATE_ROOM",
         playerName,
         avatarId,
         maxPlayers,
       });
-    }, 500);
-  }, [connect, send]);
+    } catch (e) {
+      setError("Could not connect. Please try again.");
+    }
+  }, [waitForConnection, send]);
 
-  const joinRoom = useCallback((roomCode: string, playerName: string, avatarId: string) => {
-    connect();
-    setTimeout(() => {
+  const joinRoom = useCallback(async (roomCode: string, playerName: string, avatarId: string) => {
+    try {
+      await waitForConnection();
       send({
         type: "JOIN_ROOM",
         roomCode,
         playerName,
         avatarId,
       });
-    }, 500);
-  }, [connect, send]);
+    } catch (e) {
+      setError("Could not connect. Please try again.");
+    }
+  }, [waitForConnection, send]);
 
   const setReady = useCallback((ready: boolean) => {
     send({ type: "PLAYER_READY", ready });
