@@ -596,6 +596,8 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     marginTop: 3,
     paddingHorizontal: Spacing.md,
+    zIndex: 10,
+    elevation: 10,
     flexWrap: "nowrap",
   },
   title: {
