@@ -115,6 +115,13 @@ export default function HomeScreen() {
     navigation.navigate("Shop");
   };
 
+  const handleMultiplayer = () => {
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    navigation.navigate("MultiplayerLobby");
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <FloatingBubbles />
@@ -230,6 +237,22 @@ export default function HomeScreen() {
                     <ThemedText style={styles.liveBadgeText}>LIVE</ThemedText>
                   </View>
                 )}
+              </View>
+            </Pressable>
+
+            <Pressable
+              style={styles.secondaryButton}
+              onPress={handleMultiplayer}
+            >
+              <View style={[styles.secondaryButtonInner, { borderLeftColor: GameColors.primary }]}>
+                <View style={[styles.secondaryButtonIcon, { backgroundColor: GameColors.primary + "30" }]}>
+                  <Feather name="globe" size={22} color={GameColors.primary} />
+                </View>
+                <View style={styles.secondaryButtonContent}>
+                  <ThemedText style={styles.secondaryButtonText}>Multiplayer</ThemedText>
+                  <ThemedText style={styles.secondaryButtonDesc}>Play across devices</ThemedText>
+                </View>
+                <Feather name="chevron-right" size={20} color={GameColors.primary} />
               </View>
             </Pressable>
           </View>

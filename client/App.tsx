@@ -27,6 +27,7 @@ import { BackgroundMusic } from "@/components/BackgroundMusic";
 import { GameProvider } from "@/context/GameContext";
 import { ProfileProvider } from "@/context/ProfileContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { MultiplayerProvider } from "@/context/MultiplayerContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -56,17 +57,19 @@ export default function App() {
         <ProfileProvider>
           <ThemeProvider>
             <GameProvider>
-              <SafeAreaProvider>
-                <GestureHandlerRootView style={styles.root}>
-                  <KeyboardProvider>
-                    <NavigationContainer>
-                      <RootStackNavigator />
-                    </NavigationContainer>
-                    <BackgroundMusic />
-                    <StatusBar style="light" />
-                  </KeyboardProvider>
-                </GestureHandlerRootView>
-              </SafeAreaProvider>
+              <MultiplayerProvider>
+                <SafeAreaProvider>
+                  <GestureHandlerRootView style={styles.root}>
+                    <KeyboardProvider>
+                      <NavigationContainer>
+                        <RootStackNavigator />
+                      </NavigationContainer>
+                      <BackgroundMusic />
+                      <StatusBar style="light" />
+                    </KeyboardProvider>
+                  </GestureHandlerRootView>
+                </SafeAreaProvider>
+              </MultiplayerProvider>
             </GameProvider>
           </ThemeProvider>
         </ProfileProvider>
