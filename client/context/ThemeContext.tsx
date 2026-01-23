@@ -1,45 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export type ThemeId = "electric" | "sunset" | "ocean" | "forest" | "galaxy" | "neon" | "retro" | "midnight" | "aurora" | "candy";
-
-export type VisualEffectId = "sparkles" | "bubbles" | "stars" | "flames" | "snow" | "confetti" | "hearts" | "lightning";
-
-export type AchievementId = 
-  | "first_game" 
-  | "ten_games" 
-  | "fifty_games" 
-  | "perfect_round" 
-  | "streak_master" 
-  | "level_10" 
-  | "level_25" 
-  | "level_50"
-  | "daily_warrior"
-  | "multiplayer_champion";
-
-export type Achievement = {
-  id: AchievementId;
-  name: string;
-  description: string;
-  icon: string;
-  unlocked: boolean;
-  unlockedAt?: string;
-  reward?: {
-    type: "theme" | "effect" | "starPoints";
-    id?: string;
-    amount?: number;
-  };
-};
-
-export type VisualEffect = {
-  id: VisualEffectId;
-  name: string;
-  description: string;
-  icon: string;
-  price: number;
-  owned: boolean;
-  unlockRequirement?: AchievementId;
-};
+export type ThemeId = "electric" | "sunset" | "ocean" | "forest" | "galaxy";
 
 export type GameTheme = {
   id: ThemeId;
@@ -47,7 +9,6 @@ export type GameTheme = {
   description: string;
   price: number;
   owned: boolean;
-  unlockRequirement?: AchievementId;
   colors: {
     primary: string;
     secondary: string;
@@ -140,245 +101,6 @@ const defaultThemes: GameTheme[] = [
       wrong: "#FF4757",
     },
   },
-  {
-    id: "neon",
-    name: "Neon Dreams",
-    description: "Unlocked by playing 10 games",
-    price: 0,
-    owned: false,
-    unlockRequirement: "ten_games",
-    colors: {
-      primary: "#FF00FF",
-      secondary: "#00FFFF",
-      accent: "#FFFF00",
-      backgroundDark: "#0A0A15",
-      surface: "#1A1A2E",
-      correct: "#39FF14",
-      wrong: "#FF073A",
-    },
-  },
-  {
-    id: "retro",
-    name: "Retro Arcade",
-    description: "Unlocked by reaching Level 10",
-    price: 0,
-    owned: false,
-    unlockRequirement: "level_10",
-    colors: {
-      primary: "#FF6347",
-      secondary: "#FFD700",
-      accent: "#32CD32",
-      backgroundDark: "#1A1A1A",
-      surface: "#2D2D2D",
-      correct: "#00FF00",
-      wrong: "#FF0000",
-    },
-  },
-  {
-    id: "midnight",
-    name: "Midnight Noir",
-    description: "Unlocked by a perfect round",
-    price: 0,
-    owned: false,
-    unlockRequirement: "perfect_round",
-    colors: {
-      primary: "#708090",
-      secondary: "#C0C0C0",
-      accent: "#FFD700",
-      backgroundDark: "#0D0D0D",
-      surface: "#1C1C1C",
-      correct: "#98FB98",
-      wrong: "#DC143C",
-    },
-  },
-  {
-    id: "aurora",
-    name: "Aurora Borealis",
-    description: "Unlocked by reaching Level 25",
-    price: 0,
-    owned: false,
-    unlockRequirement: "level_25",
-    colors: {
-      primary: "#00CED1",
-      secondary: "#9370DB",
-      accent: "#98FB98",
-      backgroundDark: "#0A1628",
-      surface: "#152238",
-      correct: "#7FFFD4",
-      wrong: "#FF6347",
-    },
-  },
-  {
-    id: "candy",
-    name: "Candy Land",
-    description: "Unlocked by playing 50 games",
-    price: 0,
-    owned: false,
-    unlockRequirement: "fifty_games",
-    colors: {
-      primary: "#FF69B4",
-      secondary: "#FFB6C1",
-      accent: "#FF1493",
-      backgroundDark: "#2D1B2E",
-      surface: "#3D2B3E",
-      correct: "#98FB98",
-      wrong: "#FF6B6B",
-    },
-  },
-];
-
-const defaultAchievements: Achievement[] = [
-  {
-    id: "first_game",
-    name: "First Steps",
-    description: "Complete your first game",
-    icon: "play",
-    unlocked: false,
-    reward: { type: "starPoints", amount: 100 },
-  },
-  {
-    id: "ten_games",
-    name: "Getting Started",
-    description: "Play 10 games",
-    icon: "award",
-    unlocked: false,
-    reward: { type: "theme", id: "neon" },
-  },
-  {
-    id: "fifty_games",
-    name: "Dedicated Player",
-    description: "Play 50 games",
-    icon: "star",
-    unlocked: false,
-    reward: { type: "theme", id: "candy" },
-  },
-  {
-    id: "perfect_round",
-    name: "Perfectionist",
-    description: "Get all answers correct in a game",
-    icon: "check-circle",
-    unlocked: false,
-    reward: { type: "theme", id: "midnight" },
-  },
-  {
-    id: "streak_master",
-    name: "Streak Master",
-    description: "Achieve a 10-answer streak",
-    icon: "zap",
-    unlocked: false,
-    reward: { type: "effect", id: "flames" },
-  },
-  {
-    id: "level_10",
-    name: "Rising Star",
-    description: "Reach Level 10",
-    icon: "trending-up",
-    unlocked: false,
-    reward: { type: "theme", id: "retro" },
-  },
-  {
-    id: "level_25",
-    name: "Expert Player",
-    description: "Reach Level 25",
-    icon: "shield",
-    unlocked: false,
-    reward: { type: "theme", id: "aurora" },
-  },
-  {
-    id: "level_50",
-    name: "Legendary",
-    description: "Reach Level 50",
-    icon: "crown",
-    unlocked: false,
-    reward: { type: "effect", id: "lightning" },
-  },
-  {
-    id: "daily_warrior",
-    name: "Daily Warrior",
-    description: "Complete 7 daily challenges",
-    icon: "calendar",
-    unlocked: false,
-    reward: { type: "effect", id: "stars" },
-  },
-  {
-    id: "multiplayer_champion",
-    name: "Multiplayer Champion",
-    description: "Win 5 multiplayer games",
-    icon: "users",
-    unlocked: false,
-    reward: { type: "effect", id: "confetti" },
-  },
-];
-
-const defaultVisualEffects: VisualEffect[] = [
-  {
-    id: "sparkles",
-    name: "Sparkles",
-    description: "Glittering sparkle effects",
-    icon: "star",
-    price: 500,
-    owned: false,
-  },
-  {
-    id: "bubbles",
-    name: "Bubbles",
-    description: "Floating bubble animations",
-    icon: "circle",
-    price: 500,
-    owned: false,
-  },
-  {
-    id: "stars",
-    name: "Shooting Stars",
-    description: "Stars streak across the screen",
-    icon: "navigation",
-    price: 0,
-    owned: false,
-    unlockRequirement: "daily_warrior",
-  },
-  {
-    id: "flames",
-    name: "Flames",
-    description: "Fiery particle effects",
-    icon: "sun",
-    price: 0,
-    owned: false,
-    unlockRequirement: "streak_master",
-  },
-  {
-    id: "snow",
-    name: "Snowfall",
-    description: "Gentle falling snowflakes",
-    icon: "cloud-snow",
-    price: 750,
-    owned: false,
-  },
-  {
-    id: "confetti",
-    name: "Confetti",
-    description: "Celebration confetti burst",
-    icon: "gift",
-    price: 0,
-    owned: false,
-    unlockRequirement: "multiplayer_champion",
-  },
-  {
-    id: "hearts",
-    name: "Hearts",
-    description: "Floating heart particles",
-    icon: "heart",
-    price: 600,
-    owned: false,
-  },
-  {
-    id: "lightning",
-    name: "Lightning",
-    description: "Electric lightning bolts",
-    icon: "zap",
-    price: 0,
-    owned: false,
-    unlockRequirement: "level_50",
-  },
 ];
 
 type ThemeContextType = {
@@ -393,24 +115,6 @@ type ThemeContextType = {
   setAdFree: (value: boolean) => void;
   hasSupported: boolean;
   setHasSupported: (value: boolean) => void;
-  achievements: Achievement[];
-  unlockAchievement: (achievementId: AchievementId) => Achievement | null;
-  checkAchievementProgress: (stats: AchievementStats) => Achievement[];
-  visualEffects: VisualEffect[];
-  activeEffect: VisualEffectId | null;
-  setActiveEffect: (effectId: VisualEffectId | null) => void;
-  purchaseEffect: (effectId: VisualEffectId) => boolean;
-  getUnlockedThemesCount: () => number;
-  getUnlockedEffectsCount: () => number;
-};
-
-export type AchievementStats = {
-  gamesPlayed: number;
-  level: number;
-  bestStreak: number;
-  perfectRounds: number;
-  dailyChallengesCompleted: number;
-  multiplayerWins: number;
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -421,9 +125,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [starPoints, setStarPoints] = useState(0);
   const [isAdFree, setIsAdFree] = useState(false);
   const [hasSupported, setHasSupportedState] = useState(false);
-  const [achievements, setAchievements] = useState<Achievement[]>(defaultAchievements);
-  const [visualEffects, setVisualEffects] = useState<VisualEffect[]>(defaultVisualEffects);
-  const [activeEffect, setActiveEffectState] = useState<VisualEffectId | null>(null);
 
   useEffect(() => {
     loadThemeData();
@@ -436,9 +137,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       const savedStarPoints = await AsyncStorage.getItem("starPoints");
       const savedAdFree = await AsyncStorage.getItem("isAdFree");
       const savedHasSupported = await AsyncStorage.getItem("hasSupported");
-      const savedAchievements = await AsyncStorage.getItem("achievements");
-      const savedOwnedEffects = await AsyncStorage.getItem("ownedEffects");
-      const savedActiveEffect = await AsyncStorage.getItem("activeEffect");
 
       if (savedThemeId) {
         setCurrentThemeId(savedThemeId as ThemeId);
@@ -465,30 +163,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       if (savedHasSupported === "true") {
         setHasSupportedState(true);
       }
-
-      if (savedAchievements) {
-        const savedAchievementData = JSON.parse(savedAchievements) as Achievement[];
-        setAchievements((prev) =>
-          prev.map((achievement) => {
-            const saved = savedAchievementData.find((a) => a.id === achievement.id);
-            return saved ? { ...achievement, ...saved } : achievement;
-          })
-        );
-      }
-
-      if (savedOwnedEffects) {
-        const ownedEffectIds = JSON.parse(savedOwnedEffects) as VisualEffectId[];
-        setVisualEffects((prev) =>
-          prev.map((effect) => ({
-            ...effect,
-            owned: ownedEffectIds.includes(effect.id),
-          }))
-        );
-      }
-
-      if (savedActiveEffect) {
-        setActiveEffectState(savedActiveEffect as VisualEffectId);
-      }
     } catch (error) {
       console.error("Error loading theme data:", error);
     }
@@ -502,14 +176,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       await AsyncStorage.setItem("starPoints", starPoints.toString());
       await AsyncStorage.setItem("isAdFree", isAdFree.toString());
       await AsyncStorage.setItem("hasSupported", hasSupported.toString());
-      await AsyncStorage.setItem("achievements", JSON.stringify(achievements));
-      const ownedEffectIds = visualEffects.filter((e) => e.owned).map((e) => e.id);
-      await AsyncStorage.setItem("ownedEffects", JSON.stringify(ownedEffectIds));
-      if (activeEffect) {
-        await AsyncStorage.setItem("activeEffect", activeEffect);
-      } else {
-        await AsyncStorage.removeItem("activeEffect");
-      }
     } catch (error) {
       console.error("Error saving theme data:", error);
     }
@@ -517,7 +183,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     saveThemeData();
-  }, [currentThemeId, themes, starPoints, isAdFree, hasSupported, achievements, visualEffects, activeEffect]);
+  }, [currentThemeId, themes, starPoints, isAdFree, hasSupported]);
 
   const currentTheme = themes.find((t) => t.id === currentThemeId) || themes[0];
 
@@ -559,89 +225,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setHasSupportedState(value);
   };
 
-  const unlockAchievement = (achievementId: AchievementId): Achievement | null => {
-    const achievement = achievements.find((a) => a.id === achievementId);
-    if (!achievement || achievement.unlocked) return null;
-
-    const updatedAchievement = {
-      ...achievement,
-      unlocked: true,
-      unlockedAt: new Date().toISOString(),
-    };
-
-    setAchievements((prev) =>
-      prev.map((a) => (a.id === achievementId ? updatedAchievement : a))
-    );
-
-    if (achievement.reward) {
-      if (achievement.reward.type === "starPoints" && achievement.reward.amount) {
-        addStarPoints(achievement.reward.amount);
-      } else if (achievement.reward.type === "theme" && achievement.reward.id) {
-        setThemes((prev) =>
-          prev.map((t) => (t.id === achievement.reward!.id ? { ...t, owned: true } : t))
-        );
-      } else if (achievement.reward.type === "effect" && achievement.reward.id) {
-        setVisualEffects((prev) =>
-          prev.map((e) => (e.id === achievement.reward!.id ? { ...e, owned: true } : e))
-        );
-      }
-    }
-
-    return updatedAchievement;
-  };
-
-  const checkAchievementProgress = (stats: AchievementStats): Achievement[] => {
-    const newlyUnlocked: Achievement[] = [];
-
-    const checkAndUnlock = (id: AchievementId, condition: boolean) => {
-      const achievement = achievements.find((a) => a.id === id);
-      if (achievement && !achievement.unlocked && condition) {
-        const unlocked = unlockAchievement(id);
-        if (unlocked) newlyUnlocked.push(unlocked);
-      }
-    };
-
-    checkAndUnlock("first_game", stats.gamesPlayed >= 1);
-    checkAndUnlock("ten_games", stats.gamesPlayed >= 10);
-    checkAndUnlock("fifty_games", stats.gamesPlayed >= 50);
-    checkAndUnlock("streak_master", stats.bestStreak >= 10);
-    checkAndUnlock("perfect_round", stats.perfectRounds >= 1);
-    checkAndUnlock("level_10", stats.level >= 10);
-    checkAndUnlock("level_25", stats.level >= 25);
-    checkAndUnlock("level_50", stats.level >= 50);
-    checkAndUnlock("daily_warrior", stats.dailyChallengesCompleted >= 7);
-    checkAndUnlock("multiplayer_champion", stats.multiplayerWins >= 5);
-
-    return newlyUnlocked;
-  };
-
-  const setActiveEffect = (effectId: VisualEffectId | null) => {
-    if (effectId === null) {
-      setActiveEffectState(null);
-      return;
-    }
-    const effect = visualEffects.find((e) => e.id === effectId);
-    if (effect?.owned) {
-      setActiveEffectState(effectId);
-    }
-  };
-
-  const purchaseEffect = (effectId: VisualEffectId): boolean => {
-    const effect = visualEffects.find((e) => e.id === effectId);
-    if (!effect || effect.owned || starPoints < effect.price) {
-      return false;
-    }
-
-    setStarPoints((prev) => prev - effect.price);
-    setVisualEffects((prev) =>
-      prev.map((e) => (e.id === effectId ? { ...e, owned: true } : e))
-    );
-    return true;
-  };
-
-  const getUnlockedThemesCount = () => themes.filter((t) => t.owned).length;
-  const getUnlockedEffectsCount = () => visualEffects.filter((e) => e.owned).length;
-
   return (
     <ThemeContext.Provider
       value={{
@@ -656,15 +239,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         setAdFree,
         hasSupported,
         setHasSupported,
-        achievements,
-        unlockAchievement,
-        checkAchievementProgress,
-        visualEffects,
-        activeEffect,
-        setActiveEffect,
-        purchaseEffect,
-        getUnlockedThemesCount,
-        getUnlockedEffectsCount,
       }}
     >
       {children}
