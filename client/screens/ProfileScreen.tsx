@@ -124,6 +124,7 @@ export default function ProfileScreen() {
     setIsSyncing(true);
     setSyncMessage(null);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    console.log("Attempting to save to cloud with socialUser.id:", socialUser.id);
     
     if (currentProfile && !currentProfile.socialId) {
       updateProfile(currentProfile.id, {
@@ -132,10 +133,11 @@ export default function ProfileScreen() {
       });
     }
     
-    const success = await syncToCloud(socialUser.id);
+    const success = await syncToCloud(socialUser.id, socialUser.email);
+    console.log("syncToCloud result:", success);
     if (success) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setSyncMessage("Progress saved to cloud!");
+      setSyncMessage("Progress saved!");
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setSyncMessage("Failed to save progress");
@@ -149,13 +151,14 @@ export default function ProfileScreen() {
     
     setIsSyncing(true);
     setSyncMessage(null);
+    console.log("Attempting to load from cloud with socialUser.id:", socialUser.id);
     const success = await loadFromCloud(socialUser.id);
     if (success) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setSyncMessage("Progress loaded from cloud!");
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      setSyncMessage("No cloud data found");
+      setSyncMessage("No saved data found. Save first!");
     }
     setIsSyncing(false);
     setTimeout(() => setSyncMessage(null), 3000);
@@ -463,13 +466,13 @@ export default function ProfileScreen() {
                   {syncMessage ? (
                     <View style={styles.syncMessageContainer}>
                       <Feather 
-                        name={syncMessage.includes("saved") || syncMessage.includes("loaded") ? "check-circle" : "alert-circle"} 
+                        name={syncMessage.includes("saved") || syncMessage.includes("loaded") ? "check-circle" : "info"} 
                         size={16} 
-                        color={syncMessage.includes("saved") || syncMessage.includes("loaded") ? GameColors.correct : GameColors.wrong} 
+                        color={syncMessage.includes("saved") || syncMessage.includes("loaded") ? GameColors.correct : syncMessage.includes("Failed") ? GameColors.wrong : GameColors.accent} 
                       />
                       <ThemedText style={[
                         styles.syncMessageText,
-                        { color: syncMessage.includes("saved") || syncMessage.includes("loaded") ? GameColors.correct : GameColors.wrong }
+                        { color: syncMessage.includes("saved") || syncMessage.includes("loaded") ? GameColors.correct : syncMessage.includes("Failed") ? GameColors.wrong : GameColors.accent }
                       ]}>
                         {syncMessage}
                       </ThemedText>

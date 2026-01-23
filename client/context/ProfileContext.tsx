@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getApiUrl } from "@/lib/query-client";
 
 export const avatarImages: { [key: string]: any } = {
   "avatar-1": require("../../assets/avatars/avatar-1.png"),
@@ -109,7 +110,7 @@ type ProfileContextType = {
   getUnansweredCount: (totalQuestions: number) => number;
   findProfileBySocialId: (socialId: string) => Profile | undefined;
   addExperience: (xp: number) => void;
-  syncToCloud: (overrideSocialId?: string) => Promise<boolean>;
+  syncToCloud: (overrideSocialId?: string, email?: string) => Promise<boolean>;
   loadFromCloud: (overrideSocialId?: string) => Promise<boolean>;
 };
 
@@ -311,9 +312,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     setExperiencePoints((prev) => prev + xp);
   };
 
-  const syncToCloud = async (overrideSocialId?: string): Promise<boolean> => {
+  const syncToCloud = async (overrideSocialId?: string, email?: string): Promise<boolean> => {
     const socialId = overrideSocialId || currentProfile?.socialId;
-    if (!socialId) return false;
+    console.log("syncToCloud called with socialId:", socialId);
+    if (!socialId) {
+      console.log("syncToCloud: No socialId, returning false");
+      return false;
+    }
     
     try {
       const currentThemeId = await AsyncStorage.getItem("currentThemeId");
@@ -330,7 +335,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const powerCards = await AsyncStorage.getItem("powerCards");
 
       const cloudData = {
-        odId: socialId,
         profiles,
         avatars,
         settings,
@@ -354,7 +358,25 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         },
         lastSync: new Date().toISOString(),
       };
-      await AsyncStorage.setItem(`cloudSync_${socialId}`, JSON.stringify(cloudData));
+
+      const baseUrl = getApiUrl();
+      const response = await fetch(`${baseUrl}/api/cloud-sync/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          socialId,
+          provider: "google",
+          email,
+          data: cloudData,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error("syncToCloud: Server returned error", response.status);
+        return false;
+      }
+
+      console.log("syncToCloud: Successfully saved data for socialId:", socialId);
       return true;
     } catch (error) {
       console.error("Error syncing to cloud:", error);
@@ -364,12 +386,26 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   const loadFromCloud = async (overrideSocialId?: string): Promise<boolean> => {
     const socialId = overrideSocialId || currentProfile?.socialId;
-    if (!socialId) return false;
+    console.log("loadFromCloud called with socialId:", socialId);
+    if (!socialId) {
+      console.log("loadFromCloud: No socialId, returning false");
+      return false;
+    }
     
     try {
-      const cloudData = await AsyncStorage.getItem(`cloudSync_${socialId}`);
-      if (cloudData) {
-        const parsed = JSON.parse(cloudData);
+      const baseUrl = getApiUrl();
+      const response = await fetch(`${baseUrl}/api/cloud-sync/load/${encodeURIComponent(socialId)}`);
+      
+      if (!response.ok) {
+        console.log("loadFromCloud: No cloud data found or server error", response.status);
+        return false;
+      }
+
+      const result = await response.json();
+      console.log("loadFromCloud: Retrieved data from server");
+
+      if (result.success && result.data) {
+        const parsed = result.data;
         if (parsed.profiles) setProfiles(parsed.profiles);
         if (parsed.avatars) setAvatars(parsed.avatars);
         if (parsed.settings) setSettings(parsed.settings);
