@@ -8,6 +8,9 @@ import Animated, { FadeIn, FadeInDown, SlideInUp, ZoomIn } from "react-native-re
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 
+import { useMultiplayer, RoundResult } from "@/context/MultiplayerContext";
+import { useProfile, avatarImages } from "@/context/ProfileContext";
+import { useGame, Panel } from "@/context/GameContext";
 import { ThemedText } from "@/components/ThemedText";
 import { FeudFusionBrand } from "@/components/FeudFusionBrand";
 import { QuestionCard } from "@/components/QuestionCard";
@@ -16,9 +19,6 @@ import { Timer } from "@/components/Timer";
 import { GradientButton } from "@/components/GradientButton";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
-import { useMultiplayer, RoundResult } from "@/context/MultiplayerContext";
-import { useProfile, avatarImages } from "@/context/ProfileContext";
-import { useGame, Panel } from "@/context/GameContext";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -146,8 +146,18 @@ export default function MultiplayerGameScreen() {
   if (gameFinished) {
     return (
       <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
+        <View style={{ position: 'absolute', top: insets.top + 5, right: 20, zIndex: 1000, elevation: 10, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
+          <ThemedText style={{ fontSize: 12, fontWeight: 'bold', color: GameColors.accent }}>
+            CODE: {room?.code}
+          </ThemedText>
+        </View>
         <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-          <ThemedText style={styles.headerTitle}>Game Over!</ThemedText>
+          <FeudFusionBrand size="small" />
+          <View style={styles.headerRow}>
+            <View style={{ width: 44 }} />
+            <ThemedText style={styles.headerTitle}>Game Over!</ThemedText>
+            <View style={{ width: 44 }} />
+          </View>
         </View>
 
         <ScrollView style={styles.content} contentContainerStyle={styles.resultsContainer}>
@@ -205,7 +215,20 @@ export default function MultiplayerGameScreen() {
   if (!localQuestion) {
     return (
       <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
-        <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
+        <View style={{ position: 'absolute', top: insets.top + 5, right: 20, zIndex: 1000, elevation: 10, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
+          <ThemedText style={{ fontSize: 12, fontWeight: 'bold', color: GameColors.accent }}>
+            CODE: {room?.code}
+          </ThemedText>
+        </View>
+        <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+          <FeudFusionBrand size="small" />
+          <View style={styles.headerRow}>
+            <View style={{ width: 44 }} />
+            <ThemedText style={styles.headerTitle}>Loading...</ThemedText>
+            <View style={{ width: 44 }} />
+          </View>
+        </View>
+        <View style={styles.loadingContainer}>
           <ThemedText style={styles.loadingText}>Loading game...</ThemedText>
         </View>
       </View>
@@ -214,25 +237,33 @@ export default function MultiplayerGameScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-        <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: GameColors.surface }]}>
-          <Feather name="x" size={24} color={GameColors.textPrimary} />
-        </Pressable>
+      <View style={{ position: 'absolute', top: insets.top + 5, right: 20, zIndex: 1000, elevation: 10, backgroundColor: 'rgba(0,0,0,0.4)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 }}>
+        <ThemedText style={{ fontSize: 12, fontWeight: 'bold', color: GameColors.accent }}>
+          CODE: {room?.code}
+        </ThemedText>
+      </View>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.md, flexDirection: 'column' }]}>
+        <FeudFusionBrand size="small" />
+        <View style={styles.headerRow}>
+          <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: GameColors.surface }]}>
+            <Feather name="x" size={24} color={GameColors.textPrimary} />
+          </Pressable>
 
-        {!showResults ? (
-          <Timer
-            duration={ROUND_DURATION}
-            onComplete={handleTimeUp}
-            isActive={timerActive}
-          />
-        ) : (
-          <View style={styles.timerPlaceholder} />
-        )}
+          {!showResults ? (
+            <Timer
+              duration={ROUND_DURATION}
+              onComplete={handleTimeUp}
+              isActive={timerActive}
+            />
+          ) : (
+            <View style={styles.timerPlaceholder} />
+          )}
 
-        <View style={styles.progressBadge}>
-          <ThemedText style={styles.progressText}>
-            {questionIndex + 1}/{TOTAL_ROUNDS}
-          </ThemedText>
+          <View style={styles.progressBadge}>
+            <ThemedText style={styles.progressText}>
+              {questionIndex + 1}/{TOTAL_ROUNDS}
+            </ThemedText>
+          </View>
         </View>
       </View>
 
@@ -347,11 +378,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+  },
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
+    width: "100%",
   },
   headerTitle: {
     ...Typography.h2,
