@@ -570,16 +570,13 @@ export default function MultiplayerLobbyScreen() {
   return (
     <View style={[styles.container, { backgroundColor: GameColors.backgroundDark, paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <FeudFusionBrand size="small" />
-        <View style={styles.headerRow}>
-          <Pressable style={styles.backButton} onPress={handleBack}>
-            <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
-          </Pressable>
-          <ThemedText style={styles.headerTitle}>
-            {mode === "lobby" ? "Game Lobby" : "Multiplayer"}
-          </ThemedText>
-          <View style={styles.headerSpacer} />
-        </View>
+        <Pressable style={styles.backButton} onPress={handleBack}>
+          <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
+        </Pressable>
+        <ThemedText style={styles.headerTitle}>
+          {mode === "lobby" ? "Game Lobby" : "Multiplayer"}
+        </ThemedText>
+        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView
@@ -601,16 +598,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-  },
-  headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    width: "100%",
-    marginTop: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
   },
   backButton: {
     width: 40,

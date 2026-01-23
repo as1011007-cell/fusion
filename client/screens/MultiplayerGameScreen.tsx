@@ -147,12 +147,7 @@ export default function MultiplayerGameScreen() {
     return (
       <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
         <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-          <FeudFusionBrand size="small" />
-          <View style={styles.headerRow}>
-            <View style={{ width: 44 }} />
-            <ThemedText style={styles.headerTitle}>Game Over!</ThemedText>
-            <View style={{ width: 44 }} />
-          </View>
+          <ThemedText style={styles.headerTitle}>Game Over!</ThemedText>
         </View>
 
         <ScrollView style={styles.content} contentContainerStyle={styles.resultsContainer}>
@@ -220,27 +215,24 @@ export default function MultiplayerGameScreen() {
   return (
     <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-        <FeudFusionBrand size="small" />
-        <View style={styles.headerRow}>
-          <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: GameColors.surface }]}>
-            <Feather name="x" size={24} color={GameColors.textPrimary} />
-          </Pressable>
+        <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: GameColors.surface }]}>
+          <Feather name="x" size={24} color={GameColors.textPrimary} />
+        </Pressable>
 
-          {!showResults ? (
-            <Timer
-              duration={ROUND_DURATION}
-              onComplete={handleTimeUp}
-              isActive={timerActive}
-            />
-          ) : (
-            <View style={styles.timerPlaceholder} />
-          )}
+        {!showResults ? (
+          <Timer
+            duration={ROUND_DURATION}
+            onComplete={handleTimeUp}
+            isActive={timerActive}
+          />
+        ) : (
+          <View style={styles.timerPlaceholder} />
+        )}
 
-          <View style={styles.progressBadge}>
-            <ThemedText style={styles.progressText}>
-              {questionIndex + 1}/{TOTAL_ROUNDS}
-            </ThemedText>
-          </View>
+        <View style={styles.progressBadge}>
+          <ThemedText style={styles.progressText}>
+            {questionIndex + 1}/{TOTAL_ROUNDS}
+          </ThemedText>
         </View>
       </View>
 
@@ -355,16 +347,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
-  },
-  headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    width: "100%",
-    marginTop: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
   },
   headerTitle: {
     ...Typography.h2,

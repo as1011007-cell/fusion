@@ -93,13 +93,6 @@ export default function ResultsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View
-          entering={FadeInDown.delay(50).springify()}
-          style={styles.brandContainer}
-        >
-          <FeudFusionBrand size="small" />
-        </Animated.View>
-
-        <Animated.View
           entering={FadeInDown.delay(100).springify()}
           style={styles.logoContainer}
         >

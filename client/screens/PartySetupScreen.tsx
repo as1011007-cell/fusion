@@ -107,14 +107,11 @@ export default function PartySetupScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-        <FeudFusionBrand size="small" />
-        <View style={styles.headerRow}>
-          <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: colors.surface }]}>
-            <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
-          </Pressable>
-          <ThemedText style={styles.headerTitle}>Party Mode</ThemedText>
-          <View style={styles.headerSpacer} />
-        </View>
+        <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: colors.surface }]}>
+          <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
+        </Pressable>
+        <ThemedText style={styles.headerTitle}>Party Mode</ThemedText>
+        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView
@@ -277,7 +274,9 @@ const styles = StyleSheet.create({
     backgroundColor: GameColors.backgroundDark,
   },
   header: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.md,
   },

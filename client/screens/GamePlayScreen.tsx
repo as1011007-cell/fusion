@@ -105,24 +105,21 @@ export default function GamePlayScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-        <FeudFusionBrand size="small" />
-        <View style={styles.headerRow}>
-          <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: colors.surface }]}>
-            <Feather name="x" size={24} color={GameColors.textPrimary} />
-          </Pressable>
+        <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: colors.surface }]}>
+          <Feather name="x" size={24} color={GameColors.textPrimary} />
+        </Pressable>
 
-          {!gameState.showResults ? (
-            <Timer
-              duration={ROUND_DURATION}
-              onComplete={handleTimeUp}
-              isActive={timerActive}
-            />
-          ) : (
-            <View style={styles.timerPlaceholder} />
-          )}
+        {!gameState.showResults ? (
+          <Timer
+            duration={ROUND_DURATION}
+            onComplete={handleTimeUp}
+            isActive={timerActive}
+          />
+        ) : (
+          <View style={styles.timerPlaceholder} />
+        )}
 
-          <ScoreDisplay score={gameState.score} streak={gameState.streak} />
-        </View>
+        <ScoreDisplay score={gameState.score} streak={gameState.streak} />
       </View>
 
       {gameState.mode === "party" ? (
@@ -246,16 +243,11 @@ const styles = StyleSheet.create({
     backgroundColor: GameColors.backgroundDark,
   },
   header: {
-    alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
-  },
-  headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    width: "100%",
-    marginTop: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
   },
   backButton: {
     width: 44,

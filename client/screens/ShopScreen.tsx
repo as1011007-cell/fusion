@@ -683,21 +683,18 @@ export default function ShopScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-        <FeudFusionBrand size="small" />
-        <View style={styles.headerRow}>
-          <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: colors.surface }]}>
-            <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
-          </Pressable>
-          <ThemedText style={styles.headerTitle}>Shop</ThemedText>
-          <View style={styles.currencyDisplay}>
-            <View style={styles.coinBadge}>
-              <Feather name="disc" size={14} color={GameColors.accent} />
-              <ThemedText style={styles.coinText}>{totalCoins}</ThemedText>
-            </View>
-            <View style={styles.starBadge}>
-              <Feather name="star" size={14} color={GameColors.secondary} />
-              <ThemedText style={styles.starText}>{starPoints}</ThemedText>
-            </View>
+        <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: colors.surface }]}>
+          <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
+        </Pressable>
+        <ThemedText style={styles.headerTitle}>Shop</ThemedText>
+        <View style={styles.currencyDisplay}>
+          <View style={styles.coinBadge}>
+            <Feather name="disc" size={14} color={GameColors.accent} />
+            <ThemedText style={styles.coinText}>{totalCoins}</ThemedText>
+          </View>
+          <View style={styles.starBadge}>
+            <Feather name="star" size={14} color={GameColors.secondary} />
+            <ThemedText style={styles.starText}>{starPoints}</ThemedText>
           </View>
         </View>
       </View>
@@ -736,16 +733,11 @@ const styles = StyleSheet.create({
     backgroundColor: GameColors.backgroundDark,
   },
   header: {
-    alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
-  },
-  headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    width: "100%",
-    marginTop: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
   },
   backButton: {
     width: 40,
