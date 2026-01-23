@@ -15,6 +15,7 @@ import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useMultiplayer, MultiplayerPlayer } from "@/context/MultiplayerContext";
 import { useProfile, avatarImages } from "@/context/ProfileContext";
+import { allQuestions } from "@/data/questions";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -28,12 +29,14 @@ export default function MultiplayerLobbyScreen() {
     playerId,
     room,
     error,
+    gameStarted,
     createRoom,
     joinRoom,
     setReady,
     startGame,
     leaveRoom,
     clearError,
+    resetGameStarted,
   } = useMultiplayer();
 
   const [mode, setMode] = useState<"select" | "create" | "join" | "lobby">("select");
@@ -53,6 +56,13 @@ export default function MultiplayerLobbyScreen() {
       setIsConnecting(false);
     }
   }, [error]);
+
+  useEffect(() => {
+    if (gameStarted && room?.status === "playing") {
+      resetGameStarted();
+      navigation.navigate("MultiplayerGame");
+    }
+  }, [gameStarted, room?.status]);
 
   const handleBack = () => {
     if (settings.hapticsEnabled) {
@@ -139,7 +149,9 @@ export default function MultiplayerLobbyScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }
 
-    navigation.navigate("MultiplayerGame" as any);
+    const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+    const gameQuestions = shuffled.slice(0, 10);
+    startGame(gameQuestions, "Mixed");
   };
 
   const isHost = room?.hostId === playerId;

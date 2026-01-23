@@ -18,7 +18,6 @@ import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useMultiplayer, RoundResult } from "@/context/MultiplayerContext";
 import { useProfile, avatarImages } from "@/context/ProfileContext";
 import { useGame, Panel } from "@/context/GameContext";
-import { allQuestions } from "@/data/questions";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -40,7 +39,6 @@ export default function MultiplayerGameScreen() {
     gameFinished,
     finalScores,
     winner,
-    startGame,
     submitAnswer,
     nextQuestion,
     leaveRoom,
@@ -55,11 +53,6 @@ export default function MultiplayerGameScreen() {
 
   const isHost = room?.hostId === playerId;
 
-  const gameQuestions = useMemo(() => {
-    const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, TOTAL_ROUNDS);
-  }, []);
-
   const currentPanel: Panel = useMemo(() => {
     if (!localQuestion) {
       return { id: "mixed", name: "Mixed", description: "Various panels", icon: "globe", color: GameColors.secondary };
@@ -69,12 +62,6 @@ export default function MultiplayerGameScreen() {
   }, [localQuestion, panels]);
 
   useEffect(() => {
-    if (isHost && room?.status === "playing") {
-      startGame(gameQuestions, "Mixed");
-    }
-  }, []);
-
-  useEffect(() => {
     if (currentQuestion) {
       setLocalQuestion(currentQuestion);
       setSelectedIndex(null);
@@ -82,13 +69,6 @@ export default function MultiplayerGameScreen() {
       setTimerActive(true);
     }
   }, [currentQuestion]);
-
-  useEffect(() => {
-    if (!currentQuestion && !localQuestion && gameQuestions.length > 0) {
-      setLocalQuestion(gameQuestions[0]);
-      setTimerActive(true);
-    }
-  }, [gameQuestions]);
 
   useEffect(() => {
     if (roundResults) {

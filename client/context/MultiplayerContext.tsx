@@ -37,6 +37,7 @@ interface MultiplayerContextType {
   roundResults: RoundResult[] | null;
   answeredCount: number;
   gameFinished: boolean;
+  gameStarted: boolean;
   finalScores: { id: string; name: string; score: number }[];
   winner: { id: string; name: string; score: number } | null;
   createRoom: (playerName: string, avatarId: string, maxPlayers?: number) => void;
@@ -48,6 +49,7 @@ interface MultiplayerContextType {
   leaveRoom: () => void;
   clearError: () => void;
   clearResults: () => void;
+  resetGameStarted: () => void;
 }
 
 const MultiplayerContext = createContext<MultiplayerContextType | undefined>(undefined);
@@ -58,6 +60,7 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
   const [room, setRoom] = useState<RoomState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<any | null>(null);
+  const [gameStarted, setGameStarted] = useState(false);
   const [roundResults, setRoundResults] = useState<RoundResult[] | null>(null);
   const [answeredCount, setAnsweredCount] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);
@@ -138,6 +141,7 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
         setRoundResults(null);
         setAnsweredCount(0);
         setGameFinished(false);
+        setGameStarted(true);
         break;
 
       case "PLAYER_ANSWERED":
@@ -227,6 +231,7 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
     setCurrentQuestion(null);
     setRoundResults(null);
     setGameFinished(false);
+    setGameStarted(false);
     setFinalScores([]);
     setWinner(null);
     wsRef.current?.close();
@@ -238,6 +243,10 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
 
   const clearResults = useCallback(() => {
     setRoundResults(null);
+  }, []);
+
+  const resetGameStarted = useCallback(() => {
+    setGameStarted(false);
   }, []);
 
   useEffect(() => {
@@ -260,6 +269,7 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
         roundResults,
         answeredCount,
         gameFinished,
+        gameStarted,
         finalScores,
         winner,
         createRoom,
@@ -271,6 +281,7 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
         leaveRoom,
         clearError,
         clearResults,
+        resetGameStarted,
       }}
     >
       {children}
