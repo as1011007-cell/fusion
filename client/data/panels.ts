@@ -10,7 +10,6 @@ export type Panel = {
 
 export const allPanels: Panel[] = [
   { id: "gen-z", name: "Gen Z", description: "Digital natives with main character energy", icon: "zap", color: "#FF006E" },
-  { id: "desi-parents", name: "Desi Parents", description: "Traditional values meet modern concerns", icon: "heart", color: "#FFD700" },
   { id: "hustlers", name: "Hustlers", description: "Grind culture and entrepreneurial spirit", icon: "trending-up", color: "#00FF87" },
   { id: "artists", name: "Artists", description: "Creative souls seeing the world differently", icon: "feather", color: "#00F5FF" },
   { id: "office-workers", name: "Office Workers", description: "Corporate life and water cooler wisdom", icon: "briefcase", color: "#A0A8C0" },
@@ -19,6 +18,7 @@ export const allPanels: Panel[] = [
   { id: "elder-sister", name: "Elder Sisters", description: "The responsible first-born experience", icon: "shield", color: "#FF69B4" },
   { id: "endometriosis", name: "Endo Warriors", description: "Living with endometriosis daily", icon: "heart", color: "#9B59B6" },
   { id: "millennials", name: "Millennials", description: "Avocado toast and existential dread", icon: "coffee", color: "#1ABC9C" },
+  { id: "desi-parents", name: "Desi Parents", description: "Traditional values meet modern concerns", icon: "heart", color: "#FFD700" },
   { id: "boomers", name: "Boomers", description: "The generation that saw it all change", icon: "tv", color: "#E74C3C" },
   { id: "teachers", name: "Teachers", description: "Educators shaping the future", icon: "book-open", color: "#3498DB" },
   { id: "nurses", name: "Healthcare Heroes", description: "The frontline of care", icon: "activity", color: "#27AE60" },
@@ -37,4 +37,12 @@ export const allPanels: Panel[] = [
   { id: "tech-workers", name: "Tech Workers", description: "Debugging life one day at a time", icon: "code", color: "#2196F3" },
   { id: "only-child", name: "Only Child", description: "Sole focus of parental attention", icon: "user", color: "#FF4081" },
   { id: "middle-child", name: "Middle Child", description: "The forgotten peacemaker", icon: "minus", color: "#4CAF50" },
+  { id: "italian-guy", name: "Italian Guy", description: "Mama mia! Hand gestures and passion", icon: "heart", color: "#009246" },
+  { id: "baby-shower", name: "Baby Shower Guests", description: "Onesies, games, and unsolicited advice", icon: "gift", color: "#FFB6C1" },
+  { id: "christmas", name: "Christmas Enthusiasts", description: "Deck the halls year-round mentality", icon: "gift", color: "#C41E3A" },
+  { id: "new-years", name: "New Years Crowd", description: "New year, new me... until January 3rd", icon: "star", color: "#FFD700" },
+  { id: "wedding-guests", name: "Wedding Guests", description: "Open bar and catching bouquets", icon: "heart", color: "#FF1493" },
+  { id: "thanksgiving", name: "Thanksgiving Family", description: "Turkey, drama, and awkward questions", icon: "home", color: "#D2691E" },
+  { id: "halloween", name: "Halloween Lovers", description: "Spooky season is a lifestyle", icon: "moon", color: "#FF6600" },
+  { id: "summer-vibes", name: "Summer Vacation Mode", description: "Beach days and no responsibilities", icon: "sun", color: "#00CED1" },
 ];
