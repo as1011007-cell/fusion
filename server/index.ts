@@ -350,12 +350,14 @@ function setupErrorHandler(app: express.Application) {
             .container { padding: 40px; }
             h1 { color: #00ff88; font-size: 28px; }
             p { color: #ccc; font-size: 16px; margin-top: 10px; }
+            .btn { display: inline-block; margin-top: 24px; padding: 14px 32px; background: linear-gradient(135deg, #00ff88, #00cc6a); color: #1a1a2e; font-size: 16px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; text-decoration: none; }
           </style>
         </head>
         <body>
           <div class="container">
             <h1>Payment Successful!</h1>
-            <p>Thank you for your purchase. You can close this window and return to the app.</p>
+            <p>Thank you for your purchase. Tap the button below to return to the app.</p>
+            <button class="btn" onclick="window.close(); window.history.back();">Return to App</button>
           </div>
         </body>
       </html>
@@ -374,12 +376,14 @@ function setupErrorHandler(app: express.Application) {
             .container { padding: 40px; }
             h1 { color: #ff6b6b; font-size: 28px; }
             p { color: #ccc; font-size: 16px; margin-top: 10px; }
+            .btn { display: inline-block; margin-top: 24px; padding: 14px 32px; background: linear-gradient(135deg, #ff6b6b, #cc5555); color: #fff; font-size: 16px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; text-decoration: none; }
           </style>
         </head>
         <body>
           <div class="container">
             <h1>Payment Cancelled</h1>
-            <p>Your payment was not completed. You can close this window and return to the app.</p>
+            <p>Your payment was not completed. Tap the button below to return to the app.</p>
+            <button class="btn" onclick="window.close(); window.history.back();">Return to App</button>
           </div>
         </body>
       </html>
