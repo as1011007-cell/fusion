@@ -408,7 +408,7 @@ export default function ShopScreen() {
                         onPress={() => canAffordStars && handlePurchaseAvatar(avatar.id, avatar.price, true)}
                         disabled={!canAffordStars}
                       >
-                        <Feather name="star" size={10} color={canAffordStars ? GameColors.accent : GameColors.textSecondary} />
+                        <Feather name="star" size={12} color={canAffordStars ? "#4A90D9" : GameColors.textSecondary} />
                         <ThemedText style={[styles.avatarBuyText, !canAffordStars && styles.textDisabled]}>
                           {avatar.price}
                         </ThemedText>
@@ -418,7 +418,7 @@ export default function ShopScreen() {
                         onPress={() => canAffordCoins && handlePurchaseAvatar(avatar.id, avatar.price, false)}
                         disabled={!canAffordCoins}
                       >
-                        <Feather name="dollar-sign" size={10} color={canAffordCoins ? GameColors.secondary : GameColors.textSecondary} />
+                        <Feather name="circle" size={12} color={canAffordCoins ? "#FFD700" : GameColors.textSecondary} />
                         <ThemedText style={[styles.avatarBuyText, !canAffordCoins && styles.textDisabled]}>
                           {avatar.price}
                         </ThemedText>
