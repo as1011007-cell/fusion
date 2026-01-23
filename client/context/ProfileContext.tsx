@@ -315,6 +315,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     if (!currentProfile?.socialId) return false;
     
     try {
+      const currentThemeId = await AsyncStorage.getItem("currentThemeId");
+      const ownedThemes = await AsyncStorage.getItem("ownedThemes");
+      const starPoints = await AsyncStorage.getItem("starPoints");
+      const isAdFree = await AsyncStorage.getItem("isAdFree");
+      const hasSupported = await AsyncStorage.getItem("hasSupported");
+      const totalCoins = await AsyncStorage.getItem("totalCoins");
+      const totalGamesPlayed = await AsyncStorage.getItem("totalGamesPlayed");
+      const highScore = await AsyncStorage.getItem("highScore");
+      const lastWeeklyClaimDate = await AsyncStorage.getItem("lastWeeklyClaimDate");
+      const answeredQuestionIds = await AsyncStorage.getItem("answeredQuestionIds");
+      const multiplayerAnsweredIds = await AsyncStorage.getItem("multiplayerAnsweredQuestionIds");
+      const powerCards = await AsyncStorage.getItem("powerCards");
+
       const cloudData = {
         odId: currentProfile.socialId,
         profiles,
@@ -322,6 +335,22 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         settings,
         answeredQuestions: [...answeredQuestions],
         experiencePoints,
+        themeData: {
+          currentThemeId,
+          ownedThemes: ownedThemes ? JSON.parse(ownedThemes) : ["electric"],
+          starPoints: starPoints ? parseInt(starPoints, 10) : 0,
+          isAdFree: isAdFree === "true",
+          hasSupported: hasSupported === "true",
+        },
+        gameData: {
+          totalCoins: totalCoins ? parseInt(totalCoins, 10) : 100,
+          totalGamesPlayed: totalGamesPlayed ? parseInt(totalGamesPlayed, 10) : 0,
+          highScore: highScore ? parseInt(highScore, 10) : 0,
+          lastWeeklyClaimDate,
+          answeredQuestionIds: answeredQuestionIds ? JSON.parse(answeredQuestionIds) : [],
+          multiplayerAnsweredIds: multiplayerAnsweredIds ? JSON.parse(multiplayerAnsweredIds) : [],
+          powerCards: powerCards ? JSON.parse(powerCards) : null,
+        },
         lastSync: new Date().toISOString(),
       };
       await AsyncStorage.setItem(`cloudSync_${currentProfile.socialId}`, JSON.stringify(cloudData));
@@ -344,6 +373,27 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         if (parsed.settings) setSettings(parsed.settings);
         if (parsed.answeredQuestions) setAnsweredQuestions(new Set(parsed.answeredQuestions));
         if (parsed.experiencePoints) setExperiencePoints(parsed.experiencePoints);
+
+        if (parsed.themeData) {
+          const { currentThemeId, ownedThemes, starPoints, isAdFree, hasSupported } = parsed.themeData;
+          if (currentThemeId) await AsyncStorage.setItem("currentThemeId", currentThemeId);
+          if (ownedThemes) await AsyncStorage.setItem("ownedThemes", JSON.stringify(ownedThemes));
+          if (starPoints !== undefined) await AsyncStorage.setItem("starPoints", starPoints.toString());
+          if (isAdFree !== undefined) await AsyncStorage.setItem("isAdFree", isAdFree.toString());
+          if (hasSupported !== undefined) await AsyncStorage.setItem("hasSupported", hasSupported.toString());
+        }
+
+        if (parsed.gameData) {
+          const { totalCoins, totalGamesPlayed, highScore, lastWeeklyClaimDate, answeredQuestionIds, multiplayerAnsweredIds, powerCards } = parsed.gameData;
+          if (totalCoins !== undefined) await AsyncStorage.setItem("totalCoins", totalCoins.toString());
+          if (totalGamesPlayed !== undefined) await AsyncStorage.setItem("totalGamesPlayed", totalGamesPlayed.toString());
+          if (highScore !== undefined) await AsyncStorage.setItem("highScore", highScore.toString());
+          if (lastWeeklyClaimDate) await AsyncStorage.setItem("lastWeeklyClaimDate", lastWeeklyClaimDate);
+          if (answeredQuestionIds) await AsyncStorage.setItem("answeredQuestionIds", JSON.stringify(answeredQuestionIds));
+          if (multiplayerAnsweredIds) await AsyncStorage.setItem("multiplayerAnsweredQuestionIds", JSON.stringify(multiplayerAnsweredIds));
+          if (powerCards) await AsyncStorage.setItem("powerCards", JSON.stringify(powerCards));
+        }
+
         return true;
       }
       return false;
