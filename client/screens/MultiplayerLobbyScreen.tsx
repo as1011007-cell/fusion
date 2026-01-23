@@ -24,7 +24,7 @@ export default function MultiplayerLobbyScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { currentProfile, settings } = useProfile();
-  const { panels } = useGame();
+  const { panels, getMultiplayerUnansweredQuestions, addMultiplayerAnsweredQuestions } = useGame();
   
   const {
     connected,
@@ -194,16 +194,19 @@ export default function MultiplayerLobbyScreen() {
     let panelName = "Mixed";
     
     if (selectedPanelId === "mixed") {
-      const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+      const unansweredQuestions = getMultiplayerUnansweredQuestions(allQuestions);
+      const shuffled = [...unansweredQuestions].sort(() => Math.random() - 0.5);
       gameQuestions = shuffled.slice(0, 10);
     } else {
       const panelQuestions = allQuestions.filter(q => q.panelId === selectedPanelId);
-      const shuffled = [...panelQuestions].sort(() => Math.random() - 0.5);
+      const unansweredQuestions = getMultiplayerUnansweredQuestions(panelQuestions);
+      const shuffled = [...unansweredQuestions].sort(() => Math.random() - 0.5);
       gameQuestions = shuffled.slice(0, 10);
       const panel = panels.find(p => p.id === selectedPanelId);
       panelName = panel?.name || selectedPanelId;
     }
     
+    addMultiplayerAnsweredQuestions(gameQuestions.map((q: any) => q.id));
     startGame(gameQuestions, panelName);
   };
 
