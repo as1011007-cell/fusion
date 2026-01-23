@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, Image } from "react-native";
+import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, Image, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -172,10 +172,14 @@ export default function ShopScreen() {
           await WebBrowser.openBrowserAsync(checkoutData.url);
           const paymentSuccess = await verifyPayment(checkoutData.sessionId);
           if (paymentSuccess) {
-            addStarPoints(5000);
             if (settings.hapticsEnabled) {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             }
+            Alert.alert(
+              "Thank You!",
+              "Your purchase was successful! You've received 5,000 Star Points.",
+              [{ text: "Awesome!", onPress: () => addStarPoints(5000) }]
+            );
           } else if (settings.hapticsEnabled) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
           }
@@ -229,10 +233,14 @@ export default function ShopScreen() {
           await WebBrowser.openBrowserAsync(checkoutData.url);
           const paymentSuccess = await verifyPayment(checkoutData.sessionId);
           if (paymentSuccess) {
-            setAdFree(true);
             if (settings.hapticsEnabled) {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             }
+            Alert.alert(
+              "Thank You!",
+              "Your purchase was successful! Enjoy your ad-free experience.",
+              [{ text: "Awesome!", onPress: () => setAdFree(true) }]
+            );
           } else if (settings.hapticsEnabled) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
           }
@@ -288,10 +296,14 @@ export default function ShopScreen() {
           await WebBrowser.openBrowserAsync(checkoutData.url);
           const paymentSuccess = await verifyPayment(checkoutData.sessionId);
           if (paymentSuccess) {
-            setHasSupported(true);
             if (settings.hapticsEnabled) {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             }
+            Alert.alert(
+              "Thank You!",
+              "Your support means the world to us! You're now a Developer Supporter.",
+              [{ text: "Happy to help!", onPress: () => setHasSupported(true) }]
+            );
           } else if (settings.hapticsEnabled) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
           }
