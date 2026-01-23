@@ -47,6 +47,19 @@ The game features a vibrant "Electric Collision" aesthetic with neon accents, pe
 - Webhook handling for payment confirmation
 - Uses expo-web-browser to open Stripe Checkout on mobile
 
+### Multiplayer Mode (January 2026)
+- Real-time multiplayer across devices using WebSocket
+- Room creation with 6-character join codes
+- Room sharing via clipboard copy and native share
+- Player lobby with ready status and avatar display
+- Host controls for starting game and advancing rounds
+- Synchronized question display across all players
+- Live answer tracking (shows how many players answered)
+- Round-by-round results with scoring
+- Final leaderboard with winner announcement
+- WebSocket server at /ws/multiplayer path
+- MultiplayerContext manages connection state and game sync
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
