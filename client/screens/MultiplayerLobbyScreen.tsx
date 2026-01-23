@@ -15,6 +15,7 @@ import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useMultiplayer, MultiplayerPlayer } from "@/context/MultiplayerContext";
 import { useProfile, avatarImages } from "@/context/ProfileContext";
+import { useGame } from "@/context/GameContext";
 import { allQuestions } from "@/data/questions";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -23,6 +24,7 @@ export default function MultiplayerLobbyScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { currentProfile, settings } = useProfile();
+  const { panels } = useGame();
   
   const {
     connected,
@@ -42,6 +44,7 @@ export default function MultiplayerLobbyScreen() {
   const [mode, setMode] = useState<"select" | "create" | "join" | "lobby">("select");
   const [joinCode, setJoinCode] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
+  const [selectedPanelId, setSelectedPanelId] = useState<string>("mixed");
   const codeInputRef = useRef<TextInput>(null);
   const pulseScale = useSharedValue(1);
 
@@ -186,9 +189,28 @@ export default function MultiplayerLobbyScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }
 
-    const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
-    const gameQuestions = shuffled.slice(0, 10);
-    startGame(gameQuestions, "Mixed");
+    let gameQuestions;
+    let panelName = "Mixed";
+    
+    if (selectedPanelId === "mixed") {
+      const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+      gameQuestions = shuffled.slice(0, 10);
+    } else {
+      const panelQuestions = allQuestions.filter(q => q.panelId === selectedPanelId);
+      const shuffled = [...panelQuestions].sort(() => Math.random() - 0.5);
+      gameQuestions = shuffled.slice(0, 10);
+      const panel = panels.find(p => p.id === selectedPanelId);
+      panelName = panel?.name || selectedPanelId;
+    }
+    
+    startGame(gameQuestions, panelName);
+  };
+
+  const handlePanelSelect = (panelId: string) => {
+    setSelectedPanelId(panelId);
+    if (settings.hapticsEnabled) {
+      Haptics.selectionAsync();
+    }
   };
 
   const isHost = room?.hostId === playerId;
@@ -435,6 +457,58 @@ export default function MultiplayerLobbyScreen() {
           ))}
         </ScrollView>
       </View>
+
+      {isHost ? (
+        <View style={[styles.feudSection, { backgroundColor: GameColors.surface }]}>
+          <ThemedText style={styles.feudSectionTitle}>Select Feud</ThemedText>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.feudScrollContent}
+          >
+            <Pressable
+              style={[
+                styles.feudChip,
+                {
+                  backgroundColor: selectedPanelId === "mixed" ? GameColors.accent : GameColors.backgroundDark,
+                  borderColor: selectedPanelId === "mixed" ? GameColors.accent : GameColors.surface,
+                }
+              ]}
+              onPress={() => handlePanelSelect("mixed")}
+            >
+              <Feather name="shuffle" size={16} color={selectedPanelId === "mixed" ? GameColors.backgroundDark : GameColors.textPrimary} />
+              <ThemedText style={[styles.feudChipText, { color: selectedPanelId === "mixed" ? GameColors.backgroundDark : GameColors.textPrimary }]}>
+                Mixed
+              </ThemedText>
+            </Pressable>
+            {panels.map((panel) => (
+              <Pressable
+                key={panel.id}
+                style={[
+                  styles.feudChip,
+                  {
+                    backgroundColor: selectedPanelId === panel.id ? GameColors.accent : GameColors.backgroundDark,
+                    borderColor: selectedPanelId === panel.id ? GameColors.accent : GameColors.surface,
+                  }
+                ]}
+                onPress={() => handlePanelSelect(panel.id)}
+              >
+                <Feather name={panel.icon as any} size={16} color={selectedPanelId === panel.id ? GameColors.backgroundDark : GameColors.textPrimary} />
+                <ThemedText style={[styles.feudChipText, { color: selectedPanelId === panel.id ? GameColors.backgroundDark : GameColors.textPrimary }]}>
+                  {panel.name}
+                </ThemedText>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      ) : (
+        <View style={[styles.feudInfoSection, { backgroundColor: GameColors.surface }]}>
+          <Feather name="info" size={16} color={GameColors.textSecondary} />
+          <ThemedText style={[styles.feudInfoText, { color: GameColors.textSecondary }]}>
+            Host is selecting the feud...
+          </ThemedText>
+        </View>
+      )}
 
       <View style={styles.lobbyActions}>
         <Pressable
@@ -722,7 +796,45 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   playersList: {
-    maxHeight: 300,
+    maxHeight: 200,
+  },
+  feudSection: {
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  feudSectionTitle: {
+    ...Typography.h4,
+    fontWeight: "bold",
+    marginBottom: Spacing.md,
+  },
+  feudScrollContent: {
+    gap: Spacing.sm,
+    paddingRight: Spacing.md,
+  },
+  feudChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    gap: Spacing.xs,
+  },
+  feudChipText: {
+    ...Typography.caption,
+    fontWeight: "600",
+  },
+  feudInfoSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  feudInfoText: {
+    ...Typography.body,
   },
   playerCard: {
     flexDirection: "row",
