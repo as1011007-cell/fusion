@@ -8,6 +8,7 @@ import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 
 import { ThemedText } from "@/components/ThemedText";
+import { FeudFusionBrand } from "@/components/FeudFusionBrand";
 import { GradientButton } from "@/components/GradientButton";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -106,11 +107,14 @@ export default function PartySetupScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-        <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: colors.surface }]}>
-          <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
-        </Pressable>
-        <ThemedText style={styles.headerTitle}>Party Mode</ThemedText>
-        <View style={styles.headerSpacer} />
+        <FeudFusionBrand size="small" />
+        <View style={styles.headerRow}>
+          <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: colors.surface }]}>
+            <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
+          </Pressable>
+          <ThemedText style={styles.headerTitle}>Party Mode</ThemedText>
+          <View style={styles.headerSpacer} />
+        </View>
       </View>
 
       <ScrollView
@@ -273,9 +277,7 @@ const styles = StyleSheet.create({
     backgroundColor: GameColors.backgroundDark,
   },
   header: {
-    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.md,
   },
@@ -293,6 +295,13 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 44,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    marginTop: Spacing.sm,
   },
   scrollView: {
     flex: 1,

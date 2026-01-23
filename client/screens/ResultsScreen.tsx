@@ -16,6 +16,7 @@ import Animated, {
 import * as Haptics from "expo-haptics";
 
 import { ThemedText } from "@/components/ThemedText";
+import { FeudFusionBrand } from "@/components/FeudFusionBrand";
 import { GradientButton } from "@/components/GradientButton";
 import { AdBanner } from "@/components/AdBanner";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
@@ -87,10 +88,17 @@ export default function ResultsScreen() {
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: insets.top + Spacing["3xl"] },
+          { paddingTop: insets.top + Spacing.lg },
         ]}
         showsVerticalScrollIndicator={false}
       >
+        <Animated.View
+          entering={FadeInDown.delay(50).springify()}
+          style={styles.brandContainer}
+        >
+          <FeudFusionBrand size="small" />
+        </Animated.View>
+
         <Animated.View
           entering={FadeInDown.delay(100).springify()}
           style={styles.logoContainer}
@@ -332,6 +340,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing["3xl"],
     alignItems: "center",
+  },
+  brandContainer: {
+    alignItems: "center",
+    marginBottom: Spacing.md,
   },
   logoContainer: {
     marginBottom: Spacing.xl,

@@ -10,6 +10,7 @@ import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
 
 import { ThemedText } from "@/components/ThemedText";
+import { FeudFusionBrand } from "@/components/FeudFusionBrand";
 import { GradientButton } from "@/components/GradientButton";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -569,13 +570,16 @@ export default function MultiplayerLobbyScreen() {
   return (
     <View style={[styles.container, { backgroundColor: GameColors.backgroundDark, paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={handleBack}>
-          <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
-        </Pressable>
-        <ThemedText style={styles.headerTitle}>
-          {mode === "lobby" ? "Game Lobby" : "Multiplayer"}
-        </ThemedText>
-        <View style={styles.headerSpacer} />
+        <FeudFusionBrand size="small" />
+        <View style={styles.headerRow}>
+          <Pressable style={styles.backButton} onPress={handleBack}>
+            <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
+          </Pressable>
+          <ThemedText style={styles.headerTitle}>
+            {mode === "lobby" ? "Game Lobby" : "Multiplayer"}
+          </ThemedText>
+          <View style={styles.headerSpacer} />
+        </View>
       </View>
 
       <ScrollView
@@ -597,11 +601,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+  },
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    width: "100%",
+    marginTop: Spacing.sm,
   },
   backButton: {
     width: 40,

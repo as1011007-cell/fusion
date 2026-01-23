@@ -8,6 +8,7 @@ import Animated, { FadeIn, FadeInUp, SlideInUp } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 
 import { ThemedText } from "@/components/ThemedText";
+import { FeudFusionBrand } from "@/components/FeudFusionBrand";
 import { QuestionCard } from "@/components/QuestionCard";
 import { MultipleChoiceOptions } from "@/components/MultipleChoiceOptions";
 import { PowerCardDock } from "@/components/PowerCardDock";
@@ -104,21 +105,24 @@ export default function GamePlayScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
-        <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: colors.surface }]}>
-          <Feather name="x" size={24} color={GameColors.textPrimary} />
-        </Pressable>
+        <FeudFusionBrand size="small" />
+        <View style={styles.headerRow}>
+          <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: colors.surface }]}>
+            <Feather name="x" size={24} color={GameColors.textPrimary} />
+          </Pressable>
 
-        {!gameState.showResults ? (
-          <Timer
-            duration={ROUND_DURATION}
-            onComplete={handleTimeUp}
-            isActive={timerActive}
-          />
-        ) : (
-          <View style={styles.timerPlaceholder} />
-        )}
+          {!gameState.showResults ? (
+            <Timer
+              duration={ROUND_DURATION}
+              onComplete={handleTimeUp}
+              isActive={timerActive}
+            />
+          ) : (
+            <View style={styles.timerPlaceholder} />
+          )}
 
-        <ScoreDisplay score={gameState.score} streak={gameState.streak} />
+          <ScoreDisplay score={gameState.score} streak={gameState.streak} />
+        </View>
       </View>
 
       {gameState.mode === "party" ? (
@@ -242,11 +246,16 @@ const styles = StyleSheet.create({
     backgroundColor: GameColors.backgroundDark,
   },
   header: {
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+  },
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
+    width: "100%",
+    marginTop: Spacing.sm,
   },
   backButton: {
     width: 44,
