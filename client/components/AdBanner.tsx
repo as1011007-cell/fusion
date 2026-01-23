@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, StyleSheet, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
@@ -12,10 +12,15 @@ type AdBannerProps = {
 
 export function AdBanner({ style }: AdBannerProps) {
   const { isAdFree } = useTheme();
+  const [isDismissed, setIsDismissed] = useState(false);
 
-  if (isAdFree) {
+  if (isAdFree || isDismissed) {
     return null;
   }
+
+  const handleClose = () => {
+    setIsDismissed(true);
+  };
 
   return (
     <View style={[styles.container, style]}>
@@ -23,6 +28,13 @@ export function AdBanner({ style }: AdBannerProps) {
         colors={["#1a1a2e", "#16213e"]}
         style={styles.adContent}
       >
+        <Pressable 
+          style={styles.closeButton} 
+          onPress={handleClose}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Feather name="x" size={16} color="rgba(255,255,255,0.7)" />
+        </Pressable>
         <View style={styles.adLabel}>
           <ThemedText style={styles.adLabelText}>AD</ThemedText>
         </View>
@@ -51,11 +63,24 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.1)",
+    position: "relative",
+  },
+  closeButton: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 10,
   },
   adLabel: {
     position: "absolute",
     top: 8,
-    right: 8,
+    right: 40,
     backgroundColor: "rgba(255,255,255,0.2)",
     paddingHorizontal: 6,
     paddingVertical: 2,
