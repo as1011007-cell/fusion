@@ -15,6 +15,7 @@ import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useProfile } from "@/context/ProfileContext";
 import { useGame } from "@/context/GameContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
 import { LinearGradient } from "expo-linear-gradient";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Profile">;
@@ -22,15 +23,17 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Profile">;
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  const { currentProfile, profiles, avatars, createProfile, updateProfile, selectProfile, deleteProfile, levelInfo, experiencePoints, syncToCloud, loadFromCloud } = useProfile();
+  const { currentProfile, profiles, avatars, createProfile, createSocialProfile, updateProfile, selectProfile, deleteProfile, levelInfo, experiencePoints, syncToCloud, loadFromCloud } = useProfile();
   const { totalCoins } = useGame();
   const { starPoints } = useTheme();
+  const { socialUser, isAuthenticated, loginWithGoogle, logout, isLoading: authLoading, error: authError } = useAuth();
 
   const [showCreateForm, setShowCreateForm] = useState(!currentProfile && profiles.length === 0);
   const [profileName, setProfileName] = useState("");
   const [selectedAvatarId, setSelectedAvatarId] = useState(avatars[0]?.id || "");
   const [customPhoto, setCustomPhoto] = useState<string | null>(null);
   const [editingProfile, setEditingProfile] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -99,6 +102,47 @@ export default function ProfileScreen() {
   const handleDeleteProfile = (profileId: string) => {
     deleteProfile(profileId);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+  };
+
+  const handleGoogleLogin = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await loginWithGoogle();
+  };
+
+  const handleConnectGoogle = async () => {
+    setIsSyncing(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await loginWithGoogle();
+    setIsSyncing(false);
+  };
+
+  const handleSyncProgress = async () => {
+    if (!socialUser) return;
+    
+    setIsSyncing(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    if (currentProfile && !currentProfile.socialId) {
+      updateProfile(currentProfile.id, {
+        socialId: socialUser.id,
+        socialProvider: socialUser.provider,
+      });
+    }
+    
+    const success = await syncToCloud();
+    if (success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+    setIsSyncing(false);
+  };
+
+  const handleLoadFromCloud = async () => {
+    setIsSyncing(true);
+    const success = await loadFromCloud();
+    if (success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+    setIsSyncing(false);
   };
 
   const ownedAvatars = avatars.filter((a) => a.owned);
@@ -332,6 +376,70 @@ export default function ProfileScreen() {
                 </View>
                 <Feather name="chevron-right" size={20} color={GameColors.textSecondary} />
               </Pressable>
+
+              {isAuthenticated && socialUser ? (
+                <View style={styles.cloudSyncCard}>
+                  <View style={styles.cloudSyncHeader}>
+                    <View style={[styles.actionIcon, { backgroundColor: GameColors.correct + "20" }]}>
+                      <Feather name="check-circle" size={24} color={GameColors.correct} />
+                    </View>
+                    <View style={styles.actionContent}>
+                      <ThemedText style={styles.actionTitle}>Connected to Google</ThemedText>
+                      <ThemedText style={styles.actionDesc}>
+                        {socialUser.email}
+                      </ThemedText>
+                    </View>
+                  </View>
+                  <View style={styles.cloudSyncButtons}>
+                    <Pressable 
+                      style={styles.cloudSyncButton} 
+                      onPress={handleSyncProgress}
+                      disabled={isSyncing}
+                    >
+                      <Feather name="upload-cloud" size={18} color={GameColors.primary} />
+                      <ThemedText style={styles.cloudSyncButtonText}>
+                        {isSyncing ? "Syncing..." : "Save Progress"}
+                      </ThemedText>
+                    </Pressable>
+                    <Pressable 
+                      style={styles.cloudSyncButton} 
+                      onPress={handleLoadFromCloud}
+                      disabled={isSyncing}
+                    >
+                      <Feather name="download-cloud" size={18} color={GameColors.accent} />
+                      <ThemedText style={[styles.cloudSyncButtonText, { color: GameColors.accent }]}>
+                        Load Progress
+                      </ThemedText>
+                    </Pressable>
+                  </View>
+                  <Pressable style={styles.signOutButton} onPress={logout}>
+                    <ThemedText style={styles.signOutText}>Sign Out</ThemedText>
+                  </Pressable>
+                </View>
+              ) : (
+                <Pressable
+                  style={styles.actionCard}
+                  onPress={handleGoogleLogin}
+                  disabled={authLoading}
+                >
+                  <View style={[styles.actionIcon, { backgroundColor: "#4285F4" + "20" }]}>
+                    <Feather name="user" size={24} color="#4285F4" />
+                  </View>
+                  <View style={styles.actionContent}>
+                    <ThemedText style={styles.actionTitle}>
+                      {authLoading ? "Connecting..." : "Login with Google"}
+                    </ThemedText>
+                    <ThemedText style={styles.actionDesc}>
+                      Save your progress to the cloud
+                    </ThemedText>
+                  </View>
+                  <Feather name="chevron-right" size={20} color={GameColors.textSecondary} />
+                </Pressable>
+              )}
+
+              {authError ? (
+                <ThemedText style={styles.errorText}>{authError}</ThemedText>
+              ) : null}
             </Animated.View>
           </>
         ) : (
@@ -668,6 +776,53 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     color: GameColors.textSecondary,
   },
+  cloudSyncCard: {
+    backgroundColor: GameColors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  cloudSyncHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  cloudSyncButtons: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  cloudSyncButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: GameColors.backgroundDark,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.xs,
+  },
+  cloudSyncButtonText: {
+    ...Typography.caption,
+    color: GameColors.primary,
+    fontWeight: "600",
+  },
+  signOutButton: {
+    alignItems: "center",
+    paddingVertical: Spacing.xs,
+  },
+  signOutText: {
+    ...Typography.caption,
+    color: GameColors.textSecondary,
+    textDecorationLine: "underline",
+  },
+  errorText: {
+    ...Typography.caption,
+    color: GameColors.wrong,
+    textAlign: "center",
+    marginTop: Spacing.sm,
+  },
   switchSection: {
     marginTop: Spacing.lg,
   },
@@ -794,12 +949,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.sm,
     padding: Spacing.md,
     marginBottom: Spacing.md,
-  },
-  errorText: {
-    ...Typography.caption,
-    color: GameColors.wrong,
-    marginLeft: Spacing.sm,
-    flex: 1,
   },
   loader: {
     marginVertical: Spacing.lg,
