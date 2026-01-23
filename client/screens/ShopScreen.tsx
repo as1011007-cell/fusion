@@ -180,8 +180,15 @@ export default function ShopScreen() {
               "Your purchase was successful! You've received 5,000 Star Points.",
               [{ text: "Awesome!", onPress: () => addStarPoints(5000) }]
             );
-          } else if (settings.hapticsEnabled) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          } else {
+            if (settings.hapticsEnabled) {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            }
+            Alert.alert(
+              "Payment Incomplete",
+              "Your payment was not completed. Please try again.",
+              [{ text: "OK", onPress: () => navigation.navigate("Home") }]
+            );
           }
         }
       } else {
@@ -241,8 +248,15 @@ export default function ShopScreen() {
               "Your purchase was successful! Enjoy your ad-free experience.",
               [{ text: "Awesome!", onPress: () => setAdFree(true) }]
             );
-          } else if (settings.hapticsEnabled) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          } else {
+            if (settings.hapticsEnabled) {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            }
+            Alert.alert(
+              "Payment Incomplete",
+              "Your payment was not completed. Please try again.",
+              [{ text: "OK", onPress: () => navigation.navigate("Home") }]
+            );
           }
         }
       } else {
@@ -304,8 +318,15 @@ export default function ShopScreen() {
               "Your support means the world to us! You're now a Developer Supporter.",
               [{ text: "Happy to help!", onPress: () => setHasSupported(true) }]
             );
-          } else if (settings.hapticsEnabled) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          } else {
+            if (settings.hapticsEnabled) {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            }
+            Alert.alert(
+              "Payment Incomplete",
+              "Your payment was not completed. Please try again.",
+              [{ text: "OK", onPress: () => navigation.navigate("Home") }]
+            );
           }
         }
       } else {
