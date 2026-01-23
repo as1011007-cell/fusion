@@ -406,11 +406,37 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
       if (result.success && result.data) {
         const parsed = result.data;
-        if (parsed.profiles) setProfiles(parsed.profiles);
-        if (parsed.avatars) setAvatars(parsed.avatars);
-        if (parsed.settings) setSettings(parsed.settings);
-        if (parsed.answeredQuestions) setAnsweredQuestions(new Set(parsed.answeredQuestions));
-        if (parsed.experiencePoints) setExperiencePoints(parsed.experiencePoints);
+        if (parsed.profiles) {
+          setProfiles(parsed.profiles);
+          // Find and set the current profile (match by socialId or take the first one)
+          const matchingProfile = parsed.profiles.find((p: Profile) => p.socialId === socialId);
+          if (matchingProfile) {
+            setCurrentProfile(matchingProfile);
+            await AsyncStorage.setItem("currentProfileId", matchingProfile.id);
+          } else if (parsed.profiles.length > 0) {
+            setCurrentProfile(parsed.profiles[0]);
+            await AsyncStorage.setItem("currentProfileId", parsed.profiles[0].id);
+          }
+          // Save profiles to AsyncStorage too
+          await AsyncStorage.setItem("profiles", JSON.stringify(parsed.profiles));
+        }
+        if (parsed.avatars) {
+          setAvatars(parsed.avatars);
+          // Save avatars to AsyncStorage
+          await AsyncStorage.setItem("avatars", JSON.stringify(parsed.avatars));
+        }
+        if (parsed.settings) {
+          setSettings(parsed.settings);
+          await AsyncStorage.setItem("settings", JSON.stringify(parsed.settings));
+        }
+        if (parsed.answeredQuestions) {
+          setAnsweredQuestions(new Set(parsed.answeredQuestions));
+          await AsyncStorage.setItem("answeredQuestions", JSON.stringify(parsed.answeredQuestions));
+        }
+        if (parsed.experiencePoints !== undefined) {
+          setExperiencePoints(parsed.experiencePoints);
+          await AsyncStorage.setItem("experiencePoints", parsed.experiencePoints.toString());
+        }
 
         if (parsed.themeData) {
           const { currentThemeId, ownedThemes, starPoints, isAdFree, hasSupported } = parsed.themeData;
