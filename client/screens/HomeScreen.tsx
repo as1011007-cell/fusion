@@ -75,9 +75,9 @@ const themeConfig = {
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  const { totalCoins, gameState, setStarPointsCallback } = useGame();
+  const { totalCoins, gameState, setStarPointsCallback, setXPCallback } = useGame();
   const { currentTheme, starPoints, addStarPoints } = useTheme();
-  const { settings } = useProfile();
+  const { settings, addExperience } = useProfile();
   const colors = currentTheme.colors;
   const themeId = currentTheme.id as ThemeId;
   const config = themeConfig[themeId];
@@ -91,6 +91,11 @@ export default function HomeScreen() {
     setStarPointsCallback(addStarPoints);
     return () => setStarPointsCallback(null);
   }, [addStarPoints, setStarPointsCallback]);
+
+  useEffect(() => {
+    setXPCallback(addExperience);
+    return () => setXPCallback(() => {});
+  }, [addExperience, setXPCallback]);
 
   useEffect(() => {
     logoScale.value = withRepeat(

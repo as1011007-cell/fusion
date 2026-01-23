@@ -83,6 +83,7 @@ type GameContextType = {
   claimWeeklyPowerCards: () => boolean;
   lastWeeklyClaimDate: string | null;
   setStarPointsCallback: (callback: StarPointsCallback) => void;
+  setXPCallback: (callback: (xp: number) => void) => void;
   multiplayerAnsweredQuestionIds: Set<string>;
   addMultiplayerAnsweredQuestions: (questionIds: string[]) => void;
   getMultiplayerUnansweredQuestions: (questions: any[]) => any[];
@@ -148,9 +149,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [highScore, setHighScore] = useState(0);
   const [lastWeeklyClaimDate, setLastWeeklyClaimDate] = useState<string | null>(null);
   const starPointsCallbackRef = React.useRef<StarPointsCallback>(null);
+  const xpCallbackRef = React.useRef<((xp: number) => void) | null>(null);
 
   const setStarPointsCallback = useCallback((callback: StarPointsCallback) => {
     starPointsCallbackRef.current = callback;
+  }, []);
+
+  const setXPCallback = useCallback((callback: (xp: number) => void) => {
+    xpCallbackRef.current = callback;
   }, []);
 
   useEffect(() => {
@@ -365,6 +371,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
       }
       setTotalGamesPlayed(prev => prev + 1);
       
+      const xpEarned = Math.floor(gameState.score / 5) + 10;
+      if (xpCallbackRef.current && xpEarned > 0) {
+        xpCallbackRef.current(xpEarned);
+      }
+      
       if (gameState.mode === "daily") {
         const today = new Date().toISOString().split("T")[0];
         AsyncStorage.setItem("dailyChallengeDate", today);
@@ -575,6 +586,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         claimWeeklyPowerCards,
         lastWeeklyClaimDate,
         setStarPointsCallback,
+        setXPCallback,
         multiplayerAnsweredQuestionIds: gameState.multiplayerAnsweredQuestionIds,
         addMultiplayerAnsweredQuestions,
         getMultiplayerUnansweredQuestions,
