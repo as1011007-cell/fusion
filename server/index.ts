@@ -287,10 +287,35 @@ function setupErrorHandler(app: express.Application) {
         cancel_url: cancelUrl,
       });
 
-      res.json({ url: session.url });
+      res.json({ url: session.url, sessionId: session.id });
     } catch (error: any) {
       console.error('Checkout error:', error);
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get('/api/stripe/verify-payment/:sessionId', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const stripe = await getUncachableStripeClient();
+
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+      if (session.payment_status === 'paid') {
+        res.json({ 
+          success: true, 
+          paymentStatus: session.payment_status,
+          metadata: session.metadata 
+        });
+      } else {
+        res.json({ 
+          success: false, 
+          paymentStatus: session.payment_status 
+        });
+      }
+    } catch (error: any) {
+      console.error('Payment verification error:', error);
+      res.status(500).json({ error: error.message, success: false });
     }
   });
 

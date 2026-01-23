@@ -127,6 +127,18 @@ export default function ShopScreen() {
     }
   };
 
+  const verifyPayment = async (sessionId: string): Promise<boolean> => {
+    try {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/stripe/verify-payment/${sessionId}`);
+      const data = await response.json();
+      return data.success === true;
+    } catch (error) {
+      console.error('Payment verification error:', error);
+      return false;
+    }
+  };
+
   const handlePurchaseStarPoints = async () => {
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -156,9 +168,10 @@ export default function ShopScreen() {
         });
         const checkoutData = await checkoutResponse.json();
 
-        if (checkoutData.url) {
-          const result = await WebBrowser.openBrowserAsync(checkoutData.url);
-          if (result.type === 'dismiss' || result.type === 'cancel') {
+        if (checkoutData.url && checkoutData.sessionId) {
+          await WebBrowser.openBrowserAsync(checkoutData.url);
+          const paymentSuccess = await verifyPayment(checkoutData.sessionId);
+          if (paymentSuccess) {
             addStarPoints(5000);
             if (settings.hapticsEnabled) {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -210,9 +223,10 @@ export default function ShopScreen() {
         });
         const checkoutData = await checkoutResponse.json();
 
-        if (checkoutData.url) {
-          const result = await WebBrowser.openBrowserAsync(checkoutData.url);
-          if (result.type === 'dismiss' || result.type === 'cancel') {
+        if (checkoutData.url && checkoutData.sessionId) {
+          await WebBrowser.openBrowserAsync(checkoutData.url);
+          const paymentSuccess = await verifyPayment(checkoutData.sessionId);
+          if (paymentSuccess) {
             setAdFree(true);
             if (settings.hapticsEnabled) {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -266,9 +280,10 @@ export default function ShopScreen() {
         });
         const checkoutData = await checkoutResponse.json();
 
-        if (checkoutData.url) {
-          const result = await WebBrowser.openBrowserAsync(checkoutData.url);
-          if (result.type === 'dismiss' || result.type === 'cancel') {
+        if (checkoutData.url && checkoutData.sessionId) {
+          await WebBrowser.openBrowserAsync(checkoutData.url);
+          const paymentSuccess = await verifyPayment(checkoutData.sessionId);
+          if (paymentSuccess) {
             setHasSupported(true);
             if (settings.hapticsEnabled) {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
