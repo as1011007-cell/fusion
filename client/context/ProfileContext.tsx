@@ -49,12 +49,54 @@ export type Settings = {
   musicVolume: number;
 };
 
+export type LevelInfo = {
+  level: number;
+  currentXP: number;
+  xpForNextLevel: number;
+  title: string;
+};
+
+const LEVEL_TITLES = [
+  "Newbie",
+  "Rookie",
+  "Player",
+  "Enthusiast",
+  "Competitor",
+  "Challenger",
+  "Expert",
+  "Master",
+  "Champion",
+  "Legend",
+  "Ultimate",
+];
+
+export const calculateLevel = (xp: number): LevelInfo => {
+  let level = 1;
+  let xpRequired = 100;
+  let totalXpForLevel = 0;
+  
+  while (xp >= totalXpForLevel + xpRequired && level < 100) {
+    totalXpForLevel += xpRequired;
+    level++;
+    xpRequired = Math.floor(100 * Math.pow(1.2, level - 1));
+  }
+  
+  const currentXP = xp - totalXpForLevel;
+  const xpForNextLevel = xpRequired;
+  const titleIndex = Math.min(Math.floor(level / 10), LEVEL_TITLES.length - 1);
+  const title = LEVEL_TITLES[titleIndex];
+  
+  return { level, currentXP, xpForNextLevel, title };
+};
+
 type ProfileContextType = {
   currentProfile: Profile | null;
   profiles: Profile[];
   avatars: Avatar[];
   settings: Settings;
   answeredQuestions: Set<string>;
+  experiencePoints: number;
+  levelInfo: LevelInfo;
   createProfile: (name: string, avatarId: string, customPhoto?: string) => void;
   createSocialProfile: (name: string, photo: string | null, provider: SocialProvider, socialId: string, email?: string) => void;
   updateProfile: (profileId: string, updates: Partial<Profile>) => void;
@@ -66,6 +108,9 @@ type ProfileContextType = {
   resetAnsweredQuestions: () => void;
   getUnansweredCount: (totalQuestions: number) => number;
   findProfileBySocialId: (socialId: string) => Profile | undefined;
+  addExperience: (xp: number) => void;
+  syncToCloud: () => Promise<boolean>;
+  loadFromCloud: () => Promise<boolean>;
 };
 
 const defaultAvatars: Avatar[] = [
@@ -101,6 +146,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [avatars, setAvatars] = useState<Avatar[]>(defaultAvatars);
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<string>>(new Set());
+  const [experiencePoints, setExperiencePoints] = useState<number>(0);
+  const levelInfo = calculateLevel(experiencePoints);
 
   useEffect(() => {
     loadData();
@@ -113,6 +160,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const avatarsData = await AsyncStorage.getItem("avatars");
       const settingsData = await AsyncStorage.getItem("settings");
       const answeredData = await AsyncStorage.getItem("answeredQuestions");
+      const xpData = await AsyncStorage.getItem("experiencePoints");
 
       if (profilesData) {
         const parsed = JSON.parse(profilesData);
@@ -134,6 +182,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (answeredData) {
         setAnsweredQuestions(new Set(JSON.parse(answeredData)));
       }
+
+      if (xpData) {
+        setExperiencePoints(JSON.parse(xpData));
+      }
     } catch (error) {
       console.error("Error loading profile data:", error);
     }
@@ -145,6 +197,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       await AsyncStorage.setItem("avatars", JSON.stringify(avatars));
       await AsyncStorage.setItem("settings", JSON.stringify(settings));
       await AsyncStorage.setItem("answeredQuestions", JSON.stringify([...answeredQuestions]));
+      await AsyncStorage.setItem("experiencePoints", JSON.stringify(experiencePoints));
       if (currentProfile) {
         await AsyncStorage.setItem("currentProfileId", currentProfile.id);
       }
@@ -155,7 +208,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     saveData();
-  }, [profiles, avatars, settings, answeredQuestions, currentProfile]);
+  }, [profiles, avatars, settings, answeredQuestions, currentProfile, experiencePoints]);
 
   const createProfile = (name: string, avatarId: string, customPhoto?: string) => {
     const newProfile: Profile = {
@@ -254,6 +307,52 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return totalQuestions - answeredQuestions.size;
   };
 
+  const addExperience = (xp: number) => {
+    setExperiencePoints((prev) => prev + xp);
+  };
+
+  const syncToCloud = async (): Promise<boolean> => {
+    if (!currentProfile?.socialId) return false;
+    
+    try {
+      const cloudData = {
+        odId: currentProfile.socialId,
+        profiles,
+        avatars,
+        settings,
+        answeredQuestions: [...answeredQuestions],
+        experiencePoints,
+        lastSync: new Date().toISOString(),
+      };
+      await AsyncStorage.setItem(`cloudSync_${currentProfile.socialId}`, JSON.stringify(cloudData));
+      return true;
+    } catch (error) {
+      console.error("Error syncing to cloud:", error);
+      return false;
+    }
+  };
+
+  const loadFromCloud = async (): Promise<boolean> => {
+    if (!currentProfile?.socialId) return false;
+    
+    try {
+      const cloudData = await AsyncStorage.getItem(`cloudSync_${currentProfile.socialId}`);
+      if (cloudData) {
+        const parsed = JSON.parse(cloudData);
+        if (parsed.profiles) setProfiles(parsed.profiles);
+        if (parsed.avatars) setAvatars(parsed.avatars);
+        if (parsed.settings) setSettings(parsed.settings);
+        if (parsed.answeredQuestions) setAnsweredQuestions(new Set(parsed.answeredQuestions));
+        if (parsed.experiencePoints) setExperiencePoints(parsed.experiencePoints);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error loading from cloud:", error);
+      return false;
+    }
+  };
+
   return (
     <ProfileContext.Provider
       value={{
@@ -262,6 +361,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         avatars,
         settings,
         answeredQuestions,
+        experiencePoints,
+        levelInfo,
         createProfile,
         createSocialProfile,
         updateProfile,
@@ -273,6 +374,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         resetAnsweredQuestions,
         getUnansweredCount,
         findProfileBySocialId,
+        addExperience,
+        syncToCloud,
+        loadFromCloud,
       }}
     >
       {children}
