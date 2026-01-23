@@ -413,8 +413,21 @@ export default function HomeScreen() {
     return decorations[config.decoration] || null;
   };
 
+  const backgroundGradients: Record<ThemeId, [string, string, string]> = {
+    electric: [colors.backgroundDark, "#0F1235", "#1A0A2E"],
+    sunset: ["#1A0505", "#2D1010", "#1A0A0A"],
+    ocean: ["#051525", "#0A1628", "#0A2035"],
+    forest: ["#051510", "#0A1A14", "#0A1F18"],
+    galaxy: ["#0A0515", "#0D0A1A", "#150A25"],
+  };
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
+    <LinearGradient
+      colors={backgroundGradients[themeId]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
       {renderDecoration()}
       <FloatingBubbles />
 
@@ -494,7 +507,7 @@ export default function HomeScreen() {
       <Animated.View entering={FadeInUp.delay(900).springify()} style={[styles.footer, { paddingBottom: insets.bottom + Spacing.md }]}>
         <ThemedText style={styles.footerText}>What Would They Say?</ThemedText>
       </Animated.View>
-    </View>
+    </LinearGradient>
   );
 }
 
