@@ -780,21 +780,25 @@ const styles = StyleSheet.create({
   roomCodeContainer: {
     alignItems: "center",
     marginBottom: Spacing.lg,
+    backgroundColor: GameColors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
   },
   roomCodeLabel: {
     ...Typography.caption,
     textTransform: "uppercase",
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
+    letterSpacing: 2,
   },
   roomCodeRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.md,
+    gap: Spacing.lg,
   },
   roomCode: {
-    fontSize: 36,
+    fontSize: 42,
     fontWeight: "bold",
-    letterSpacing: 4,
+    letterSpacing: 8,
   },
   codeActions: {
     flexDirection: "row",

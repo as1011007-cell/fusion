@@ -363,17 +363,21 @@ const styles = StyleSheet.create({
   scoreContainer: {
     alignItems: "center",
     marginBottom: Spacing["2xl"],
+    width: "100%",
+    paddingHorizontal: Spacing.lg,
   },
   scoreLabel: {
     ...Typography.body,
     color: GameColors.textSecondary,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
+    fontSize: 16,
   },
   score: {
-    fontSize: 48,
+    fontSize: 56,
     fontWeight: "700",
     color: GameColors.textPrimary,
     fontFamily: Typography.h1.fontFamily,
+    textAlign: "center",
   },
   partyResultContainer: {
     width: "100%",
