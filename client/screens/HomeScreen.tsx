@@ -436,7 +436,7 @@ export default function HomeScreen() {
       {renderDecoration()}
       <FloatingBubbles />
 
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
         <AnimatedPressable
           onPress={handleProfilePress}
           onPressIn={() => { profileScale.value = withSpring(0.9); }}

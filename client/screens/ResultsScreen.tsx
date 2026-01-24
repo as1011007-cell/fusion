@@ -88,7 +88,7 @@ export default function ResultsScreen() {
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingTop: insets.top + Spacing.lg },
+          { paddingTop: insets.top + Spacing["2xl"] },
         ]}
         showsVerticalScrollIndicator={false}
       >

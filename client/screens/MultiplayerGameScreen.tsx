@@ -146,7 +146,7 @@ export default function MultiplayerGameScreen() {
   if (gameFinished) {
     return (
       <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+        <View style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
           <ThemedText style={styles.headerTitle}>Game Over!</ThemedText>
         </View>
 
@@ -205,7 +205,7 @@ export default function MultiplayerGameScreen() {
   if (!localQuestion) {
     return (
       <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
-        <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
+        <View style={[styles.loadingContainer, { paddingTop: insets.top + Spacing.xl }]}>
           <ThemedText style={styles.loadingText}>Loading game...</ThemedText>
         </View>
       </View>
@@ -214,7 +214,7 @@ export default function MultiplayerGameScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
         <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: GameColors.surface }]}>
           <Feather name="x" size={24} color={GameColors.textPrimary} />
         </Pressable>

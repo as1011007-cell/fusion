@@ -568,7 +568,7 @@ export default function MultiplayerLobbyScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: GameColors.backgroundDark, paddingTop: insets.top }]}>
+    <View style={[styles.container, { backgroundColor: GameColors.backgroundDark, paddingTop: insets.top + Spacing.md }]}>
       <View style={styles.header}>
         <Pressable style={styles.backButton} onPress={handleBack}>
           <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
