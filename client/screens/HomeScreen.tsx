@@ -475,10 +475,10 @@ export default function HomeScreen() {
 
         <Animated.View entering={FadeInUp.delay(400).springify()} style={styles.titleContainer}>
           <View style={styles.titleRow}>
-            <ThemedText style={styles.title} adjustsFontSizeToFit numberOfLines={1}>
+            <ThemedText style={styles.title}>
               FEUD
             </ThemedText>
-            <ThemedText style={[styles.titleAccent, { color: colors.primary, textShadowColor: colors.primary }]} adjustsFontSizeToFit numberOfLines={1}>
+            <ThemedText style={[styles.titleAccent, { color: colors.primary, textShadowColor: colors.primary }]}>
               FUSION
             </ThemedText>
           </View>
@@ -588,35 +588,38 @@ const styles = StyleSheet.create({
   titleContainer: {
     alignItems: "center",
     marginBottom: Spacing["2xl"],
+    overflow: "visible",
   },
   titleRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.sm,
-    marginTop: 3,
     paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
     flexWrap: "nowrap",
     width: "100%",
-    maxWidth: SCREEN_WIDTH - Spacing.xl * 2,
+    overflow: "visible",
   },
   title: {
-    ...Typography.h1,
-    fontSize: Math.min(42, SCREEN_WIDTH * 0.11),
+    fontSize: Math.min(38, SCREEN_WIDTH * 0.10),
+    lineHeight: Math.min(50, SCREEN_WIDTH * 0.13),
     color: GameColors.textPrimary,
-    letterSpacing: 3,
+    letterSpacing: 2,
     fontWeight: "900",
     textShadowColor: "rgba(0, 0, 0, 0.5)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+    includeFontPadding: false,
   },
   titleAccent: {
-    ...Typography.h1,
-    fontSize: Math.min(42, SCREEN_WIDTH * 0.11),
-    letterSpacing: 3,
+    fontSize: Math.min(38, SCREEN_WIDTH * 0.10),
+    lineHeight: Math.min(50, SCREEN_WIDTH * 0.13),
+    letterSpacing: 2,
     fontWeight: "900",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
+    includeFontPadding: false,
   },
   subtitle: {
     ...Typography.body,

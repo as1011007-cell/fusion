@@ -679,16 +679,19 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   codeBox: {
-    width: 48,
-    height: 60,
+    width: 44,
+    height: 56,
     borderRadius: BorderRadius.md,
     borderWidth: 2,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "visible",
   },
   codeBoxText: {
-    fontSize: 28,
+    fontSize: 24,
+    lineHeight: 32,
     fontWeight: "bold",
+    includeFontPadding: false,
   },
   hiddenInput: {
     position: "absolute",
@@ -796,9 +799,11 @@ const styles = StyleSheet.create({
     gap: Spacing.lg,
   },
   roomCode: {
-    fontSize: 42,
+    fontSize: 38,
+    lineHeight: 50,
     fontWeight: "bold",
-    letterSpacing: 8,
+    letterSpacing: 6,
+    includeFontPadding: false,
   },
   codeActions: {
     flexDirection: "row",
