@@ -8,6 +8,17 @@ The game features a vibrant "Electric Collision" aesthetic with neon accents, pe
 
 ## Recent Changes (January 2026)
 
+### Google Play Store Preparation
+- Updated app.json with Android adaptive icon (foreground + monochrome)
+- Added Android permissions (INTERNET, VIBRATE)
+- Created eas.json for EAS Build configuration
+- Updated APP_STORE_ASSETS.md with:
+  - Google Play Data Safety declaration guide
+  - Content rating (IARC) questionnaire answers
+  - Store listing graphics requirements
+  - EAS Build instructions for generating AAB
+  - Complete submission checklist
+
 ### Profile System
 - Full profile creation with avatar selection and name input
 - Photo upload support using expo-image-picker
