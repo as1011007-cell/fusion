@@ -14,7 +14,7 @@ import { FeudFusionBrand } from "@/components/FeudFusionBrand";
 import { GradientButton } from "@/components/GradientButton";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
-import { useMultiplayer, MultiplayerPlayer } from "@/context/MultiplayerContext";
+import { useMultiplayer, MultiplayerPlayer, ChatMessage } from "@/context/MultiplayerContext";
 import { useProfile, avatarImages } from "@/context/ProfileContext";
 import { useGame } from "@/context/GameContext";
 import { allQuestions } from "@/data/questions";
@@ -33,12 +33,14 @@ export default function MultiplayerLobbyScreen() {
     room,
     error,
     gameStarted,
+    chatMessages,
     createRoom,
     joinRoom,
     setReady,
     selectPanel,
     startGame,
     leaveRoom,
+    sendChatMessage,
     clearError,
     resetGameStarted,
   } = useMultiplayer();
@@ -47,7 +49,9 @@ export default function MultiplayerLobbyScreen() {
   const [joinCode, setJoinCode] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
   const [selectedPanelId, setSelectedPanelId] = useState<string>("mixed");
+  const [chatInput, setChatInput] = useState("");
   const codeInputRef = useRef<TextInput>(null);
+  const chatScrollRef = useRef<ScrollView>(null);
   const pulseScale = useSharedValue(1);
 
   useEffect(() => {
@@ -220,6 +224,24 @@ export default function MultiplayerLobbyScreen() {
       Haptics.selectionAsync();
     }
   };
+
+  const handleSendChat = () => {
+    if (chatInput.trim()) {
+      sendChatMessage(chatInput.trim());
+      setChatInput("");
+      if (settings.hapticsEnabled) {
+        Haptics.selectionAsync();
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (chatMessages.length > 0) {
+      setTimeout(() => {
+        chatScrollRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [chatMessages.length]);
 
   const isHost = room?.hostId === playerId;
   const currentPlayer = room?.players.find(p => p.id === playerId);
@@ -527,6 +549,62 @@ export default function MultiplayerLobbyScreen() {
           </View>
         </View>
       )}
+
+      <View style={[styles.chatSection, { backgroundColor: GameColors.surface }]}>
+        <View style={styles.chatHeader}>
+          <Feather name="message-circle" size={18} color={GameColors.accent} />
+          <ThemedText style={styles.chatTitle}>Lobby Chat</ThemedText>
+        </View>
+        <ScrollView 
+          ref={chatScrollRef}
+          style={styles.chatMessages} 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.chatMessagesContent}
+        >
+          {chatMessages.length === 0 ? (
+            <ThemedText style={[styles.chatEmptyText, { color: GameColors.textSecondary }]}>
+              No messages yet. Say hello!
+            </ThemedText>
+          ) : (
+            chatMessages.map((msg) => (
+              <Animated.View
+                key={msg.id}
+                entering={FadeInDown.duration(200)}
+                style={[
+                  styles.chatBubble,
+                  msg.playerId === playerId ? styles.chatBubbleMine : styles.chatBubbleOther,
+                ]}
+              >
+                {msg.playerId !== playerId ? (
+                  <ThemedText style={[styles.chatSender, { color: GameColors.accent }]}>
+                    {msg.playerName}
+                  </ThemedText>
+                ) : null}
+                <ThemedText style={styles.chatMessageText}>{msg.message}</ThemedText>
+              </Animated.View>
+            ))
+          )}
+        </ScrollView>
+        <View style={styles.chatInputRow}>
+          <TextInput
+            style={[styles.chatInput, { backgroundColor: GameColors.backgroundDark, color: GameColors.textPrimary }]}
+            placeholder="Type a message..."
+            placeholderTextColor={GameColors.textSecondary}
+            value={chatInput}
+            onChangeText={setChatInput}
+            maxLength={200}
+            onSubmitEditing={handleSendChat}
+            returnKeyType="send"
+          />
+          <Pressable 
+            style={[styles.chatSendBtn, { backgroundColor: chatInput.trim() ? GameColors.accent : GameColors.surface }]}
+            onPress={handleSendChat}
+            disabled={!chatInput.trim()}
+          >
+            <Feather name="send" size={18} color={chatInput.trim() ? GameColors.backgroundDark : GameColors.textSecondary} />
+          </Pressable>
+        </View>
+      </View>
 
       <View style={styles.lobbyActions}>
         <Pressable
@@ -923,5 +1001,77 @@ const styles = StyleSheet.create({
   },
   startButton: {
     width: "100%",
+  },
+  chatSection: {
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  chatHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  chatTitle: {
+    ...Typography.h4,
+    fontWeight: "bold",
+  },
+  chatMessages: {
+    maxHeight: 150,
+    marginBottom: Spacing.sm,
+  },
+  chatMessagesContent: {
+    paddingVertical: Spacing.xs,
+  },
+  chatEmptyText: {
+    ...Typography.caption,
+    textAlign: "center",
+    fontStyle: "italic",
+    paddingVertical: Spacing.lg,
+  },
+  chatBubble: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.xs,
+    maxWidth: "85%",
+  },
+  chatBubbleMine: {
+    backgroundColor: GameColors.accent + "30",
+    alignSelf: "flex-end",
+  },
+  chatBubbleOther: {
+    backgroundColor: GameColors.backgroundDark,
+    alignSelf: "flex-start",
+  },
+  chatSender: {
+    ...Typography.caption,
+    fontWeight: "bold",
+    marginBottom: 2,
+  },
+  chatMessageText: {
+    ...Typography.body,
+    fontSize: 14,
+  },
+  chatInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  chatInput: {
+    flex: 1,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    ...Typography.body,
+    fontSize: 14,
+  },
+  chatSendBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

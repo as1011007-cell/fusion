@@ -38,12 +38,15 @@ export default function MultiplayerGameScreen() {
     roundResults,
     answeredCount,
     gameFinished,
+    roomReset,
     finalScores,
     winner,
     submitAnswer,
     nextQuestion,
     leaveRoom,
+    playAgain,
     clearResults,
+    clearRoomReset,
   } = useMultiplayer();
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -132,9 +135,15 @@ export default function MultiplayerGameScreen() {
   };
 
   const handlePlayAgain = () => {
-    leaveRoom();
-    navigation.navigate("MultiplayerLobby" as any);
+    playAgain();
   };
+
+  useEffect(() => {
+    if (roomReset && room?.status === "waiting") {
+      clearRoomReset();
+      navigation.navigate("MultiplayerLobby" as any);
+    }
+  }, [roomReset, room?.status]);
 
   const handleGoHome = () => {
     leaveRoom();

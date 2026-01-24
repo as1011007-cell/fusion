@@ -30,6 +30,14 @@ export interface RoundResult {
   newScore: number;
 }
 
+export interface ChatMessage {
+  id: string;
+  playerId: string;
+  playerName: string;
+  message: string;
+  timestamp: number;
+}
+
 interface MultiplayerContextType {
   connected: boolean;
   playerId: string | null;
@@ -40,8 +48,10 @@ interface MultiplayerContextType {
   answeredCount: number;
   gameFinished: boolean;
   gameStarted: boolean;
+  roomReset: boolean;
   finalScores: { id: string; name: string; score: number }[];
   winner: { id: string; name: string; score: number } | null;
+  chatMessages: ChatMessage[];
   createRoom: (playerName: string, avatarId: string, maxPlayers?: number) => void;
   joinRoom: (roomCode: string, playerName: string, avatarId: string) => void;
   setReady: (ready: boolean) => void;
@@ -50,9 +60,12 @@ interface MultiplayerContextType {
   submitAnswer: (answer: string, correctAnswer: string, points: number) => void;
   nextQuestion: () => void;
   leaveRoom: () => void;
+  playAgain: () => void;
+  sendChatMessage: (message: string) => void;
   clearError: () => void;
   clearResults: () => void;
   resetGameStarted: () => void;
+  clearRoomReset: () => void;
 }
 
 const MultiplayerContext = createContext<MultiplayerContextType | undefined>(undefined);
@@ -67,8 +80,10 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
   const [roundResults, setRoundResults] = useState<RoundResult[] | null>(null);
   const [answeredCount, setAnsweredCount] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);
+  const [roomReset, setRoomReset] = useState(false);
   const [finalScores, setFinalScores] = useState<{ id: string; name: string; score: number }[]>([]);
   const [winner, setWinner] = useState<{ id: string; name: string; score: number } | null>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -167,6 +182,22 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
         setGameFinished(true);
         setFinalScores(message.finalScores);
         setWinner(message.winner);
+        break;
+
+      case "ROOM_RESET":
+        setRoom(message.room);
+        setGameFinished(false);
+        setCurrentQuestion(null);
+        setRoundResults(null);
+        setAnsweredCount(0);
+        setFinalScores([]);
+        setWinner(null);
+        setChatMessages([]);
+        setRoomReset(true);
+        break;
+
+      case "CHAT_MESSAGE":
+        setChatMessages(prev => [...prev.slice(-49), message.message]);
         break;
 
       case "ROOM_EXPIRED":
@@ -270,7 +301,18 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
     setGameStarted(false);
     setFinalScores([]);
     setWinner(null);
+    setChatMessages([]);
     wsRef.current?.close();
+  }, [send]);
+
+  const playAgain = useCallback(() => {
+    send({ type: "PLAY_AGAIN" });
+  }, [send]);
+
+  const sendChatMessage = useCallback((message: string) => {
+    if (message.trim()) {
+      send({ type: "CHAT_MESSAGE", message: message.trim() });
+    }
   }, [send]);
 
   const clearError = useCallback(() => {
@@ -283,6 +325,10 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
 
   const resetGameStarted = useCallback(() => {
     setGameStarted(false);
+  }, []);
+
+  const clearRoomReset = useCallback(() => {
+    setRoomReset(false);
   }, []);
 
   useEffect(() => {
@@ -306,8 +352,10 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
         answeredCount,
         gameFinished,
         gameStarted,
+        roomReset,
         finalScores,
         winner,
+        chatMessages,
         createRoom,
         joinRoom,
         setReady,
@@ -316,9 +364,12 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
         submitAnswer,
         nextQuestion,
         leaveRoom,
+        playAgain,
+        sendChatMessage,
         clearError,
         clearResults,
         resetGameStarted,
+        clearRoomReset,
       }}
     >
       {children}

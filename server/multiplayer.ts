@@ -10,6 +10,14 @@ interface Player {
   ready: boolean;
 }
 
+interface ChatMessage {
+  id: string;
+  playerId: string;
+  playerName: string;
+  message: string;
+  timestamp: number;
+}
+
 interface GameRoom {
   id: string;
   code: string;
@@ -24,6 +32,7 @@ interface GameRoom {
   roundAnswers: Map<string, { answer: string; timestamp: number }>;
   maxPlayers: number;
   createdAt: Date;
+  chatMessages: ChatMessage[];
 }
 
 const rooms = new Map<string, GameRoom>();
@@ -104,6 +113,7 @@ export function setupMultiplayer(server: Server) {
               roundAnswers: new Map(),
               maxPlayers: message.maxPlayers || 8,
               createdAt: new Date(),
+              chatMessages: [],
             };
 
             const player: Player = {
@@ -321,6 +331,60 @@ export function setupMultiplayer(server: Server) {
             handlePlayerLeave(playerId, currentRoomCode);
             currentRoomCode = null;
             playerId = null;
+            break;
+          }
+
+          case 'PLAY_AGAIN': {
+            if (!currentRoomCode || !playerId) return;
+            const room = rooms.get(currentRoomCode);
+            if (!room) return;
+
+            // Reset room state for a new game
+            room.status = 'waiting';
+            room.currentQuestion = 0;
+            room.questions = [];
+            room.roundAnswers.clear();
+            room.chatMessages = [];
+            
+            // Reset all player scores and ready states (host stays ready)
+            room.players.forEach((player, pid) => {
+              player.score = 0;
+              player.ready = pid === room.hostId;
+            });
+
+            broadcastToRoom(room, {
+              type: 'ROOM_RESET',
+              room: getRoomState(room),
+            });
+            break;
+          }
+
+          case 'CHAT_MESSAGE': {
+            if (!currentRoomCode || !playerId) return;
+            const room = rooms.get(currentRoomCode);
+            if (!room || room.status !== 'waiting') return;
+
+            const player = room.players.get(playerId);
+            if (!player) return;
+
+            const chatMsg: ChatMessage = {
+              id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+              playerId,
+              playerName: player.name,
+              message: message.message?.slice(0, 200) || '',
+              timestamp: Date.now(),
+            };
+
+            room.chatMessages.push(chatMsg);
+            // Keep only the last 50 messages
+            if (room.chatMessages.length > 50) {
+              room.chatMessages = room.chatMessages.slice(-50);
+            }
+
+            broadcastToRoom(room, {
+              type: 'CHAT_MESSAGE',
+              message: chatMsg,
+            });
             break;
           }
         }
