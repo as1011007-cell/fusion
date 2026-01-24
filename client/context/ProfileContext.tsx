@@ -364,8 +364,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          socialId,
-          provider: "google",
+          userId: socialId,
           email,
           data: cloudData,
         }),
@@ -384,17 +383,17 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const loadFromCloud = async (overrideSocialId?: string): Promise<boolean> => {
-    const socialId = overrideSocialId || currentProfile?.socialId;
-    console.log("loadFromCloud called with socialId:", socialId);
-    if (!socialId) {
-      console.log("loadFromCloud: No socialId, returning false");
+  const loadFromCloud = async (overrideUserId?: string): Promise<boolean> => {
+    const userId = overrideUserId || currentProfile?.socialId;
+    console.log("loadFromCloud called with userId:", userId);
+    if (!userId) {
+      console.log("loadFromCloud: No userId, returning false");
       return false;
     }
     
     try {
       const baseUrl = getApiUrl();
-      const response = await fetch(`${baseUrl}/api/cloud-sync/load/${encodeURIComponent(socialId)}`);
+      const response = await fetch(`${baseUrl}/api/cloud-sync/load/${encodeURIComponent(userId)}`);
       
       if (!response.ok) {
         console.log("loadFromCloud: No cloud data found or server error", response.status);
