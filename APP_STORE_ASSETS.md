@@ -36,13 +36,24 @@ From Gen Z to Boomers, Desi Parents to Gamers, Artists to Office Workers - each 
 **Multiple Game Modes**
 - Solo Play: Test your perspective-reading skills
 - Party Mode: Pass the phone and compete with friends
+- Online Multiplayer: Create rooms and play with friends anywhere!
 - Daily Challenge: Fresh questions every day
+
+**Real-Time Multiplayer**
+- Create private game rooms with 6-character codes
+- Share room codes via text, social media, or QR
+- Live lobby chat while waiting for players
+- See everyone's answers in real-time
+- Play again together without leaving the room!
 
 **Earn & Customize**
 - Collect coins and star points as you play
 - Unlock 16 unique avatars
 - Choose from 5 stunning visual themes
 - Power up with Skip, Steal, and Double Bluff cards
+
+**Cloud Save**
+Create an account to sync your progress, avatars, and purchases across all your devices!
 
 **5,500+ Questions**
 Our massive question library ensures you'll never see the same question twice!
@@ -60,10 +71,13 @@ feud, trivia, party game, perspective, social game, family feud, guess, survey, 
 Welcome to Feud Fusion! This is our launch version featuring:
 - 28 demographic panels with unique perspectives
 - 5,500+ diverse questions
-- Solo, Party, and Daily Challenge modes
+- Solo, Party, Daily Challenge, and Online Multiplayer modes
+- Real-time multiplayer with private rooms and lobby chat
+- Email/password accounts with cloud sync
 - Avatar shop with 16 collectible avatars
 - 5 visual themes to customize your experience
 - Power cards: Skip, Steal, and Double Bluff
+- Level and XP progression system
 
 ---
 
@@ -136,22 +150,136 @@ The `/support` route redirects to this email address.
 
 ---
 
+---
+
+## Google Play Store Specific
+
+### Data Safety Declaration
+
+When filling out the Data Safety form in Google Play Console, provide:
+
+**Data collected:**
+- Email address (Account management, Authentication)
+- Name/Username (Profile display, Multiplayer)
+- Purchase history (In-app purchases via Stripe)
+- Game progress (Cloud sync)
+
+**Data NOT collected:**
+- Location
+- Device identifiers for advertising
+- Contacts
+- Photos/Videos (except optional profile photo upload)
+
+**Data sharing:**
+- Payment data shared with Stripe for processing purchases
+- No data sold to third parties
+
+**Data security:**
+- Data encrypted in transit (HTTPS)
+- Passwords hashed with bcrypt
+- Users can delete their account and data
+
+### Content Rating (IARC)
+
+When completing the content rating questionnaire:
+- No violence or gore
+- No sexual content
+- No profanity (user-generated chat in multiplayer - moderate)
+- No controlled substances
+- No gambling with real money
+- Interactive elements: Users Interact (multiplayer chat)
+- In-app purchases: Yes
+
+**Expected rating:** PEGI 3 / Everyone
+
+### Store Listing Graphics
+
+**Feature Graphic** (required): 1024 x 500 px
+- Display the app name "Feud Fusion" with colorful demographic bubbles
+- Use brand colors: Dark blue (#0A0E27), Magenta (#FF2E93), Cyan (#00D4FF)
+
+**Phone Screenshots**: 1080 x 1920 px minimum (16:9 or taller)
+- Minimum 2, maximum 8
+- Recommended: 4-6 screenshots showing key features
+
+**7-inch Tablet**: 1080 x 1920 px (optional)
+**10-inch Tablet**: 1200 x 1920 px (optional)
+
+---
+
+## Building for Google Play
+
+### Using EAS Build (Expo Application Services)
+
+1. **Install EAS CLI**:
+   ```bash
+   npm install -g eas-cli
+   eas login
+   ```
+
+2. **Configure EAS** (run in project root):
+   ```bash
+   eas build:configure
+   ```
+
+3. **Build Android App Bundle (AAB)**:
+   ```bash
+   eas build --platform android --profile production
+   ```
+
+4. **Download the AAB** from the Expo dashboard after build completes
+
+5. **Upload to Google Play Console**:
+   - Go to Google Play Console > Your App > Release > Production
+   - Create new release and upload the AAB file
+   - Fill in release notes from "What's New" section above
+
+### App Signing
+
+- Google Play uses App Signing by Google Play (recommended)
+- EAS handles the upload key automatically
+- First upload will establish your app's signing key
+
+---
+
 ## Checklist Before Submission
 
-- [ ] Set up Apple Developer Account ($99/year)
-- [ ] Set up Google Play Developer Account ($25 one-time)
-- [ ] Create privacy policy page
-- [ ] Create support page/email
-- [ ] Take 6 screenshots for each device size
-- [ ] Review and test all features
+### Developer Accounts
+- [ ] Set up Google Play Developer Account ($25 one-time fee)
+- [ ] Set up Apple Developer Account ($99/year) - for iOS
+
+### App Content
+- [ ] Privacy policy page is live and accessible
+- [ ] Test all game modes work correctly
+- [ ] Test multiplayer with multiple devices
+- [ ] Test in-app purchases in test mode
+- [ ] Verify cloud sync works
+
+### Store Listing
+- [ ] Prepare app icon (512 x 512 px)
+- [ ] Create feature graphic (1024 x 500 px)
+- [ ] Take 4-6 phone screenshots
+- [ ] Write short description (80 chars max)
+- [ ] Write full description (4000 chars max)
+
+### Google Play Specific
+- [ ] Complete Data Safety form
+- [ ] Complete Content Rating questionnaire
+- [ ] Set up pricing (Free with in-app purchases)
 - [ ] Configure Stripe for production payments
+- [ ] Select target countries/regions
+
+### Build & Submit
+- [ ] Build production AAB with EAS
+- [ ] Upload to Google Play Console
 - [ ] Submit for review
 
 ---
 
 ## Next Steps
 
-1. **Sign up for developer accounts** (links in main chat)
-2. **Create privacy policy** (can use free generators like termly.io)
-3. **Come back to Replit** and click Publish > Publish to App Store
-4. Follow the guided publishing flow
+1. **Create Google Play Developer Account**: https://play.google.com/console/signup ($25 one-time)
+2. **Publish your app on Replit** to get your live domain for privacy policy URL
+3. **Run EAS build** to generate the AAB file
+4. **Upload to Google Play Console** and complete the store listing
+5. **Submit for review** (typically 1-7 days)
