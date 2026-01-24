@@ -126,6 +126,29 @@ export default function SettingsScreen() {
 
             <View style={styles.divider} />
 
+            <Pressable 
+              style={styles.infoRow}
+              onPress={() => {
+                if (settings.hapticsEnabled) {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+                navigation.navigate("PrivacyPolicy");
+              }}
+            >
+              <View style={[styles.settingIcon, { backgroundColor: GameColors.primary + "20" }]}>
+                <Feather name="shield" size={20} color={GameColors.primary} />
+              </View>
+              <View style={styles.settingContent}>
+                <ThemedText style={styles.settingTitle}>Privacy Policy</ThemedText>
+                <ThemedText style={styles.settingDesc}>
+                  View our privacy policy
+                </ThemedText>
+              </View>
+              <Feather name="chevron-right" size={20} color={GameColors.textSecondary} />
+            </Pressable>
+
+            <View style={styles.divider} />
+
             <View style={styles.infoRow}>
               <View style={[styles.settingIcon, { backgroundColor: "#9B59B620" }]}>
                 <Feather name="heart" size={20} color="#9B59B6" />
