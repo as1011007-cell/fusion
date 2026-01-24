@@ -231,6 +231,8 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "700",
     color: GameColors.backgroundDark,
+    lineHeight: 38,
+    includeFontPadding: false,
   },
   calendarMonth: {
     ...Typography.caption,
