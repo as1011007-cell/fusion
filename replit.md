@@ -20,15 +20,14 @@ The game features a vibrant "Electric Collision" aesthetic with neon accents, pe
 - No-repeat question tracking until all answered, persisted in AsyncStorage
 - Panels: Gen Z, Desi Parents, Hustlers, Artists, Office Workers, Small Town, Blonde, Elder Sister, Endo Warriors, Millennials, Boomers, Teachers, Nurses, Gamers, Introverts, Extroverts, Pet Parents, Fitness Buffs, Foodies, Remote Workers, New Parents, College Students, Travelers, Music Lovers, Bookworms, Tech Workers, Only Child, Middle Child
 
-### Social Login & Cloud Sync (January 2026)
-- Google OAuth login integration using expo-auth-session
-- Facebook OAuth login integration using expo-auth-session
-- Profile sync from social accounts (name, profile picture, email)
-- Connected account badges shown on profile
-- Sign out functionality for social accounts
+### Email/Password Authentication & Cloud Sync (January 2026)
+- Email/password registration and login system
+- Password reset functionality with 6-character reset codes
+- Secure password hashing with bcrypt
 - AuthContext manages authentication state with AuthProvider wrapper
-- Cloud sync for Google-logged users: Save/Load progress to cloud
+- Cloud sync for logged-in users: Save/Load progress to cloud
 - Progress includes: profiles, avatars, settings, answered questions, XP
+- AuthScreen for login, registration, and password reset flows
 
 ### Level & Experience System (January 2026)
 - 11 progression titles: Newbie, Rising Star, Contender, Challenger, Champion, Elite, Master, Legend, Icon, Titan, Ultimate
