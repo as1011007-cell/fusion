@@ -1,77 +1,31 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as WebBrowser from "expo-web-browser";
-import * as AuthSession from "expo-auth-session";
-import { Platform, Linking } from "react-native";
 import { getApiUrl } from "@/lib/query-client";
 
-WebBrowser.maybeCompleteAuthSession();
-
-export type SocialProvider = "google" | "facebook" | null;
-
-export type SocialUser = {
+export type AuthUser = {
   id: string;
-  name: string;
   email: string;
-  picture: string | null;
-  provider: SocialProvider;
+  name: string | null;
 };
 
 type AuthContextType = {
-  socialUser: SocialUser | null;
+  user: AuthUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  loginWithGoogle: () => Promise<void>;
-  loginWithFacebook: () => Promise<void>;
+  register: (email: string, password: string, name?: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  forgotPassword: (email: string) => Promise<{ success: boolean; resetCode?: string; error?: string }>;
+  resetPassword: (email: string, resetCode: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   error: string | null;
-};
-
-const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || "";
-const FACEBOOK_APP_ID = process.env.EXPO_PUBLIC_FACEBOOK_APP_ID || "";
-
-const googleDiscovery = {
-  authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth",
-  tokenEndpoint: "https://oauth2.googleapis.com/token",
-  revocationEndpoint: "https://oauth2.googleapis.com/revoke",
-  userInfoEndpoint: "https://www.googleapis.com/oauth2/v3/userinfo",
-};
-
-const facebookDiscovery = {
-  authorizationEndpoint: "https://www.facebook.com/v18.0/dialog/oauth",
-  tokenEndpoint: "https://graph.facebook.com/v18.0/oauth/access_token",
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [socialUser, setSocialUser] = useState<SocialUser | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // For web, use the API domain for OAuth redirect
-  const getRedirectUri = () => {
-    if (Platform.OS === "web") {
-      try {
-        const apiUrl = getApiUrl();
-        return `${apiUrl}/auth/callback`;
-      } catch {
-        return AuthSession.makeRedirectUri({ scheme: "feudfusion", path: "auth" });
-      }
-    }
-    return AuthSession.makeRedirectUri({
-      scheme: "feudfusion",
-      path: "auth",
-      preferLocalhost: false,
-    });
-  };
-
-  const redirectUri = getRedirectUri();
-
-  // Log the redirect URI for debugging OAuth setup
-  useEffect(() => {
-    console.log("OAuth Redirect URI:", redirectUri);
-  }, [redirectUri]);
 
   useEffect(() => {
     loadStoredUser();
@@ -79,119 +33,139 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadStoredUser = async () => {
     try {
-      const userData = await AsyncStorage.getItem("socialUser");
+      const userData = await AsyncStorage.getItem("authUser");
       if (userData) {
-        setSocialUser(JSON.parse(userData));
+        setUser(JSON.parse(userData));
       }
     } catch (err) {
       console.error("Error loading stored user:", err);
-    }
-  };
-
-  const saveUser = async (user: SocialUser | null) => {
-    try {
-      if (user) {
-        await AsyncStorage.setItem("socialUser", JSON.stringify(user));
-      } else {
-        await AsyncStorage.removeItem("socialUser");
-      }
-      setSocialUser(user);
-    } catch (err) {
-      console.error("Error saving user:", err);
-    }
-  };
-
-  const loginWithGoogle = async () => {
-    if (!GOOGLE_CLIENT_ID) {
-      setError("Google login is not configured. Please add EXPO_PUBLIC_GOOGLE_CLIENT_ID.");
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const request = new AuthSession.AuthRequest({
-        clientId: GOOGLE_CLIENT_ID,
-        scopes: ["openid", "profile", "email"],
-        redirectUri,
-        responseType: AuthSession.ResponseType.Token,
-        usePKCE: false,
-      });
-
-      const result = await request.promptAsync(googleDiscovery);
-
-      if (result.type === "success" && result.authentication?.accessToken) {
-        const userInfoResponse = await fetch(
-          `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${result.authentication.accessToken}`
-        );
-        const userInfo = await userInfoResponse.json();
-
-        const user: SocialUser = {
-          id: userInfo.sub,
-          name: userInfo.name || "Google User",
-          email: userInfo.email || "",
-          picture: userInfo.picture || null,
-          provider: "google",
-        };
-
-        await saveUser(user);
-      } else if (result.type === "cancel") {
-        setError("Login was cancelled");
-      } else {
-        setError("Failed to login with Google");
-      }
-    } catch (err) {
-      console.error("Google login error:", err);
-      setError("An error occurred during Google login");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const loginWithFacebook = async () => {
-    if (!FACEBOOK_APP_ID) {
-      setError("Facebook login is not configured. Please add EXPO_PUBLIC_FACEBOOK_APP_ID.");
-      return;
+  const saveUser = async (userData: AuthUser | null) => {
+    try {
+      if (userData) {
+        await AsyncStorage.setItem("authUser", JSON.stringify(userData));
+      } else {
+        await AsyncStorage.removeItem("authUser");
+      }
+      setUser(userData);
+    } catch (err) {
+      console.error("Error saving user:", err);
     }
+  };
 
+  const register = async (email: string, password: string, name?: string): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const request = new AuthSession.AuthRequest({
-        clientId: FACEBOOK_APP_ID,
-        scopes: ["public_profile", "email"],
-        redirectUri,
-        responseType: AuthSession.ResponseType.Token,
-        usePKCE: false,
+      const response = await fetch(`${getApiUrl()}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name }),
       });
 
-      const result = await request.promptAsync(facebookDiscovery);
+      const data = await response.json();
 
-      if (result.type === "success" && result.authentication?.accessToken) {
-        const userInfoResponse = await fetch(
-          `https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=${result.authentication.accessToken}`
-        );
-        const userInfo = await userInfoResponse.json();
-
-        const user: SocialUser = {
-          id: userInfo.id,
-          name: userInfo.name || "Facebook User",
-          email: userInfo.email || "",
-          picture: userInfo.picture?.data?.url || null,
-          provider: "facebook",
-        };
-
-        await saveUser(user);
-      } else if (result.type === "cancel") {
-        setError("Login was cancelled");
-      } else {
-        setError("Failed to login with Facebook");
+      if (!response.ok) {
+        setError(data.error);
+        return { success: false, error: data.error };
       }
+
+      await saveUser(data.user);
+      return { success: true };
     } catch (err) {
-      console.error("Facebook login error:", err);
-      setError("An error occurred during Facebook login");
+      const errorMessage = "Failed to register. Please try again.";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${getApiUrl()}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error);
+        return { success: false, error: data.error };
+      }
+
+      await saveUser(data.user);
+      return { success: true };
+    } catch (err) {
+      const errorMessage = "Failed to login. Please try again.";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const forgotPassword = async (email: string): Promise<{ success: boolean; resetCode?: string; error?: string }> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${getApiUrl()}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error);
+        return { success: false, error: data.error };
+      }
+
+      return { success: true, resetCode: data.resetCode };
+    } catch (err) {
+      const errorMessage = "Failed to send reset code. Please try again.";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPassword = async (email: string, resetCode: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${getApiUrl()}/api/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, resetCode, newPassword }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error);
+        return { success: false, error: data.error };
+      }
+
+      return { success: true };
+    } catch (err) {
+      const errorMessage = "Failed to reset password. Please try again.";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
     } finally {
       setIsLoading(false);
     }
@@ -205,11 +179,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        socialUser,
+        user,
         isLoading,
-        isAuthenticated: !!socialUser,
-        loginWithGoogle,
-        loginWithFacebook,
+        isAuthenticated: !!user,
+        register,
+        login,
+        forgotPassword,
+        resetPassword,
         logout,
         error,
       }}
