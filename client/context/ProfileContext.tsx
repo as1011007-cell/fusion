@@ -407,8 +407,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         const parsed = result.data;
         if (parsed.profiles) {
           setProfiles(parsed.profiles);
-          // Find and set the current profile (match by socialId or take the first one)
-          const matchingProfile = parsed.profiles.find((p: Profile) => p.socialId === socialId);
+          // Find and set the current profile (match by userId or take the first one)
+          const matchingProfile = parsed.profiles.find((p: Profile) => p.socialId === userId);
           if (matchingProfile) {
             setCurrentProfile(matchingProfile);
             await AsyncStorage.setItem("currentProfileId", matchingProfile.id);
