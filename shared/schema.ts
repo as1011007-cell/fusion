@@ -7,21 +7,25 @@ export const users = pgTable("users", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
+  name: text("name"),
+  resetToken: text("reset_token"),
+  resetTokenExpiry: timestamp("reset_token_expiry"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
+  email: true,
   password: true,
+  name: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
 export const cloudSync = pgTable("cloud_sync", {
-  socialId: varchar("social_id").primaryKey(),
-  provider: varchar("provider").notNull(),
+  userId: varchar("user_id").primaryKey(),
   email: text("email"),
   data: jsonb("data").notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
