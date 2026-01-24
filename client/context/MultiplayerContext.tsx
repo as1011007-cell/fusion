@@ -149,9 +149,13 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
 
       case "PLAYER_JOINED":
       case "PLAYER_READY_UPDATE":
-      case "PLAYER_LEFT":
       case "PANEL_SELECTED":
         setRoom(message.room);
+        break;
+
+      case "PLAYER_LEFT":
+        setRoom(message.room);
+        // If host changed, update context so UI reflects new host
         break;
 
       case "GAME_STARTED":

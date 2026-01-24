@@ -416,13 +416,22 @@ export function setupMultiplayer(server: Server) {
       return;
     }
 
+    // If host left, assign new host
     if (room.hostId === playerId) {
       const newHost = room.players.keys().next().value;
       if (newHost) {
         room.hostId = newHost;
+        // Make new host ready if in waiting state
+        const newHostPlayer = room.players.get(newHost);
+        if (newHostPlayer && room.status === 'waiting') {
+          newHostPlayer.ready = true;
+        }
       }
     }
 
+    // If game was finished and someone left, allow remaining players to play again
+    // by keeping room in finished state but notifying all players of the change
+    
     broadcastToRoom(room, {
       type: 'PLAYER_LEFT',
       playerId,
