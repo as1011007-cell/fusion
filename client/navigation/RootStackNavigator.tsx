@@ -11,6 +11,7 @@ import PartySetupScreen from "@/screens/PartySetupScreen";
 import DailyChallengeScreen from "@/screens/DailyChallengeScreen";
 import MultiplayerLobbyScreen from "@/screens/MultiplayerLobbyScreen";
 import MultiplayerGameScreen from "@/screens/MultiplayerGameScreen";
+import AuthScreen from "@/screens/AuthScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { GameColors } from "@/constants/theme";
 
@@ -26,6 +27,7 @@ export type RootStackParamList = {
   DailyChallenge: undefined;
   MultiplayerLobby: undefined;
   MultiplayerGame: undefined;
+  Auth: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -70,6 +72,11 @@ export default function RootStackNavigator() {
       <Stack.Screen name="DailyChallenge" component={DailyChallengeScreen} />
       <Stack.Screen name="MultiplayerLobby" component={MultiplayerLobbyScreen} />
       <Stack.Screen name="MultiplayerGame" component={MultiplayerGameScreen} />
+      <Stack.Screen
+        name="Auth"
+        component={AuthScreen}
+        options={{ presentation: "modal" }}
+      />
     </Stack.Navigator>
   );
 }

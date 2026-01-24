@@ -27,7 +27,7 @@ export default function ProfileScreen() {
   const { currentProfile, profiles, avatars, createProfile, createSocialProfile, updateProfile, selectProfile, deleteProfile, levelInfo, experiencePoints, syncToCloud, loadFromCloud } = useProfile();
   const { totalCoins, reloadPlayerData } = useGame();
   const { starPoints, reloadThemeData } = useTheme();
-  const { socialUser, isAuthenticated, loginWithGoogle, logout, isLoading: authLoading, error: authError } = useAuth();
+  const { user, isAuthenticated, logout, isLoading: authLoading, error: authError } = useAuth();
 
   const [showCreateForm, setShowCreateForm] = useState(!currentProfile && profiles.length === 0);
   const [profileName, setProfileName] = useState("");
@@ -37,31 +37,18 @@ export default function ProfileScreen() {
   const [isSyncing, setIsSyncing] = useState(false);
   const prevSocialUserRef = useRef<string | null>(null);
 
-  // Auto-sync from cloud when user logs in with Google
   useEffect(() => {
     const autoSyncOnLogin = async () => {
-      if (socialUser && socialUser.id && prevSocialUserRef.current !== socialUser.id) {
-        prevSocialUserRef.current = socialUser.id;
-        console.log("Auto-syncing from cloud after login for:", socialUser.id);
+      if (user && user.id && prevSocialUserRef.current !== user.id) {
+        prevSocialUserRef.current = user.id;
+        console.log("Auto-syncing from cloud after login for:", user.id);
         setIsSyncing(true);
         
-        // Try to load existing cloud data
-        const loaded = await loadFromCloud(socialUser.id);
+        const loaded = await loadFromCloud(user.id);
         if (loaded) {
-          // Reload all context data from AsyncStorage
           await reloadPlayerData();
           await reloadThemeData();
           console.log("Auto-sync: Loaded data from cloud");
-        } else {
-          // No cloud data exists, create/link social profile
-          createSocialProfile(
-            socialUser.name,
-            socialUser.picture,
-            socialUser.provider,
-            socialUser.id,
-            socialUser.email
-          );
-          console.log("Auto-sync: Created new social profile");
         }
         
         setIsSyncing(false);
@@ -69,7 +56,7 @@ export default function ProfileScreen() {
     };
     
     autoSyncOnLogin();
-  }, [socialUser]);
+  }, [user]);
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -140,36 +127,22 @@ export default function ProfileScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
   };
 
-  const handleGoogleLogin = async () => {
+  const handleLogin = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await loginWithGoogle();
-  };
-
-  const handleConnectGoogle = async () => {
-    setIsSyncing(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await loginWithGoogle();
-    setIsSyncing(false);
+    navigation.navigate("Auth");
   };
 
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   const handleSyncProgress = async () => {
-    if (!socialUser) return;
+    if (!user) return;
     
     setIsSyncing(true);
     setSyncMessage(null);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    console.log("Attempting to save to cloud with socialUser.id:", socialUser.id);
+    console.log("Attempting to save to cloud with user.id:", user.id);
     
-    if (currentProfile && !currentProfile.socialId) {
-      updateProfile(currentProfile.id, {
-        socialId: socialUser.id,
-        socialProvider: socialUser.provider,
-      });
-    }
-    
-    const success = await syncToCloud(socialUser.id, socialUser.email);
+    const success = await syncToCloud(user.id, user.email);
     console.log("syncToCloud result:", success);
     if (success) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -183,14 +156,13 @@ export default function ProfileScreen() {
   };
 
   const handleLoadFromCloud = async () => {
-    if (!socialUser) return;
+    if (!user) return;
     
     setIsSyncing(true);
     setSyncMessage(null);
-    console.log("Attempting to load from cloud with socialUser.id:", socialUser.id);
-    const success = await loadFromCloud(socialUser.id);
+    console.log("Attempting to load from cloud with user.id:", user.id);
+    const success = await loadFromCloud(user.id);
     if (success) {
-      // Reload all context data from AsyncStorage
       await reloadPlayerData();
       await reloadThemeData();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -214,18 +186,18 @@ export default function ProfileScreen() {
       </ThemedText>
 
       {!editingProfile && !isAuthenticated ? (
-        <View style={styles.googleSignInSection}>
+        <View style={styles.loginSignInSection}>
           <Pressable
-            style={styles.googleSignInButton}
-            onPress={handleGoogleLogin}
+            style={styles.loginSignInButton}
+            onPress={handleLogin}
             disabled={authLoading}
           >
-            <Feather name="user" size={20} color="#4285F4" />
-            <ThemedText style={styles.googleSignInText}>
-              {authLoading ? "Connecting..." : "Sign in with Google"}
+            <Feather name="user" size={20} color={GameColors.primary} />
+            <ThemedText style={styles.loginSignInText}>
+              Sign In / Create Account
             </ThemedText>
           </Pressable>
-          <ThemedText style={styles.googleSignInDesc}>
+          <ThemedText style={styles.loginSignInDesc}>
             Sign in to save your progress to the cloud
           </ThemedText>
           <View style={styles.dividerContainer}>
@@ -236,11 +208,11 @@ export default function ProfileScreen() {
         </View>
       ) : null}
 
-      {isAuthenticated && socialUser && !editingProfile ? (
+      {isAuthenticated && user && !editingProfile ? (
         <View style={styles.connectedSection}>
           <Feather name="check-circle" size={18} color={GameColors.correct} />
           <ThemedText style={styles.connectedText}>
-            Signed in as {socialUser.name}
+            Signed in as {user.name || user.email}
           </ThemedText>
         </View>
       ) : null}
@@ -467,16 +439,16 @@ export default function ProfileScreen() {
                 <Feather name="chevron-right" size={20} color={GameColors.textSecondary} />
               </Pressable>
 
-              {isAuthenticated && socialUser ? (
+              {isAuthenticated && user ? (
                 <View style={styles.cloudSyncCard}>
                   <View style={styles.cloudSyncHeader}>
                     <View style={[styles.actionIcon, { backgroundColor: GameColors.correct + "20" }]}>
                       <Feather name="check-circle" size={24} color={GameColors.correct} />
                     </View>
                     <View style={styles.actionContent}>
-                      <ThemedText style={styles.actionTitle}>Connected to Google</ThemedText>
+                      <ThemedText style={styles.actionTitle}>Signed In</ThemedText>
                       <ThemedText style={styles.actionDesc}>
-                        {socialUser.email}
+                        {user.email}
                       </ThemedText>
                     </View>
                   </View>
@@ -524,15 +496,15 @@ export default function ProfileScreen() {
               ) : (
                 <Pressable
                   style={styles.actionCard}
-                  onPress={handleGoogleLogin}
+                  onPress={handleLogin}
                   disabled={authLoading}
                 >
-                  <View style={[styles.actionIcon, { backgroundColor: "#4285F4" + "20" }]}>
-                    <Feather name="user" size={24} color="#4285F4" />
+                  <View style={[styles.actionIcon, { backgroundColor: GameColors.primary + "20" }]}>
+                    <Feather name="user" size={24} color={GameColors.primary} />
                   </View>
                   <View style={styles.actionContent}>
                     <ThemedText style={styles.actionTitle}>
-                      {authLoading ? "Connecting..." : "Login with Google"}
+                      Sign In / Create Account
                     </ThemedText>
                     <ThemedText style={styles.actionDesc}>
                       Save your progress to the cloud
@@ -608,28 +580,28 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: Spacing.xl,
   },
-  googleSignInSection: {
+  loginSignInSection: {
     marginBottom: Spacing.lg,
   },
-  googleSignInButton: {
+  loginSignInButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#4285F4" + "15",
+    backgroundColor: GameColors.primary + "15",
     borderWidth: 1,
-    borderColor: "#4285F4" + "40",
+    borderColor: GameColors.primary + "40",
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
     borderRadius: BorderRadius.md,
     gap: Spacing.sm,
     marginBottom: Spacing.sm,
   },
-  googleSignInText: {
+  loginSignInText: {
     ...Typography.body,
-    color: "#4285F4",
+    color: GameColors.primary,
     fontWeight: "600",
   },
-  googleSignInDesc: {
+  loginSignInDesc: {
     ...Typography.caption,
     color: GameColors.textSecondary,
     textAlign: "center",
