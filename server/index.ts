@@ -27,7 +27,7 @@ function setupCors(app: express.Application) {
     }
 
     if (process.env.REPLIT_DOMAINS) {
-      process.env.REPLIT_DOMAINS.split(",").forEach((d) => {
+      process.env.REPLIT_DOMAINS.split(",").forEach((d: string) => {
         origins.add(`https://${d.trim()}`);
       });
     }
@@ -404,6 +404,47 @@ function setupErrorHandler(app: express.Application) {
   // Support page redirect
   app.get('/support', (_req, res) => {
     res.redirect('mailto:support@feudfusion.app');
+  });
+
+  // OAuth callback handler for Google login
+  app.get('/auth/callback', (req, res) => {
+    // This page handles the OAuth redirect and passes tokens back to the app
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Logging in...</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <style>
+            body { font-family: -apple-system, sans-serif; background: #1a1a2e; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
+            .container { padding: 40px; }
+            h1 { color: #00ff88; font-size: 24px; }
+            p { color: #ccc; font-size: 16px; margin-top: 10px; }
+            .spinner { width: 40px; height: 40px; border: 4px solid #333; border-top-color: #00ff88; border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto; }
+            @keyframes spin { to { transform: rotate(360deg); } }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="spinner"></div>
+            <h1>Logging you in...</h1>
+            <p>Please wait while we complete your login.</p>
+          </div>
+          <script>
+            // Pass the hash fragment (with access token) back to opener if present
+            if (window.opener) {
+              window.opener.postMessage({ type: 'oauth', url: window.location.href }, '*');
+              setTimeout(() => window.close(), 1000);
+            } else {
+              // If no opener, show a message to return to the app
+              document.querySelector('h1').textContent = 'Login Complete!';
+              document.querySelector('p').textContent = 'You can close this window and return to the app.';
+              document.querySelector('.spinner').style.display = 'none';
+            }
+          </script>
+        </body>
+      </html>
+    `);
   });
 
   configureExpoAndLanding(app);

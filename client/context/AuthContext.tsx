@@ -2,7 +2,8 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
-import { Platform } from "react-native";
+import { Platform, Linking } from "react-native";
+import { getApiUrl } from "@/lib/query-client";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -48,11 +49,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const redirectUri = AuthSession.makeRedirectUri({
-    scheme: "feudfusion",
-    path: "auth",
-    preferLocalhost: false,
-  });
+  // For web, use the API domain for OAuth redirect
+  const getRedirectUri = () => {
+    if (Platform.OS === "web") {
+      try {
+        const apiUrl = getApiUrl();
+        return `${apiUrl}/auth/callback`;
+      } catch {
+        return AuthSession.makeRedirectUri({ scheme: "feudfusion", path: "auth" });
+      }
+    }
+    return AuthSession.makeRedirectUri({
+      scheme: "feudfusion",
+      path: "auth",
+      preferLocalhost: false,
+    });
+  };
+
+  const redirectUri = getRedirectUri();
 
   // Log the redirect URI for debugging OAuth setup
   useEffect(() => {
