@@ -221,6 +221,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isInitialLoadComplete) return;
     
+    console.log("Auto-sync useEffect triggered - saving locally");
     saveData();
     
     // Auto-sync to cloud if user is logged in
@@ -232,6 +233,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         return;
       }
       
+      console.log("Scheduling cloud sync in 1 second");
       // Debounce cloud sync to avoid too many requests
       const timeoutId = setTimeout(() => {
         // Double check we haven't loaded from cloud during debounce
@@ -240,6 +242,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           console.log("Skipping auto-sync in timeout (just loaded from cloud)");
           return;
         }
+        console.log("Executing cloud sync now");
         syncToCloudInternal(currentProfile.socialId!);
       }, 1000);
       return () => clearTimeout(timeoutId);
@@ -371,10 +374,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   const purchaseAvatar = (avatarId: string, points: number): boolean => {
     const avatar = avatars.find((a) => a.id === avatarId);
+    console.log("purchaseAvatar called:", { avatarId, points, avatarPrice: avatar?.price, avatarOwned: avatar?.owned });
     if (!avatar || avatar.owned || points < avatar.price) {
+      console.log("purchaseAvatar failed - conditions not met");
       return false;
     }
 
+    console.log("purchaseAvatar success - updating avatar state");
     setAvatars((prev) =>
       prev.map((a) => (a.id === avatarId ? { ...a, owned: true } : a))
     );
