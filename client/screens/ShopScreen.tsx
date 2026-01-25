@@ -64,8 +64,10 @@ export default function ShopScreen() {
   };
 
   const handleEquipAvatar = (avatarId: string) => {
+    console.log("handleEquipAvatar called:", { avatarId, currentProfileId: currentProfile?.id, currentAvatarId: currentProfile?.avatarId });
     if (currentProfile) {
       updateProfile(currentProfile.id, { avatarId, customPhoto: null });
+      console.log("updateProfile called with avatarId:", avatarId);
       if (settings.hapticsEnabled) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }

@@ -369,11 +369,16 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   };
 
   const updateProfile = (profileId: string, updates: Partial<Profile>) => {
+    console.log("ProfileContext updateProfile called:", { profileId, updates });
     setProfiles((prev) =>
       prev.map((p) => (p.id === profileId ? { ...p, ...updates } : p))
     );
     if (currentProfile?.id === profileId) {
-      setCurrentProfile((prev) => (prev ? { ...prev, ...updates } : null));
+      setCurrentProfile((prev) => {
+        const updated = prev ? { ...prev, ...updates } : null;
+        console.log("currentProfile updated to:", updated);
+        return updated;
+      });
     }
   };
 
