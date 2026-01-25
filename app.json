@@ -12,6 +12,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.feudfusionwhatwouldtheysay.app",
       "usesGameCenter": true,
+      "entitlements": {
+        "com.apple.developer.game-center": true
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "GCSupportsGameCenterLogin": true
