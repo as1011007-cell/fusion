@@ -1,0 +1,148 @@
+GAME CENTER DISPLAY NAME
+
+FEUD FUSION
+
+Description (optional):
+Guess what the crowd thinks and prove you can read the room.
+
+LEADERBOARDS
+1️⃣ Global Score Leaderboard
+
+Reference Name: Global High Scores
+
+Leaderboard ID: global_high_score
+
+Score Format: Integer
+
+Sort Order: High to Low
+
+Score Reset: Never
+
+Description: Top scores from players worldwide
+
+2️⃣ Weekly Leaderboard (Optional)
+
+Reference Name: Weekly Champions
+
+Leaderboard ID: weekly_champions
+
+Score Format: Integer
+
+Sort Order: High to Low
+
+Score Reset: Every Week
+
+Description: Weekly best crowd-readers
+
+3️⃣ Friends Leaderboard (Optional)
+
+Reference Name: Friends Rankings
+
+Leaderboard ID: friends_score
+
+Scope: Friends Only
+
+Description: Compete with your friends
+
+ACHIEVEMENTS
+🎯 Recommended Achievements
+
+Top Answer!
+
+ID: top_answer_1
+
+Points: 10
+
+Description: Guess the #1 answer in a round
+
+Mind Reader
+
+ID: mind_reader_10
+
+Points: 25
+
+Description: Guess 10 top answers
+
+Steal Master
+
+ID: steal_master
+
+Points: 20
+
+Description: Win a round by stealing the top answer
+
+Winning Streak
+
+ID: win_streak_5
+
+Points: 30
+
+Description: Win 5 matches in a row
+
+Party Starter
+
+ID: party_mode_first
+
+Points: 10
+
+Description: Play your first multiplayer match
+
+Crowd Legend
+
+ID: crowd_legend
+
+Points: 50
+
+Description: Reach the highest rank
+
+MULTIPLAYER (If Using Game Center)
+Matchmaking
+
+Mode: Turn-based or Real-time (your choice)
+
+Min Players: 2
+
+Max Players: 6 (recommended for party feel)
+
+Invite Friends: Enabled
+
+Auto-Match: Enabled
+
+Match Description (Shown to players)
+
+Fast-paced trivia battles where guessing people beats knowing facts.
+
+PLAYER AUTHENTICATION
+
+Use Game Center automatic login
+
+Fallback to guest mode if user declines
+
+Do not block gameplay if Game Center is off (Apple prefers optional)
+
+AGE & CONTENT COMPLIANCE
+
+Family-friendly language
+
+No user-generated text shown publicly
+
+No gambling or real-money rewards
+✅ Fully compliant with Game Center policies
+
+TESTING CHECKLIST (IMPORTANT)
+
+Before submitting:
+
+✅ Test leaderboards in Sandbox
+
+✅ Test achievements unlocking
+
+✅ Test multiplayer invite + auto-match
+
+✅ Test offline play fallback
+
+APP REVIEW NOTE (Highly Recommended)
+
+Add this in App Store Review Notes:
+
+Game Center is used for optional leaderboards, achievements, and multiplayer matchmaking. The app remains fully playable without signing into Game Center.
