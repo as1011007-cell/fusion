@@ -150,10 +150,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [experiencePoints, setExperiencePoints] = useState<number>(0);
   const levelInfo = calculateLevel(experiencePoints);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const loadData = async () => {
     try {
       const profilesData = await AsyncStorage.getItem("profiles");
@@ -207,9 +203,54 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Track if initial load is complete to avoid syncing during load
+  const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
+
   useEffect(() => {
+    const initializeData = async () => {
+      await loadData();
+      setIsInitialLoadComplete(true);
+    };
+    initializeData();
+  }, []);
+
+  // Save locally and sync to cloud when data changes (after initial load)
+  useEffect(() => {
+    if (!isInitialLoadComplete) return;
+    
     saveData();
-  }, [profiles, avatars, settings, answeredQuestions, currentProfile, experiencePoints]);
+    
+    // Auto-sync to cloud if user is logged in
+    if (currentProfile?.socialId) {
+      // Debounce cloud sync to avoid too many requests
+      const timeoutId = setTimeout(() => {
+        syncToCloudInternal(currentProfile.socialId!);
+      }, 1000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [profiles, avatars, settings, answeredQuestions, currentProfile, experiencePoints, isInitialLoadComplete]);
+
+  // Internal sync function that doesn't depend on state
+  const syncToCloudInternal = async (userId: string) => {
+    try {
+      const baseUrl = getApiUrl();
+      const dataToSync = {
+        profiles,
+        avatars: avatars.map(({ image, ...rest }) => rest),
+        settings,
+        answeredQuestions: [...answeredQuestions],
+        experiencePoints,
+      };
+      
+      await fetch(`${baseUrl}/api/cloud-sync/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, data: dataToSync }),
+      });
+    } catch (error) {
+      console.error("Auto-sync to cloud failed:", error);
+    }
+  };
 
   const createProfile = (name: string, avatarId: string, customPhoto?: string) => {
     const newProfile: Profile = {
