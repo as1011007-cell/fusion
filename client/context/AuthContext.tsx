@@ -76,6 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       await saveUser(data.user);
+      // Set flag to trigger cloud sync in ProfileContext
+      await AsyncStorage.setItem("needsCloudSync", "true");
       return { success: true };
     } catch (err) {
       const errorMessage = "Failed to register. Please try again.";
@@ -105,6 +107,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       await saveUser(data.user);
+      // Set flag to trigger cloud sync in ProfileContext
+      await AsyncStorage.setItem("needsCloudSync", "true");
       return { success: true };
     } catch (err) {
       const errorMessage = "Failed to login. Please try again.";

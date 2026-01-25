@@ -217,6 +217,25 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     initializeData();
   }, []);
 
+  // Check for needsCloudSync flag (set by AuthContext on login/register)
+  useEffect(() => {
+    const checkAndSyncFromCloud = async () => {
+      if (!isInitialLoadComplete) return;
+      
+      const needsSync = await AsyncStorage.getItem("needsCloudSync");
+      if (needsSync === "true" && currentProfile?.socialId) {
+        console.log("needsCloudSync flag detected, syncing from cloud for:", currentProfile.socialId);
+        // Clear the flag first to prevent re-syncing
+        await AsyncStorage.removeItem("needsCloudSync");
+        
+        // Load from cloud
+        await loadFromCloud(currentProfile.socialId);
+      }
+    };
+    
+    checkAndSyncFromCloud();
+  }, [isInitialLoadComplete, currentProfile?.socialId]);
+
   // Save locally and sync to cloud when data changes (after initial load)
   useEffect(() => {
     if (!isInitialLoadComplete) return;
