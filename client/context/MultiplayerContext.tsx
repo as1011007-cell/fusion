@@ -51,6 +51,7 @@ interface MultiplayerContextType {
   roomReset: boolean;
   finalScores: { id: string; name: string; score: number }[];
   winner: { id: string; name: string; score: number } | null;
+  isDraw: boolean;
   chatMessages: ChatMessage[];
   createRoom: (playerName: string, avatarId: string, maxPlayers?: number) => void;
   joinRoom: (roomCode: string, playerName: string, avatarId: string) => void;
@@ -83,6 +84,7 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
   const [roomReset, setRoomReset] = useState(false);
   const [finalScores, setFinalScores] = useState<{ id: string; name: string; score: number }[]>([]);
   const [winner, setWinner] = useState<{ id: string; name: string; score: number } | null>(null);
+  const [isDraw, setIsDraw] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   
   const wsRef = useRef<WebSocket | null>(null);
@@ -186,6 +188,7 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
         setGameFinished(true);
         setFinalScores(message.finalScores);
         setWinner(message.winner);
+        setIsDraw(message.isDraw || false);
         break;
 
       case "ROOM_RESET":
@@ -196,6 +199,7 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
         setAnsweredCount(0);
         setFinalScores([]);
         setWinner(null);
+        setIsDraw(false);
         setChatMessages([]);
         setRoomReset(true);
         break;
@@ -305,6 +309,7 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
     setGameStarted(false);
     setFinalScores([]);
     setWinner(null);
+    setIsDraw(false);
     setChatMessages([]);
     wsRef.current?.close();
   }, [send]);
@@ -359,6 +364,7 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
         roomReset,
         finalScores,
         winner,
+        isDraw,
         chatMessages,
         createRoom,
         joinRoom,

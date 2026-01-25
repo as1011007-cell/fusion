@@ -41,6 +41,7 @@ export default function MultiplayerGameScreen() {
     roomReset,
     finalScores,
     winner,
+    isDraw,
     submitAnswer,
     nextQuestion,
     leaveRoom,
@@ -161,11 +162,17 @@ export default function MultiplayerGameScreen() {
 
         <ScrollView style={styles.content} contentContainerStyle={styles.resultsContainer}>
           <Animated.View entering={ZoomIn.duration(500)} style={styles.winnerSection}>
-            <Feather name="award" size={64} color={GameColors.accent} />
-            <ThemedText style={styles.winnerLabel}>Winner</ThemedText>
-            <ThemedText style={styles.winnerName}>{winner?.name}</ThemedText>
+            <Feather name={isDraw ? "users" : "award"} size={64} color={GameColors.accent} />
+            <ThemedText style={styles.winnerLabel}>{isDraw ? "It's a Draw!" : "Winner"}</ThemedText>
+            {isDraw ? (
+              <ThemedText style={styles.winnerName}>
+                {finalScores.filter(p => p.score === finalScores[0]?.score).map(p => p.name).join(" & ")}
+              </ThemedText>
+            ) : (
+              <ThemedText style={styles.winnerName}>{winner?.name}</ThemedText>
+            )}
             <ThemedText style={[styles.winnerScore, { color: GameColors.accent }]}>
-              {winner?.score} points
+              {isDraw ? finalScores[0]?.score : winner?.score} points
             </ThemedText>
           </Animated.View>
 

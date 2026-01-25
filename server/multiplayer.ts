@@ -307,10 +307,16 @@ export function setupMultiplayer(server: Server) {
 
               console.log('Game finished! Final scores:', finalScores);
 
+              // Check for tie - if top 2+ players have same score, it's a draw
+              const topScore = finalScores[0]?.score || 0;
+              const playersWithTopScore = finalScores.filter(p => p.score === topScore);
+              const isDraw = playersWithTopScore.length > 1;
+
               broadcastToRoom(room, {
                 type: 'GAME_FINISHED',
                 finalScores,
-                winner: finalScores[0],
+                winner: isDraw ? null : finalScores[0],
+                isDraw,
                 room: getRoomState(room),
               });
             } else {
