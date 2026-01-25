@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getApiUrl } from "@/lib/query-client";
 
@@ -205,6 +205,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   // Track if initial load is complete to avoid syncing during load
   const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
+  
+  // Track when we loaded from cloud to skip auto-syncs for a period
+  const cloudLoadTimestampRef = useRef<number>(0);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -222,8 +225,21 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     
     // Auto-sync to cloud if user is logged in
     if (currentProfile?.socialId) {
+      // Skip auto-sync if we just loaded from cloud (within last 3 seconds)
+      const timeSinceCloudLoad = Date.now() - cloudLoadTimestampRef.current;
+      if (timeSinceCloudLoad < 3000) {
+        console.log("Skipping auto-sync (just loaded from cloud)");
+        return;
+      }
+      
       // Debounce cloud sync to avoid too many requests
       const timeoutId = setTimeout(() => {
+        // Double check we haven't loaded from cloud during debounce
+        const checkTime = Date.now() - cloudLoadTimestampRef.current;
+        if (checkTime < 3000) {
+          console.log("Skipping auto-sync in timeout (just loaded from cloud)");
+          return;
+        }
         syncToCloudInternal(currentProfile.socialId!);
       }, 1000);
       return () => clearTimeout(timeoutId);
@@ -477,6 +493,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       console.log("loadFromCloud: Retrieved data from server");
 
       if (result.success && result.data) {
+        // Set timestamp to skip auto-sync for a period after loading from cloud
+        cloudLoadTimestampRef.current = Date.now();
+        
         const parsed = result.data;
         if (parsed.profiles) {
           setProfiles(parsed.profiles);
