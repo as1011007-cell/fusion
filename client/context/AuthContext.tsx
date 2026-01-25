@@ -173,6 +173,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     await saveUser(null);
+    // Clear sync flag so next login will sync from cloud
+    await AsyncStorage.removeItem("lastSyncedUserId");
     setError(null);
   };
 

@@ -7,6 +7,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { ThemedText } from "@/components/ThemedText";
 import { FeudFusionBrand } from "@/components/FeudFusionBrand";
@@ -35,28 +36,36 @@ export default function ProfileScreen() {
   const [customPhoto, setCustomPhoto] = useState<string | null>(null);
   const [editingProfile, setEditingProfile] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const prevSocialUserRef = useRef<string | null>(null);
+  const hasSyncedRef = useRef<string | null>(null);
 
+  // Sync from cloud only once per user login session (not on every screen visit)
   useEffect(() => {
-    const autoSyncOnLogin = async () => {
-      if (user && user.id && prevSocialUserRef.current !== user.id) {
-        prevSocialUserRef.current = user.id;
-        console.log("Auto-syncing from cloud after login for:", user.id);
-        setIsSyncing(true);
-        
-        const loaded = await loadFromCloud(user.id);
-        if (loaded) {
-          await reloadPlayerData();
-          await reloadThemeData();
-          console.log("Auto-sync: Loaded data from cloud");
-        }
-        
-        setIsSyncing(false);
+    const syncOncePerSession = async () => {
+      if (!user || !user.id) return;
+      
+      // Check if we already synced for this user
+      const lastSyncedUserId = await AsyncStorage.getItem("lastSyncedUserId");
+      if (lastSyncedUserId === user.id && hasSyncedRef.current === user.id) {
+        // Already synced for this user in this session
+        return;
       }
+      
+      console.log("Initial sync from cloud for user:", user.id);
+      hasSyncedRef.current = user.id;
+      await AsyncStorage.setItem("lastSyncedUserId", user.id);
+      
+      setIsSyncing(true);
+      const loaded = await loadFromCloud(user.id);
+      if (loaded) {
+        await reloadPlayerData();
+        await reloadThemeData();
+        console.log("Initial sync: Loaded data from cloud");
+      }
+      setIsSyncing(false);
     };
     
-    autoSyncOnLogin();
-  }, [user]);
+    syncOncePerSession();
+  }, [user?.id]);
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
