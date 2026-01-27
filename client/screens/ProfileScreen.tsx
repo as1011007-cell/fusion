@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { StyleSheet, View, ScrollView, Pressable, TextInput, Image, Platform, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import * as ImagePicker from "expo-image-picker";
@@ -38,6 +39,32 @@ export default function ProfileScreen() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const autoSyncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      reloadThemeData();
+      reloadPlayerData();
+    }, [reloadThemeData, reloadPlayerData])
+  );
+
+  useEffect(() => {
+    if (!user || !isAuthenticated) return;
+    
+    if (autoSyncTimeoutRef.current) {
+      clearTimeout(autoSyncTimeoutRef.current);
+    }
+    
+    autoSyncTimeoutRef.current = setTimeout(async () => {
+      await syncToCloud(user.id, user.email);
+    }, 2000);
+
+    return () => {
+      if (autoSyncTimeoutRef.current) {
+        clearTimeout(autoSyncTimeoutRef.current);
+      }
+    };
+  }, [currentProfile, profiles, avatars, experiencePoints, user, isAuthenticated]);
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -133,27 +160,6 @@ export default function ProfileScreen() {
   };
 
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
-
-  const handleSyncProgress = async () => {
-    if (!user) return;
-    
-    setIsSyncing(true);
-    setSyncMessage(null);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    console.log("Attempting to save to cloud with user.id:", user.id);
-    
-    const success = await syncToCloud(user.id, user.email);
-    console.log("syncToCloud result:", success);
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setSyncMessage("Progress saved!");
-    } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      setSyncMessage("Failed to save progress");
-    }
-    setIsSyncing(false);
-    setTimeout(() => setSyncMessage(null), 3000);
-  };
 
   const handleLoadFromCloud = async () => {
     if (!user) return;
@@ -452,17 +458,13 @@ export default function ProfileScreen() {
                       </ThemedText>
                     </View>
                   </View>
+                  <View style={styles.autoSyncInfo}>
+                    <Feather name="check-circle" size={14} color={GameColors.correct} />
+                    <ThemedText style={styles.autoSyncText}>
+                      Progress saves automatically
+                    </ThemedText>
+                  </View>
                   <View style={styles.cloudSyncButtons}>
-                    <Pressable 
-                      style={styles.cloudSyncButton} 
-                      onPress={handleSyncProgress}
-                      disabled={isSyncing}
-                    >
-                      <Feather name="upload-cloud" size={18} color={GameColors.primary} />
-                      <ThemedText style={styles.cloudSyncButtonText}>
-                        {isSyncing ? "Syncing..." : "Save Progress"}
-                      </ThemedText>
-                    </Pressable>
                     <Pressable 
                       style={styles.cloudSyncButton} 
                       onPress={handleLoadFromCloud}
@@ -470,7 +472,7 @@ export default function ProfileScreen() {
                     >
                       <Feather name="download-cloud" size={18} color={GameColors.accent} />
                       <ThemedText style={[styles.cloudSyncButtonText, { color: GameColors.accent }]}>
-                        Load Progress
+                        {isSyncing ? "Loading..." : "Load from Cloud"}
                       </ThemedText>
                     </Pressable>
                   </View>
@@ -545,8 +547,8 @@ export default function ProfileScreen() {
             <TextInput
               style={[styles.modalInput, { 
                 backgroundColor: GameColors.backgroundDark,
-                color: GameColors.text,
-                borderColor: deleteError ? GameColors.wrong : GameColors.border
+                color: GameColors.textPrimary,
+                borderColor: deleteError ? GameColors.wrong : GameColors.textSecondary
               }]}
               placeholder="Enter your password to confirm"
               placeholderTextColor={GameColors.textSecondary}
@@ -989,10 +991,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: Spacing.md,
   },
+  autoSyncInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  autoSyncText: {
+    ...Typography.caption,
+    color: GameColors.correct,
+  },
   cloudSyncButtons: {
     flexDirection: "row",
     gap: Spacing.sm,
     marginBottom: Spacing.md,
+    justifyContent: "center",
   },
   cloudSyncButton: {
     flex: 1,
@@ -1092,7 +1106,7 @@ const styles = StyleSheet.create({
   modalCancelButton: {
     backgroundColor: GameColors.backgroundDark,
     borderWidth: 1,
-    borderColor: GameColors.border,
+    borderColor: GameColors.textSecondary,
   },
   modalDeleteButton: {
     backgroundColor: GameColors.wrong,
