@@ -1,0 +1,65 @@
+See below for additional information about the issues that require your attention for this submission. If you have any questions, we are here to help. Reply to this message in App Store Connect and let us know.
+
+Review Environment
+
+Submission ID: bd92a20b-94c0-49b6-a6ef-1a78f4869922
+Review date: January 27, 2026
+Review Device: iPad M3
+Version reviewed: 1
+
+
+Guideline 5.1.1 - Legal - Privacy - Data Collection and Storage
+
+Issue Description
+
+One or more purpose strings in the app do not sufficiently explain the use of protected resources. Purpose strings must clearly and completely describe the app's use of data and, in most cases, provide an example of how the data will be used.
+
+Next Steps
+
+Update the photo library purpose string to explain how the app will use the requested information and provide a specific example of how the data will be used. See the attached screenshot.
+
+Resources
+
+Purpose strings must clearly describe how an app uses the ability, data, or resource. The following are hypothetical examples of unclear purpose strings that would not pass review: 
+
+- "App would like to access your Contacts"
+- "App needs microphone access"
+
+See examples of helpful, informative purpose strings.
+
+
+Guideline 5.1.1(v) - Data Collection and Storage
+
+Issue Description
+
+The app supports account creation but does not include an option to initiate account deletion. Apps that support account creation must also offer account deletion to give users more control of the data they've shared while using an app.
+
+Follow these requirements when updating an app to support account deletion:
+
+- Only offering to temporarily deactivate or disable an account is insufficient.
+- If users need to visit a website to finish deleting their account, include a link directly to the website page where they can complete the process.
+- Apps may include confirmation steps to prevent users from accidentally deleting their account. However, only apps in highly-regulated industries may require users to use customer service resources, such as making a phone call or sending an email, to complete account deletion.
+
+Next Steps
+
+Update the app to support account deletion. If the app already supports account deletion, reply to App Review in App Store Connect and identify where to locate this feature.
+
+If the app is unable to offer account deletion or needs to provide additional customer service flows to facilitate and confirm account deletion, either because the app operates in a highly-regulated industry or for some other reason, reply to App Review in App Store Connect and provide additional information or documentation. For questions regarding legal obligations, check with legal counsel.
+
+Resources
+
+Review frequently asked questions and learn more about the account deletion requirements.
+
+
+Guideline 2.1 - Performance - App Completeness
+
+
+We are unable to complete the review of the app because one or more of the in-app purchase products have not been submitted for review.
+
+Specifically, the app includes references to ad free but the associated in-app purchase products have not been submitted for review. 
+
+Next Steps
+
+To resolve this issue, please be sure to take action and submit your in-app purchases and upload a new binary in App Store Connect so we can proceed with our review. 
+
+Note you must provide an App Review screenshot in App Store Connect in order to submit in-app purchases for review. Learn more about required in-app purchase metadata.

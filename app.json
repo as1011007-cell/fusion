@@ -17,7 +17,8 @@
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "GCSupportsGameCenterLogin": true
+        "GCSupportsGameCenterLogin": true,
+        "NSPhotoLibraryUsageDescription": "Feud Fusion needs access to your photo library so you can select a custom profile picture to personalize your player avatar. For example, you can choose a photo of yourself to display on leaderboards and in multiplayer games."
       }
     },
     "android": {
