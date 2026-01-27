@@ -1415,15 +1415,22 @@ export function getDailyChallenge(): Question[] {
   
   const panelIds = [...new Set(allQuestions.map(q => q.panelId))];
   const selectedQuestions: Question[] = [];
+  const usedQuestionIds = new Set<string>();
   
-  for (let i = 0; i < 10; i++) {
-    const panelIndex = Math.floor(seededRandom(seed + i) * panelIds.length);
+  let attempts = 0;
+  const maxAttempts = 100;
+  
+  while (selectedQuestions.length < 10 && attempts < maxAttempts) {
+    const panelIndex = Math.floor(seededRandom(seed + attempts) * panelIds.length);
     const panelQuestions = allQuestions.filter(q => q.panelId === panelIds[panelIndex]);
-    const questionIndex = Math.floor(seededRandom(seed + i + 100) * panelQuestions.length);
+    const questionIndex = Math.floor(seededRandom(seed + attempts + 100) * panelQuestions.length);
     
-    if (panelQuestions[questionIndex]) {
-      selectedQuestions.push(panelQuestions[questionIndex]);
+    const question = panelQuestions[questionIndex];
+    if (question && !usedQuestionIds.has(question.id)) {
+      selectedQuestions.push(question);
+      usedQuestionIds.add(question.id);
     }
+    attempts++;
   }
   
   return selectedQuestions.length > 0 ? selectedQuestions : allQuestions.slice(0, 10);
