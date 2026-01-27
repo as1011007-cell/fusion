@@ -156,6 +156,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete account endpoint
+  app.delete("/api/auth/delete-account", async (req, res) => {
+    try {
+      const { userId, email, password } = req.body;
+
+      if (!userId || !email || !password) {
+        return res.status(400).json({ error: "User ID, email, and password are required" });
+      }
+
+      const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Verify email matches
+      if (user.email.toLowerCase() !== email.toLowerCase()) {
+        return res.status(400).json({ error: "Email does not match" });
+      }
+
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return res.status(400).json({ error: "Incorrect password" });
+      }
+
+      // Delete cloud sync data first
+      await db.delete(cloudSync).where(eq(cloudSync.userId, userId));
+
+      // Delete user account
+      await db.delete(users).where(eq(users.id, userId));
+
+      res.json({ success: true, message: "Account deleted successfully" });
+    } catch (error) {
+      console.error("Delete account error:", error);
+      res.status(500).json({ error: "Failed to delete account" });
+    }
+  });
+
   app.post("/api/cloud-sync/save", async (req, res) => {
     try {
       const { userId, email, data } = req.body;

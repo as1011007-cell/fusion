@@ -16,6 +16,7 @@ type AuthContextType = {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   forgotPassword: (email: string) => Promise<{ success: boolean; resetCode?: string; error?: string }>;
   resetPassword: (email: string, resetCode: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
+  deleteAccount: (password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   error: string | null;
 };
@@ -175,6 +176,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const deleteAccount = async (password: string): Promise<{ success: boolean; error?: string }> => {
+    if (!user) {
+      return { success: false, error: "Not logged in" };
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const baseUrl = getApiUrl();
+      const response = await fetch(`${baseUrl}/api/auth/delete-account`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, email: user.email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error);
+        return { success: false, error: data.error };
+      }
+
+      // Clear all local data
+      await saveUser(null);
+      await AsyncStorage.removeItem("lastSyncedUserId");
+      await AsyncStorage.removeItem("needsCloudSync");
+      setError(null);
+      return { success: true };
+    } catch (err) {
+      const errorMessage = "Failed to delete account. Please try again.";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = async () => {
     await saveUser(null);
     // Clear sync flag so next login will sync from cloud
@@ -192,6 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         forgotPassword,
         resetPassword,
+        deleteAccount,
         logout,
         error,
       }}

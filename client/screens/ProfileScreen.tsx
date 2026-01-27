@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, ScrollView, Pressable, TextInput, Image, Platform } from "react-native";
+import { StyleSheet, View, ScrollView, Pressable, TextInput, Image, Platform, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -27,7 +27,7 @@ export default function ProfileScreen() {
   const { currentProfile, profiles, avatars, createProfile, createSocialProfile, updateProfile, selectProfile, deleteProfile, levelInfo, experiencePoints, syncToCloud, loadFromCloud } = useProfile();
   const { totalCoins, reloadPlayerData } = useGame();
   const { starPoints, reloadThemeData } = useTheme();
-  const { user, isAuthenticated, logout, isLoading: authLoading, error: authError } = useAuth();
+  const { user, isAuthenticated, logout, deleteAccount, isLoading: authLoading, error: authError } = useAuth();
 
   const [showCreateForm, setShowCreateForm] = useState(!currentProfile && profiles.length === 0);
   const [profileName, setProfileName] = useState("");
@@ -35,6 +35,9 @@ export default function ProfileScreen() {
   const [customPhoto, setCustomPhoto] = useState<string | null>(null);
   const [editingProfile, setEditingProfile] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -108,6 +111,25 @@ export default function ProfileScreen() {
   const handleLogin = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     navigation.navigate("Auth");
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword.trim()) {
+      setDeleteError("Please enter your password");
+      return;
+    }
+    
+    setDeleteError(null);
+    const result = await deleteAccount(deletePassword);
+    
+    if (result.success) {
+      setShowDeleteModal(false);
+      setDeletePassword("");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      setDeleteError(result.error || "Failed to delete account");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
   };
 
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
@@ -470,6 +492,12 @@ export default function ProfileScreen() {
                   <Pressable style={styles.signOutButton} onPress={logout}>
                     <ThemedText style={styles.signOutText}>Sign Out</ThemedText>
                   </Pressable>
+                  <Pressable 
+                    style={styles.deleteAccountButton} 
+                    onPress={() => setShowDeleteModal(true)}
+                  >
+                    <ThemedText style={styles.deleteAccountText}>Delete Account</ThemedText>
+                  </Pressable>
                 </View>
               ) : (
                 <Pressable
@@ -501,6 +529,61 @@ export default function ProfileScreen() {
           renderProfileForm()
         )}
       </ScrollView>
+
+      <Modal
+        visible={showDeleteModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: GameColors.surface }]}>
+            <ThemedText style={styles.modalTitle}>Delete Account</ThemedText>
+            <ThemedText style={styles.modalDescription}>
+              This will permanently delete your account and all your data. This action cannot be undone.
+            </ThemedText>
+            <TextInput
+              style={[styles.modalInput, { 
+                backgroundColor: GameColors.backgroundDark,
+                color: GameColors.text,
+                borderColor: deleteError ? GameColors.wrong : GameColors.border
+              }]}
+              placeholder="Enter your password to confirm"
+              placeholderTextColor={GameColors.textSecondary}
+              secureTextEntry
+              value={deletePassword}
+              onChangeText={(text) => {
+                setDeletePassword(text);
+                setDeleteError(null);
+              }}
+            />
+            {deleteError ? (
+              <ThemedText style={styles.modalError}>{deleteError}</ThemedText>
+            ) : null}
+            <View style={styles.modalButtons}>
+              <Pressable 
+                style={[styles.modalButton, styles.modalCancelButton]}
+                onPress={() => {
+                  setShowDeleteModal(false);
+                  setDeletePassword("");
+                  setDeleteError(null);
+                }}
+              >
+                <ThemedText style={styles.modalButtonText}>Cancel</ThemedText>
+              </Pressable>
+              <Pressable 
+                style={[styles.modalButton, styles.modalDeleteButton]}
+                onPress={handleDeleteAccount}
+                disabled={authLoading}
+              >
+                <ThemedText style={[styles.modalButtonText, { color: "#fff" }]}>
+                  {authLoading ? "Deleting..." : "Delete"}
+                </ThemedText>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -946,6 +1029,76 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     color: GameColors.textSecondary,
     textDecorationLine: "underline",
+  },
+  deleteAccountButton: {
+    alignItems: "center",
+    paddingVertical: Spacing.xs,
+    marginTop: Spacing.sm,
+  },
+  deleteAccountText: {
+    ...Typography.caption,
+    color: GameColors.wrong,
+    textDecorationLine: "underline",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.lg,
+  },
+  modalContent: {
+    width: "100%",
+    maxWidth: 400,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+  },
+  modalTitle: {
+    ...Typography.h3,
+    textAlign: "center",
+    marginBottom: Spacing.md,
+    color: GameColors.wrong,
+  },
+  modalDescription: {
+    ...Typography.body,
+    textAlign: "center",
+    color: GameColors.textSecondary,
+    marginBottom: Spacing.lg,
+  },
+  modalInput: {
+    ...Typography.body,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    marginBottom: Spacing.sm,
+  },
+  modalError: {
+    ...Typography.caption,
+    color: GameColors.wrong,
+    textAlign: "center",
+    marginBottom: Spacing.sm,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    marginTop: Spacing.md,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
+  },
+  modalCancelButton: {
+    backgroundColor: GameColors.backgroundDark,
+    borderWidth: 1,
+    borderColor: GameColors.border,
+  },
+  modalDeleteButton: {
+    backgroundColor: GameColors.wrong,
+  },
+  modalButtonText: {
+    ...Typography.button,
   },
   errorText: {
     ...Typography.caption,
