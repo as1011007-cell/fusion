@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, Image, Alert } from "react-native";
+import React, { useState, useEffect } from "react";
+import { StyleSheet, View, ScrollView, Pressable, ActivityIndicator, Image, Alert, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -16,6 +16,7 @@ import { useProfile } from "@/context/ProfileContext";
 import { useGame } from "@/context/GameContext";
 import { useTheme } from "@/context/ThemeContext";
 import { getApiUrl } from "@/lib/query-client";
+import { storeKitService, PRODUCT_IDS } from "@/services/StoreKitService";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Shop">;
 type TabType = "avatars" | "themes" | "powerups" | "premium";
@@ -28,9 +29,39 @@ export default function ShopScreen() {
   const { themes, currentTheme, setCurrentTheme, purchaseTheme, starPoints, addStarPoints, spendStarPoints, isAdFree, setAdFree, hasSupported, setHasSupported } = useTheme();
   const [activeTab, setActiveTab] = useState<TabType>("avatars");
   const [loading, setLoading] = useState<string | null>(null);
+  const [storeKitReady, setStoreKitReady] = useState(false);
+  const [storeKitProducts, setStoreKitProducts] = useState<any[]>([]);
 
   const { settings } = useProfile();
   const colors = currentTheme.colors;
+
+  const isIOS = Platform.OS === "ios";
+
+  useEffect(() => {
+    const initStoreKit = async () => {
+      if (isIOS) {
+        try {
+          const connected = await storeKitService.connect();
+          if (connected) {
+            const products = await storeKitService.loadProducts();
+            setStoreKitProducts(products);
+            setStoreKitReady(true);
+            console.log("StoreKit initialized with products:", products.length);
+          }
+        } catch (error) {
+          console.log("StoreKit not available (development mode):", error);
+        }
+      }
+    };
+
+    initStoreKit();
+
+    return () => {
+      if (isIOS) {
+        storeKitService.disconnect();
+      }
+    };
+  }, [isIOS]);
 
   const handleBack = () => {
     if (settings.hapticsEnabled) {
@@ -142,7 +173,40 @@ export default function ShopScreen() {
     }
   };
 
-  const handlePurchaseStarPoints = async () => {
+  const handlePurchaseStarPointsIOS = async () => {
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    setLoading("starPoints");
+    try {
+      const result = await storeKitService.purchaseProduct(PRODUCT_IDS.STAR_POINTS_5000);
+      if (result.success) {
+        if (settings.hapticsEnabled) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        addStarPoints(5000);
+        Alert.alert(
+          "Thank You!",
+          "Your purchase was successful! You've received 5,000 Star Points.",
+          [{ text: "Awesome!" }]
+        );
+      } else if (result.error !== "Purchase was cancelled") {
+        if (settings.hapticsEnabled) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        }
+        Alert.alert("Purchase Failed", result.error || "Something went wrong. Please try again.");
+      }
+    } catch (error) {
+      console.error('StoreKit purchase error:', error);
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handlePurchaseStarPointsStripe = async () => {
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
@@ -211,7 +275,48 @@ export default function ShopScreen() {
     }
   };
 
-  const handlePurchaseAdFree = async () => {
+  const handlePurchaseStarPoints = () => {
+    if (isIOS && storeKitReady) {
+      handlePurchaseStarPointsIOS();
+    } else {
+      handlePurchaseStarPointsStripe();
+    }
+  };
+
+  const handlePurchaseAdFreeIOS = async () => {
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    setLoading("adFree");
+    try {
+      const result = await storeKitService.purchaseProduct(PRODUCT_IDS.AD_FREE);
+      if (result.success) {
+        if (settings.hapticsEnabled) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        setAdFree(true);
+        Alert.alert(
+          "Thank You!",
+          "Your purchase was successful! Enjoy your ad-free experience.",
+          [{ text: "Awesome!" }]
+        );
+      } else if (result.error !== "Purchase was cancelled") {
+        if (settings.hapticsEnabled) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        }
+        Alert.alert("Purchase Failed", result.error || "Something went wrong. Please try again.");
+      }
+    } catch (error) {
+      console.error('StoreKit purchase error:', error);
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handlePurchaseAdFreeStripe = async () => {
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
@@ -280,7 +385,48 @@ export default function ShopScreen() {
     }
   };
 
-  const handleSupportDeveloper = async () => {
+  const handlePurchaseAdFree = () => {
+    if (isIOS && storeKitReady) {
+      handlePurchaseAdFreeIOS();
+    } else {
+      handlePurchaseAdFreeStripe();
+    }
+  };
+
+  const handleSupportDeveloperIOS = async () => {
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    setLoading("support");
+    try {
+      const result = await storeKitService.purchaseProduct(PRODUCT_IDS.SUPPORT_DEVELOPER);
+      if (result.success) {
+        if (settings.hapticsEnabled) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        setHasSupported(true);
+        Alert.alert(
+          "Thank You!",
+          "Your support means the world to us! You're now a Developer Supporter.",
+          [{ text: "Happy to help!" }]
+        );
+      } else if (result.error !== "Purchase was cancelled") {
+        if (settings.hapticsEnabled) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        }
+        Alert.alert("Purchase Failed", result.error || "Something went wrong. Please try again.");
+      }
+    } catch (error) {
+      console.error('StoreKit purchase error:', error);
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleSupportDeveloperStripe = async () => {
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
@@ -346,6 +492,64 @@ export default function ShopScreen() {
       if (settings.hapticsEnabled) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleSupportDeveloper = () => {
+    if (isIOS && storeKitReady) {
+      handleSupportDeveloperIOS();
+    } else {
+      handleSupportDeveloperStripe();
+    }
+  };
+
+  const handleRestorePurchases = async () => {
+    if (!isIOS || !storeKitReady) {
+      Alert.alert("Not Available", "Restore purchases is only available on iOS devices.");
+      return;
+    }
+
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    setLoading("restore");
+    
+    try {
+      const results = await storeKitService.restorePurchases();
+      const restoredProducts = results.filter(r => r.success && r.productId);
+      
+      if (restoredProducts.length > 0) {
+        restoredProducts.forEach(result => {
+          if (result.productId === PRODUCT_IDS.AD_FREE) {
+            setAdFree(true);
+          } else if (result.productId === PRODUCT_IDS.SUPPORT_DEVELOPER) {
+            setHasSupported(true);
+          }
+        });
+        
+        if (settings.hapticsEnabled) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        Alert.alert(
+          "Purchases Restored",
+          `Successfully restored ${restoredProducts.length} purchase(s).`,
+          [{ text: "Great!" }]
+        );
+      } else {
+        Alert.alert(
+          "No Purchases Found",
+          "No previous purchases were found to restore.",
+          [{ text: "OK" }]
+        );
+      }
+    } catch (error) {
+      console.error('Restore purchases error:', error);
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+      Alert.alert("Restore Failed", "Unable to restore purchases. Please try again later.");
     } finally {
       setLoading(null);
     }
@@ -679,6 +883,28 @@ export default function ShopScreen() {
           </Pressable>
         )}
       </View>
+
+      {isIOS ? (
+        <View style={styles.restoreSection}>
+          <Pressable
+            style={styles.restoreButton}
+            onPress={handleRestorePurchases}
+            disabled={loading === "restore"}
+          >
+            {loading === "restore" ? (
+              <ActivityIndicator color={GameColors.textSecondary} size="small" />
+            ) : (
+              <>
+                <Feather name="refresh-cw" size={16} color={GameColors.textSecondary} />
+                <ThemedText style={styles.restoreText}>Restore Purchases</ThemedText>
+              </>
+            )}
+          </Pressable>
+          <ThemedText style={styles.restoreHint}>
+            Reinstalled the app? Tap to restore your previous purchases.
+          </ThemedText>
+        </View>
+      ) : null}
     </Animated.View>
   );
 
@@ -1210,5 +1436,33 @@ const styles = StyleSheet.create({
     ...Typography.body,
     color: GameColors.correct,
     fontWeight: "600",
+  },
+  restoreSection: {
+    alignItems: "center",
+    marginTop: Spacing.xl,
+    paddingTop: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.1)",
+  },
+  restoreButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  restoreText: {
+    ...Typography.body,
+    color: GameColors.textSecondary,
+    fontWeight: "500",
+  },
+  restoreHint: {
+    ...Typography.caption,
+    color: GameColors.textSecondary,
+    opacity: 0.7,
+    textAlign: "center",
+    marginTop: Spacing.xs,
+    paddingHorizontal: Spacing.lg,
   },
 });
