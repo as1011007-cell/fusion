@@ -592,6 +592,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           if (starPoints !== undefined) await AsyncStorage.setItem("starPoints", starPoints.toString());
           if (isAdFree !== undefined) await AsyncStorage.setItem("isAdFree", isAdFree.toString());
           if (hasSupported !== undefined) await AsyncStorage.setItem("hasSupported", hasSupported.toString());
+          // Signal ThemeContext to reload
+          await AsyncStorage.setItem("needsThemeReload", "true");
         }
 
         if (parsed.gameData) {

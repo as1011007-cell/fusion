@@ -131,6 +131,22 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     loadThemeData();
   }, []);
 
+  // Check for theme reload flag (set by ProfileContext after cloud sync)
+  useEffect(() => {
+    const checkForThemeReload = async () => {
+      const needsReload = await AsyncStorage.getItem("needsThemeReload");
+      if (needsReload === "true") {
+        console.log("Theme reload flag detected, reloading theme data");
+        await AsyncStorage.removeItem("needsThemeReload");
+        await loadThemeData();
+      }
+    };
+    
+    // Check periodically for theme reload flag
+    const interval = setInterval(checkForThemeReload, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const loadThemeData = async () => {
     try {
       const savedThemeId = await AsyncStorage.getItem("currentThemeId");
