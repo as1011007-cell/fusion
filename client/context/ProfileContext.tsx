@@ -223,18 +223,26 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (!isInitialLoadComplete) return;
       
       const needsSync = await AsyncStorage.getItem("needsCloudSync");
-      if (needsSync === "true" && currentProfile?.socialId) {
-        console.log("needsCloudSync flag detected, syncing from cloud for:", currentProfile.socialId);
-        // Clear the flag first to prevent re-syncing
-        await AsyncStorage.removeItem("needsCloudSync");
-        
-        // Load from cloud
-        await loadFromCloud(currentProfile.socialId);
+      if (needsSync === "true") {
+        // Get the authenticated user from AsyncStorage
+        const authUserData = await AsyncStorage.getItem("authUser");
+        if (authUserData) {
+          const authUser = JSON.parse(authUserData);
+          console.log("needsCloudSync flag detected, syncing from cloud for user:", authUser.id);
+          // Clear the flag first to prevent re-syncing
+          await AsyncStorage.removeItem("needsCloudSync");
+          
+          // Load from cloud using auth user's ID
+          const success = await loadFromCloud(authUser.id);
+          if (success) {
+            console.log("Cloud sync completed successfully on login");
+          }
+        }
       }
     };
     
     checkAndSyncFromCloud();
-  }, [isInitialLoadComplete, currentProfile?.socialId]);
+  }, [isInitialLoadComplete]);
 
   // Save locally and sync to cloud when data changes (after initial load)
   useEffect(() => {
@@ -244,7 +252,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     saveData();
     
     // Auto-sync to cloud if user is logged in
-    if (currentProfile?.socialId) {
+    const autoSyncToCloud = async () => {
+      // Check for authenticated user
+      const authUserData = await AsyncStorage.getItem("authUser");
+      if (!authUserData) return;
+      
+      const authUser = JSON.parse(authUserData);
+      
       // Skip auto-sync if we just loaded from cloud (within last 3 seconds)
       const timeSinceCloudLoad = Date.now() - cloudLoadTimestampRef.current;
       if (timeSinceCloudLoad < 3000) {
@@ -252,20 +266,27 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         return;
       }
       
-      console.log("Scheduling cloud sync in 1 second");
+      console.log("Scheduling cloud sync in 1 second for user:", authUser.id);
       // Debounce cloud sync to avoid too many requests
-      const timeoutId = setTimeout(() => {
+      const timeoutId = setTimeout(async () => {
         // Double check we haven't loaded from cloud during debounce
         const checkTime = Date.now() - cloudLoadTimestampRef.current;
         if (checkTime < 3000) {
           console.log("Skipping auto-sync in timeout (just loaded from cloud)");
           return;
         }
-        console.log("Executing cloud sync now");
-        syncToCloudInternal(currentProfile.socialId!);
+        console.log("Executing cloud sync now for user:", authUser.id);
+        await syncToCloudInternal(authUser.id);
       }, 1000);
-      return () => clearTimeout(timeoutId);
-    }
+      return timeoutId;
+    };
+    
+    let timeoutId: NodeJS.Timeout | undefined;
+    autoSyncToCloud().then(id => { timeoutId = id; });
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [profiles, avatars, settings, answeredQuestions, currentProfile, experiencePoints, isInitialLoadComplete]);
 
   // Internal sync function that syncs all data to cloud
