@@ -1,5 +1,14 @@
-import { Platform, Alert } from "react-native";
-import * as InAppPurchases from "expo-in-app-purchases";
+import { Platform } from "react-native";
+
+let InAppPurchases: any = null;
+
+if (Platform.OS === "ios") {
+  try {
+    InAppPurchases = require("expo-in-app-purchases");
+  } catch (e) {
+    console.log("expo-in-app-purchases not available (development mode)");
+  }
+}
 
 export const PRODUCT_IDS = {
   STAR_POINTS_5000: "com.feudfusion.starpoints5000",
@@ -15,19 +24,28 @@ interface PurchaseResult {
   error?: string;
 }
 
+interface IAPItemDetails {
+  productId: string;
+  title: string;
+  description: string;
+  price: string;
+  priceAmountMicros: number;
+  priceCurrencyCode: string;
+}
+
 class StoreKitService {
   private isConnected = false;
-  private products: InAppPurchases.IAPItemDetails[] = [];
+  private products: IAPItemDetails[] = [];
   private purchaseListenerSet = false;
   private pendingPurchaseResolve: ((result: PurchaseResult) => void) | null = null;
 
   isAvailable(): boolean {
-    return Platform.OS === "ios";
+    return Platform.OS === "ios" && InAppPurchases !== null;
   }
 
   async connect(): Promise<boolean> {
     if (!this.isAvailable()) {
-      console.log("StoreKit is only available on iOS");
+      console.log("StoreKit is only available on iOS with native modules");
       return false;
     }
 
@@ -42,16 +60,18 @@ class StoreKitService {
       console.log("StoreKit connected successfully");
       return true;
     } catch (error) {
-      console.error("Failed to connect to StoreKit:", error);
+      console.log("Failed to connect to StoreKit (expected in development):", error);
       return false;
     }
   }
 
   private setupPurchaseListener() {
+    if (!InAppPurchases) return;
+    
     InAppPurchases.setPurchaseListener(
-      ({ responseCode, results, errorCode }) => {
+      ({ responseCode, results, errorCode }: any) => {
         if (responseCode === InAppPurchases.IAPResponseCode.OK) {
-          results?.forEach(async (purchase) => {
+          results?.forEach(async (purchase: any) => {
             if (!purchase.acknowledged) {
               await InAppPurchases.finishTransactionAsync(purchase, true);
             }
@@ -85,7 +105,9 @@ class StoreKitService {
     );
   }
 
-  async loadProducts(): Promise<InAppPurchases.IAPItemDetails[]> {
+  async loadProducts(): Promise<IAPItemDetails[]> {
+    if (!InAppPurchases) return [];
+    
     if (!this.isConnected) {
       const connected = await this.connect();
       if (!connected) return [];
@@ -97,22 +119,29 @@ class StoreKitService {
       
       if (responseCode === InAppPurchases.IAPResponseCode.OK && results) {
         this.products = results;
-        console.log("Loaded products:", results.map(p => p.productId));
+        console.log("Loaded products:", results.map((p: any) => p.productId));
         return results;
       }
       
       return [];
     } catch (error) {
-      console.error("Failed to load products:", error);
+      console.log("Failed to load products (expected in development):", error);
       return [];
     }
   }
 
-  getProduct(productId: ProductId): InAppPurchases.IAPItemDetails | undefined {
+  getProduct(productId: ProductId): IAPItemDetails | undefined {
     return this.products.find((p) => p.productId === productId);
   }
 
   async purchaseProduct(productId: ProductId): Promise<PurchaseResult> {
+    if (!InAppPurchases) {
+      return {
+        success: false,
+        error: "In-app purchases not available",
+      };
+    }
+    
     if (!this.isConnected) {
       const connected = await this.connect();
       if (!connected) {
@@ -127,7 +156,7 @@ class StoreKitService {
       return new Promise((resolve) => {
         this.pendingPurchaseResolve = resolve;
         
-        InAppPurchases.purchaseItemAsync(productId).catch((error) => {
+        InAppPurchases.purchaseItemAsync(productId).catch((error: any) => {
           resolve({
             success: false,
             error: error.message || "Purchase failed",
@@ -144,6 +173,10 @@ class StoreKitService {
   }
 
   async restorePurchases(): Promise<PurchaseResult[]> {
+    if (!InAppPurchases) {
+      return [{ success: false, error: "In-app purchases not available" }];
+    }
+    
     if (!this.isConnected) {
       const connected = await this.connect();
       if (!connected) {
@@ -155,7 +188,7 @@ class StoreKitService {
       const { results, responseCode } = await InAppPurchases.getPurchaseHistoryAsync();
       
       if (responseCode === InAppPurchases.IAPResponseCode.OK && results) {
-        return results.map((purchase) => ({
+        return results.map((purchase: any) => ({
           success: true,
           productId: purchase.productId,
         }));
@@ -168,6 +201,8 @@ class StoreKitService {
   }
 
   async disconnect(): Promise<void> {
+    if (!InAppPurchases) return;
+    
     if (this.isConnected) {
       try {
         await InAppPurchases.disconnectAsync();
@@ -175,7 +210,7 @@ class StoreKitService {
         this.purchaseListenerSet = false;
         console.log("StoreKit disconnected");
       } catch (error) {
-        console.error("Failed to disconnect from StoreKit:", error);
+        console.log("Failed to disconnect from StoreKit:", error);
       }
     }
   }
