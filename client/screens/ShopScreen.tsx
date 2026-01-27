@@ -830,20 +830,22 @@ export default function ShopScreen() {
         {isAdFree ? (
           <View style={styles.purchasedBadge}>
             <Feather name="check-circle" size={20} color={GameColors.correct} />
-            <ThemedText style={styles.purchasedText}>Activated</ThemedText>
+            <ThemedText style={styles.purchasedText}>Purchased</ThemedText>
           </View>
         ) : (
           <Pressable
-            style={styles.freeButton}
-            onPress={() => {
-              setAdFree(true);
-              if (settings.hapticsEnabled) {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              }
-            }}
+            style={styles.realMoneyButton}
+            onPress={handlePurchaseAdFree}
+            disabled={loading === "adFree"}
           >
-            <Feather name="gift" size={18} color="#fff" />
-            <ThemedText style={styles.freeButtonText}>Claim FREE</ThemedText>
+            {loading === "adFree" ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <ThemedText style={styles.realMoneyText}>$5.99</ThemedText>
+                <Feather name="external-link" size={16} color="#fff" />
+              </>
+            )}
           </Pressable>
         )}
       </View>
