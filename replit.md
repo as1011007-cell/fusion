@@ -58,8 +58,14 @@ The game features a vibrant "Electric Collision" aesthetic with neon accents, pe
 - Dual currency system: Coins (for avatars) and Star Points (for themes/power cards)
 - 5 purchasable UI themes: Electric Collision (free), Sunset Vibes, Ocean Breeze, Forest Mist, Galaxy Night (1500 stars each)
 - Power card bundle purchase: +2 Skip, +2 Steal, +2 Double Bluff for 500 star points
-- Premium purchases via Stripe: 5000 Star Points ($5) and Ad-Free Version ($5)
-- ThemeContext manages theme selection and purchases with AsyncStorage persistence
+
+### Apple StoreKit Integration (January 2026)
+- Native iOS in-app purchases via expo-in-app-purchases
+- StoreKitService handles connection, product loading, purchases, and restore
+- Product IDs: com.feudfusion.starpoints5000, com.feudfusion.adfree, com.feudfusion.support
+- Uses StoreKit on iOS, falls back to Stripe on web
+- Restore Purchases button in Premium tab for iOS users
+- Products must be configured in App Store Connect with matching IDs
 
 ### Stripe Integration
 - Stripe payments for real-money purchases using stripe-replit-sync

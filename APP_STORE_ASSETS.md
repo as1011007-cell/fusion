@@ -150,6 +150,52 @@ The `/support` route redirects to this email address.
 
 ---
 
+## In-App Purchase Configuration
+
+### iOS App Store Connect Product IDs
+
+Create these products in App Store Connect > Your App > In-App Purchases:
+
+| Product Name | Product ID | Type | Price Tier |
+|--------------|------------|------|------------|
+| 5000 Star Points | `com.feudfusion.starpoints5000` | Consumable | Tier 5 ($4.99) |
+| Ad-Free Version | `com.feudfusion.adfree` | Non-Consumable | Tier 5 ($4.99) |
+| Support Developer | `com.feudfusion.support` | Consumable | Tier 3 ($2.99) |
+
+**Setup Instructions:**
+
+1. Go to App Store Connect > Apps > Your App
+2. Click "In-App Purchases" under Monetization in the sidebar
+3. Click the "+" button to create each product
+4. For each product:
+   - **Reference Name**: Internal name (e.g., "Star Points 5000")
+   - **Product ID**: Use the exact ID from the table above (must match code)
+   - **Type**: Consumable or Non-Consumable as specified
+   - **Price**: Select from Apple's price tiers
+   - **Localization**: Add display name and description in each supported language
+   - **Review Screenshot**: Add a screenshot showing where the purchase appears in app
+5. Submit products for review with your app binary
+
+**Important Notes:**
+- Product IDs must match exactly between App Store Connect and `client/services/StoreKitService.ts`
+- Test purchases using Sandbox tester accounts before submission
+- In-app purchases are reviewed together with the app binary
+- Apple takes 30% commission (15% for Small Business Program members)
+
+### Google Play Billing Product IDs
+
+For Google Play, create matching products in Google Play Console > Monetization > In-app products:
+
+| Product Name | Product ID | Type |
+|--------------|------------|------|
+| 5000 Star Points | `starpoints5000` | Managed Product |
+| Ad-Free Version | `adfree` | Managed Product |
+| Support Developer | `support` | Managed Product |
+
+**Note:** Google Play uses shorter product IDs without the bundle identifier prefix.
+
+---
+
 ---
 
 ## Google Play Store Specific
