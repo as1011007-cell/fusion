@@ -144,9 +144,9 @@ The `/support` route redirects to this email address.
 **Base App**: Free
 
 **In-App Purchases:**
-- 5,000 Star Points: $4.99
-- Ad-Free Version: $4.99
-- Support the Developer (Coffee Tip): $2.99
+- 5,000 Star Points: $5.99
+- Ad-Free Version: FREE
+- Support the Developer (Coffee Tip): $3.99
 
 ---
 
@@ -158,9 +158,9 @@ Create these products in App Store Connect > Your App > In-App Purchases:
 
 | Product Name | Product ID | Type | Price Tier |
 |--------------|------------|------|------------|
-| 5000 Star Points | `com.feudfusion.starpoints5000` | Consumable | Tier 5 ($4.99) |
-| Ad-Free Version | `com.feudfusion.adfree` | Non-Consumable | Tier 5 ($4.99) |
-| Support Developer | `com.feudfusion.support` | Consumable | Tier 3 ($2.99) |
+| 5000 Star Points | `com.feudfusion.starpoints5000` | Consumable | Tier 6 ($5.99) |
+| Ad-Free Version | `com.feudfusion.adfree` | Non-Consumable | Free (Tier 0) |
+| Support Developer | `com.feudfusion.support` | Consumable | Tier 4 ($3.99) |
 
 **Setup Instructions:**
 

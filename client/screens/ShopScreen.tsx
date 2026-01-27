@@ -809,7 +809,7 @@ export default function ShopScreen() {
             <ActivityIndicator color="#fff" />
           ) : (
             <>
-              <ThemedText style={styles.realMoneyText}>$5.00</ThemedText>
+              <ThemedText style={styles.realMoneyText}>$5.99</ThemedText>
               <Feather name="external-link" size={16} color="#fff" />
             </>
           )}
@@ -830,22 +830,20 @@ export default function ShopScreen() {
         {isAdFree ? (
           <View style={styles.purchasedBadge}>
             <Feather name="check-circle" size={20} color={GameColors.correct} />
-            <ThemedText style={styles.purchasedText}>Purchased</ThemedText>
+            <ThemedText style={styles.purchasedText}>Activated</ThemedText>
           </View>
         ) : (
           <Pressable
-            style={styles.realMoneyButton}
-            onPress={handlePurchaseAdFree}
-            disabled={loading === "adFree"}
+            style={styles.freeButton}
+            onPress={() => {
+              setAdFree(true);
+              if (settings.hapticsEnabled) {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              }
+            }}
           >
-            {loading === "adFree" ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <ThemedText style={styles.realMoneyText}>$5.00</ThemedText>
-                <Feather name="external-link" size={16} color="#fff" />
-              </>
-            )}
+            <Feather name="gift" size={18} color="#fff" />
+            <ThemedText style={styles.freeButtonText}>Claim FREE</ThemedText>
           </Pressable>
         )}
       </View>
@@ -876,7 +874,7 @@ export default function ShopScreen() {
               <ActivityIndicator color="#fff" />
             ) : (
               <>
-                <ThemedText style={styles.realMoneyText}>$3.00</ThemedText>
+                <ThemedText style={styles.realMoneyText}>$3.99</ThemedText>
                 <Feather name="external-link" size={16} color="#fff" />
               </>
             )}
@@ -1464,5 +1462,19 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: Spacing.xs,
     paddingHorizontal: Spacing.lg,
+  },
+  freeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: GameColors.correct,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.sm,
+  },
+  freeButtonText: {
+    ...Typography.body,
+    color: "#fff",
+    fontWeight: "700",
   },
 });
