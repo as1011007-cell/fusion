@@ -152,6 +152,20 @@ class StoreKitService {
       }
     }
 
+    // Ensure products are loaded before purchase (Apple requirement)
+    if (this.products.length === 0) {
+      await this.loadProducts();
+    }
+
+    // Verify the product exists in our loaded products
+    const product = this.products.find((p) => p.productId === productId);
+    if (!product) {
+      return {
+        success: false,
+        error: "Product not available. Please try again later.",
+      };
+    }
+
     try {
       return new Promise((resolve) => {
         this.pendingPurchaseResolve = resolve;
