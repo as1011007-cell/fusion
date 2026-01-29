@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { StyleSheet, View, Pressable, TextInput, ScrollView, Share, Alert, Platform, ActivityIndicator } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -646,7 +647,11 @@ export default function MultiplayerLobbyScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: GameColors.backgroundDark, paddingTop: insets.top + Spacing.md }]}>
+    <KeyboardAvoidingView 
+      style={[styles.container, { backgroundColor: GameColors.backgroundDark, paddingTop: insets.top + Spacing.md }]}
+      behavior="padding"
+      keyboardVerticalOffset={0}
+    >
       <View style={styles.header}>
         <Pressable style={styles.backButton} onPress={handleBack}>
           <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
@@ -659,15 +664,16 @@ export default function MultiplayerLobbyScreen() {
 
       <ScrollView
         style={styles.content}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[styles.contentContainer, { paddingBottom: insets.bottom + Spacing.xl }]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {mode === "select" ? renderModeSelect() : null}
         {mode === "create" ? renderCreateRoom() : null}
         {mode === "join" ? renderJoinRoom() : null}
         {mode === "lobby" ? renderLobby() : null}
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
