@@ -563,14 +563,42 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           await AsyncStorage.setItem("profiles", JSON.stringify(parsed.profiles));
         }
         if (parsed.avatars) {
-          // Restore avatar images from local avatarImages since they can't be serialized
-          const restoredAvatars = parsed.avatars.map((avatar: Avatar) => ({
-            ...avatar,
-            image: avatarImages[avatar.id] || avatarImages["avatar-1"],
-          }));
-          setAvatars(restoredAvatars);
-          // Save avatars to AsyncStorage
-          await AsyncStorage.setItem("avatars", JSON.stringify(restoredAvatars));
+          // Get local avatars to merge (preserve purchases)
+          const localAvatarsData = await AsyncStorage.getItem("avatars");
+          const localAvatars: Avatar[] = localAvatarsData ? JSON.parse(localAvatarsData) : avatars;
+          
+          // Create a map of all avatars, merging ownership status
+          const avatarMap = new Map<string, Avatar>();
+          
+          // First add all local avatars
+          localAvatars.forEach((avatar: Avatar) => {
+            avatarMap.set(avatar.id, {
+              ...avatar,
+              image: avatarImages[avatar.id] || avatarImages["avatar-1"],
+            });
+          });
+          
+          // Then merge cloud avatars - keep owned=true if either is true
+          parsed.avatars.forEach((cloudAvatar: Avatar) => {
+            const existing = avatarMap.get(cloudAvatar.id);
+            if (existing) {
+              avatarMap.set(cloudAvatar.id, {
+                ...existing,
+                owned: existing.owned || cloudAvatar.owned,
+                image: avatarImages[cloudAvatar.id] || avatarImages["avatar-1"],
+              });
+            } else {
+              avatarMap.set(cloudAvatar.id, {
+                ...cloudAvatar,
+                image: avatarImages[cloudAvatar.id] || avatarImages["avatar-1"],
+              });
+            }
+          });
+          
+          const mergedAvatars = Array.from(avatarMap.values());
+          setAvatars(mergedAvatars);
+          await AsyncStorage.setItem("avatars", JSON.stringify(mergedAvatars));
+          console.log("Cloud sync merged avatars - owned:", mergedAvatars.filter(a => a.owned).length);
         }
         if (parsed.settings) {
           setSettings(parsed.settings);
@@ -581,30 +609,79 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           await AsyncStorage.setItem("answeredQuestions", JSON.stringify(parsed.answeredQuestions));
         }
         if (parsed.experiencePoints !== undefined) {
-          setExperiencePoints(parsed.experiencePoints);
-          await AsyncStorage.setItem("experiencePoints", parsed.experiencePoints.toString());
+          // Merge: keep higher XP
+          const localXP = parseInt(await AsyncStorage.getItem("experiencePoints") || "0", 10);
+          const mergedXP = Math.max(localXP, parsed.experiencePoints);
+          setExperiencePoints(mergedXP);
+          await AsyncStorage.setItem("experiencePoints", mergedXP.toString());
+          console.log("Cloud sync merged XP - local:", localXP, "cloud:", parsed.experiencePoints, "merged:", mergedXP);
         }
 
         if (parsed.themeData) {
           const { currentThemeId, ownedThemes, starPoints, isAdFree, hasSupported } = parsed.themeData;
+          
+          // Get local values to merge (keep the better value)
+          const localStarPoints = parseInt(await AsyncStorage.getItem("starPoints") || "0", 10);
+          const localOwnedThemes = JSON.parse(await AsyncStorage.getItem("ownedThemes") || '["electric-collision"]');
+          const localIsAdFree = (await AsyncStorage.getItem("isAdFree")) === "true";
+          const localHasSupported = (await AsyncStorage.getItem("hasSupported")) === "true";
+          
+          // Merge: keep higher star points
+          const mergedStarPoints = Math.max(localStarPoints, starPoints || 0);
+          await AsyncStorage.setItem("starPoints", mergedStarPoints.toString());
+          
+          // Merge: union of owned themes
+          const cloudThemes = ownedThemes || [];
+          const mergedThemes = [...new Set([...localOwnedThemes, ...cloudThemes])];
+          await AsyncStorage.setItem("ownedThemes", JSON.stringify(mergedThemes));
+          
+          // Keep current theme if set
           if (currentThemeId) await AsyncStorage.setItem("currentThemeId", currentThemeId);
-          if (ownedThemes) await AsyncStorage.setItem("ownedThemes", JSON.stringify(ownedThemes));
-          if (starPoints !== undefined) await AsyncStorage.setItem("starPoints", starPoints.toString());
-          if (isAdFree !== undefined) await AsyncStorage.setItem("isAdFree", isAdFree.toString());
-          if (hasSupported !== undefined) await AsyncStorage.setItem("hasSupported", hasSupported.toString());
+          
+          // Merge: keep true if either is true (preserve purchases)
+          const mergedAdFree = localIsAdFree || isAdFree || false;
+          const mergedSupported = localHasSupported || hasSupported || false;
+          await AsyncStorage.setItem("isAdFree", mergedAdFree.toString());
+          await AsyncStorage.setItem("hasSupported", mergedSupported.toString());
+          
           // Signal ThemeContext to reload
           await AsyncStorage.setItem("needsThemeReload", "true");
+          console.log("Cloud sync merged theme data - stars:", mergedStarPoints, "themes:", mergedThemes.length);
         }
 
         if (parsed.gameData) {
           const { totalCoins, totalGamesPlayed, highScore, lastWeeklyClaimDate, answeredQuestionIds, multiplayerAnsweredIds, powerCards } = parsed.gameData;
-          if (totalCoins !== undefined) await AsyncStorage.setItem("totalCoins", totalCoins.toString());
-          if (totalGamesPlayed !== undefined) await AsyncStorage.setItem("totalGamesPlayed", totalGamesPlayed.toString());
-          if (highScore !== undefined) await AsyncStorage.setItem("highScore", highScore.toString());
+          
+          // Get local values to merge
+          const localCoins = parseInt(await AsyncStorage.getItem("totalCoins") || "0", 10);
+          const localGamesPlayed = parseInt(await AsyncStorage.getItem("totalGamesPlayed") || "0", 10);
+          const localHighScore = parseInt(await AsyncStorage.getItem("highScore") || "0", 10);
+          const localPowerCards = JSON.parse(await AsyncStorage.getItem("powerCards") || '{"skip":0,"steal":0,"doubleBluff":0}');
+          
+          // Merge: keep higher values
+          const mergedCoins = Math.max(localCoins, totalCoins || 0);
+          const mergedGamesPlayed = Math.max(localGamesPlayed, totalGamesPlayed || 0);
+          const mergedHighScore = Math.max(localHighScore, highScore || 0);
+          
+          await AsyncStorage.setItem("totalCoins", mergedCoins.toString());
+          await AsyncStorage.setItem("totalGamesPlayed", mergedGamesPlayed.toString());
+          await AsyncStorage.setItem("highScore", mergedHighScore.toString());
+          
           if (lastWeeklyClaimDate) await AsyncStorage.setItem("lastWeeklyClaimDate", lastWeeklyClaimDate);
           if (answeredQuestionIds) await AsyncStorage.setItem("answeredQuestionIds", JSON.stringify(answeredQuestionIds));
           if (multiplayerAnsweredIds) await AsyncStorage.setItem("multiplayerAnsweredQuestionIds", JSON.stringify(multiplayerAnsweredIds));
-          if (powerCards) await AsyncStorage.setItem("powerCards", JSON.stringify(powerCards));
+          
+          // Merge power cards: keep higher of each
+          if (powerCards) {
+            const mergedPowerCards = {
+              skip: Math.max(localPowerCards.skip || 0, powerCards.skip || 0),
+              steal: Math.max(localPowerCards.steal || 0, powerCards.steal || 0),
+              doubleBluff: Math.max(localPowerCards.doubleBluff || 0, powerCards.doubleBluff || 0),
+            };
+            await AsyncStorage.setItem("powerCards", JSON.stringify(mergedPowerCards));
+          }
+          
+          console.log("Cloud sync merged game data - coins:", mergedCoins, "games:", mergedGamesPlayed);
         }
 
         return true;
