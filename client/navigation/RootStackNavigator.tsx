@@ -13,6 +13,9 @@ import MultiplayerLobbyScreen from "@/screens/MultiplayerLobbyScreen";
 import MultiplayerGameScreen from "@/screens/MultiplayerGameScreen";
 import AuthScreen from "@/screens/AuthScreen";
 import PrivacyPolicyScreen from "@/screens/PrivacyPolicyScreen";
+import IQSetupScreen from "@/screens/IQSetupScreen";
+import IQGameScreen from "@/screens/IQGameScreen";
+import IQResultsScreen from "@/screens/IQResultsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { GameColors } from "@/constants/theme";
 
@@ -30,6 +33,22 @@ export type RootStackParamList = {
   MultiplayerGame: undefined;
   Auth: undefined;
   PrivacyPolicy: undefined;
+  IQSetup: undefined;
+  IQGame: undefined;
+  IQResults: {
+    finalScore: number;
+    correctCount: number;
+    avgTime: number;
+    iqEstimate: number;
+    totalQuestions: number;
+    categoryBreakdown: Record<string, { correct: number; total: number }>;
+  };
+  IQMultiplayerLobby: {
+    difficulty: string;
+    category: string;
+    questionCount: number;
+  };
+  IQMultiplayerGame: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -83,6 +102,17 @@ export default function RootStackNavigator() {
         name="PrivacyPolicy"
         component={PrivacyPolicyScreen}
         options={{ presentation: "modal" }}
+      />
+      <Stack.Screen name="IQSetup" component={IQSetupScreen} />
+      <Stack.Screen
+        name="IQGame"
+        component={IQGameScreen}
+        options={{ gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="IQResults"
+        component={IQResultsScreen}
+        options={{ gestureEnabled: false }}
       />
     </Stack.Navigator>
   );

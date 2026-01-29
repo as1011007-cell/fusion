@@ -167,6 +167,11 @@ export default function HomeScreen() {
     navigation.navigate("MultiplayerLobby");
   };
 
+  const handleIQTest = () => {
+    if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    navigation.navigate("IQSetup");
+  };
+
   const renderPlayButton = () => {
     const buttonStyles: Record<string, any> = {
       "angular": {
@@ -501,6 +506,7 @@ export default function HomeScreen() {
               700
             )}
             {renderSecondaryButton("globe", "Multiplayer", "Play across devices", handleMultiplayer, colors.primary, false, false, 750)}
+            {renderSecondaryButton("cpu", "IQ Test", "Test your intelligence", handleIQTest, "#9B59B6", false, false, 800)}
           </View>
         </Animated.View>
       </View>
