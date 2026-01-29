@@ -558,17 +558,38 @@ export default function HomeScreen() {
 
           <View style={styles.secondaryButtons}>
             <View style={styles.partyDailyRow}>
-              {renderSecondaryButton("users", "Party Mode", "Play with friends", handlePartyMode, colors.secondary, false, false, 650)}
-              {renderSecondaryButton(
-                "zap",
-                "Daily Challenge",
-                gameState.dailyChallengeCompleted ? "Completed!" : "Win bonus rewards",
-                handleDailyChallenge,
-                colors.accent,
-                gameState.dailyChallengeCompleted,
-                !gameState.dailyChallengeCompleted,
-                700
-              )}
+              <Animated.View entering={FadeInUp.delay(650).springify()} style={styles.simpleButton}>
+                <Pressable
+                  onPress={handlePartyMode}
+                  accessibilityLabel="Party Mode"
+                  accessibilityHint="Play with friends locally"
+                  accessibilityRole="button"
+                >
+                  <LinearGradient
+                    colors={[colors.secondary, colors.secondary + "CC"]}
+                    style={styles.simpleButtonInner}
+                  >
+                    <ThemedText style={styles.simpleButtonText} numberOfLines={1}>Party Mode</ThemedText>
+                  </LinearGradient>
+                </Pressable>
+              </Animated.View>
+              <Animated.View entering={FadeInUp.delay(700).springify()} style={[styles.simpleButton, gameState.dailyChallengeCompleted && styles.completedButton]}>
+                <Pressable
+                  onPress={handleDailyChallenge}
+                  accessibilityLabel="Daily Challenge"
+                  accessibilityHint={gameState.dailyChallengeCompleted ? "Already completed" : "Win bonus rewards"}
+                  accessibilityRole="button"
+                >
+                  <LinearGradient
+                    colors={[colors.accent, colors.accent + "CC"]}
+                    style={styles.simpleButtonInner}
+                  >
+                    <ThemedText style={styles.simpleButtonText} numberOfLines={1}>
+                      {gameState.dailyChallengeCompleted ? "Completed" : "Daily Challenge"}
+                    </ThemedText>
+                  </LinearGradient>
+                </Pressable>
+              </Animated.View>
             </View>
             <View style={styles.multiplayerRow}>
               <Animated.View entering={FadeInUp.delay(750).springify()} style={styles.compactButton}>
@@ -791,6 +812,32 @@ const styles = StyleSheet.create({
   partyDailyRow: {
     flexDirection: "row",
     gap: Spacing.sm,
+  },
+  simpleButton: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: "hidden",
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+  },
+  simpleButtonInner: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.md + 4,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: 12,
+    minHeight: 52,
+  },
+  simpleButtonText: {
+    ...Typography.body,
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: Math.min(14, SCREEN_WIDTH * 0.035),
+    letterSpacing: 0.5,
+    textAlign: "center",
   },
   compactButton: {
     flex: 1,
