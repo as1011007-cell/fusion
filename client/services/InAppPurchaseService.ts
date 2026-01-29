@@ -2,7 +2,8 @@ import { Platform } from "react-native";
 
 let InAppPurchases: any = null;
 
-if (Platform.OS === "ios") {
+// Load in-app purchases for both iOS and Android
+if (Platform.OS === "ios" || Platform.OS === "android") {
   try {
     InAppPurchases = require("expo-in-app-purchases");
   } catch (e) {
@@ -33,19 +34,23 @@ interface IAPItemDetails {
   priceCurrencyCode: string;
 }
 
-class StoreKitService {
+class InAppPurchaseService {
   private isConnected = false;
   private products: IAPItemDetails[] = [];
   private purchaseListenerSet = false;
   private pendingPurchaseResolve: ((result: PurchaseResult) => void) | null = null;
 
   isAvailable(): boolean {
-    return Platform.OS === "ios" && InAppPurchases !== null;
+    return (Platform.OS === "ios" || Platform.OS === "android") && InAppPurchases !== null;
+  }
+
+  getStoreName(): string {
+    return Platform.OS === "ios" ? "App Store" : "Play Store";
   }
 
   async connect(): Promise<boolean> {
     if (!this.isAvailable()) {
-      console.log("StoreKit is only available on iOS with native modules");
+      console.log("In-app purchases only available on iOS/Android with native modules");
       return false;
     }
 
@@ -57,10 +62,10 @@ class StoreKitService {
       await InAppPurchases.connectAsync();
       this.isConnected = true;
       this.setupPurchaseListener();
-      console.log("StoreKit connected successfully");
+      console.log(`Connected to ${this.getStoreName()} successfully`);
       return true;
     } catch (error) {
-      console.log("Failed to connect to StoreKit (expected in development):", error);
+      console.log(`Failed to connect to ${this.getStoreName()} (expected in development):`, error);
       return false;
     }
   }
@@ -147,12 +152,12 @@ class StoreKitService {
       if (!connected) {
         return {
           success: false,
-          error: "Could not connect to App Store",
+          error: `Could not connect to ${this.getStoreName()}`,
         };
       }
     }
 
-    // Ensure products are loaded before purchase (Apple requirement)
+    // Ensure products are loaded before purchase (store requirement)
     if (this.products.length === 0) {
       await this.loadProducts();
     }
@@ -194,7 +199,7 @@ class StoreKitService {
     if (!this.isConnected) {
       const connected = await this.connect();
       if (!connected) {
-        return [{ success: false, error: "Could not connect to App Store" }];
+        return [{ success: false, error: `Could not connect to ${this.getStoreName()}` }];
       }
     }
 
@@ -222,12 +227,15 @@ class StoreKitService {
         await InAppPurchases.disconnectAsync();
         this.isConnected = false;
         this.purchaseListenerSet = false;
-        console.log("StoreKit disconnected");
+        console.log(`Disconnected from ${this.getStoreName()}`);
       } catch (error) {
-        console.log("Failed to disconnect from StoreKit:", error);
+        console.log(`Failed to disconnect from ${this.getStoreName()}:`, error);
       }
     }
   }
 }
 
-export const storeKitService = new StoreKitService();
+export const inAppPurchaseService = new InAppPurchaseService();
+
+// Keep backward compatibility with old import name
+export const storeKitService = inAppPurchaseService;

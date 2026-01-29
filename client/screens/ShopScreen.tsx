@@ -16,7 +16,7 @@ import { useProfile } from "@/context/ProfileContext";
 import { useGame } from "@/context/GameContext";
 import { useTheme } from "@/context/ThemeContext";
 import { getApiUrl } from "@/lib/query-client";
-import { storeKitService, PRODUCT_IDS } from "@/services/StoreKitService";
+import { inAppPurchaseService, PRODUCT_IDS } from "@/services/InAppPurchaseService";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Shop">;
 type TabType = "avatars" | "themes" | "powerups" | "premium";
@@ -35,33 +35,34 @@ export default function ShopScreen() {
   const { settings } = useProfile();
   const colors = currentTheme.colors;
 
+  const isNative = Platform.OS === "ios" || Platform.OS === "android";
   const isIOS = Platform.OS === "ios";
 
   useEffect(() => {
-    const initStoreKit = async () => {
-      if (isIOS) {
+    const initInAppPurchases = async () => {
+      if (isNative) {
         try {
-          const connected = await storeKitService.connect();
+          const connected = await inAppPurchaseService.connect();
           if (connected) {
-            const products = await storeKitService.loadProducts();
+            const products = await inAppPurchaseService.loadProducts();
             setStoreKitProducts(products);
             setStoreKitReady(true);
-            console.log("StoreKit initialized with products:", products.length);
+            console.log("In-app purchases initialized with products:", products.length);
           }
         } catch (error) {
-          console.log("StoreKit not available (development mode):", error);
+          console.log("In-app purchases not available (development mode):", error);
         }
       }
     };
 
-    initStoreKit();
+    initInAppPurchases();
 
     return () => {
-      if (isIOS) {
-        storeKitService.disconnect();
+      if (isNative) {
+        inAppPurchaseService.disconnect();
       }
     };
-  }, [isIOS]);
+  }, [isNative]);
 
   const handleBack = () => {
     if (settings.hapticsEnabled) {
@@ -173,13 +174,13 @@ export default function ShopScreen() {
     }
   };
 
-  const handlePurchaseStarPointsIOS = async () => {
+  const handlePurchaseStarPointsNative = async () => {
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     setLoading("starPoints");
     try {
-      const result = await storeKitService.purchaseProduct(PRODUCT_IDS.STAR_POINTS_5000);
+      const result = await inAppPurchaseService.purchaseProduct(PRODUCT_IDS.STAR_POINTS_5000);
       if (result.success) {
         if (settings.hapticsEnabled) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -276,20 +277,20 @@ export default function ShopScreen() {
   };
 
   const handlePurchaseStarPoints = () => {
-    if (isIOS && storeKitReady) {
-      handlePurchaseStarPointsIOS();
+    if (isNative && storeKitReady) {
+      handlePurchaseStarPointsNative();
     } else {
       handlePurchaseStarPointsStripe();
     }
   };
 
-  const handlePurchaseAdFreeIOS = async () => {
+  const handlePurchaseAdFreeNative = async () => {
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     setLoading("adFree");
     try {
-      const result = await storeKitService.purchaseProduct(PRODUCT_IDS.AD_FREE);
+      const result = await inAppPurchaseService.purchaseProduct(PRODUCT_IDS.AD_FREE);
       if (result.success) {
         if (settings.hapticsEnabled) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -386,20 +387,20 @@ export default function ShopScreen() {
   };
 
   const handlePurchaseAdFree = () => {
-    if (isIOS && storeKitReady) {
-      handlePurchaseAdFreeIOS();
+    if (isNative && storeKitReady) {
+      handlePurchaseAdFreeNative();
     } else {
       handlePurchaseAdFreeStripe();
     }
   };
 
-  const handleSupportDeveloperIOS = async () => {
+  const handleSupportDeveloperNative = async () => {
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     setLoading("support");
     try {
-      const result = await storeKitService.purchaseProduct(PRODUCT_IDS.SUPPORT_DEVELOPER);
+      const result = await inAppPurchaseService.purchaseProduct(PRODUCT_IDS.SUPPORT_DEVELOPER);
       if (result.success) {
         if (settings.hapticsEnabled) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -498,16 +499,16 @@ export default function ShopScreen() {
   };
 
   const handleSupportDeveloper = () => {
-    if (isIOS && storeKitReady) {
-      handleSupportDeveloperIOS();
+    if (isNative && storeKitReady) {
+      handleSupportDeveloperNative();
     } else {
       handleSupportDeveloperStripe();
     }
   };
 
   const handleRestorePurchases = async () => {
-    if (!isIOS || !storeKitReady) {
-      Alert.alert("Not Available", "Restore purchases is only available on iOS devices.");
+    if (!isNative || !storeKitReady) {
+      Alert.alert("Not Available", "Restore purchases is only available on iOS and Android devices.");
       return;
     }
 
@@ -517,7 +518,7 @@ export default function ShopScreen() {
     setLoading("restore");
     
     try {
-      const results = await storeKitService.restorePurchases();
+      const results = await inAppPurchaseService.restorePurchases();
       const restoredProducts = results.filter(r => r.success && r.productId);
       
       if (restoredProducts.length > 0) {
