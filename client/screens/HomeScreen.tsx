@@ -167,6 +167,11 @@ export default function HomeScreen() {
     navigation.navigate("MultiplayerLobby");
   };
 
+  const handleIQMultiplayer = () => {
+    if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    navigation.navigate("IQMultiplayerLobby", { difficulty: "all", category: "all", questionCount: 20 });
+  };
+
   const handleIQTest = () => {
     if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate("IQSetup");
@@ -529,7 +534,10 @@ export default function HomeScreen() {
               !gameState.dailyChallengeCompleted,
               700
             )}
-            {renderSecondaryButton("globe", "Multiplayer", "Play across devices", handleMultiplayer, colors.primary, false, false, 750)}
+            <View style={styles.multiplayerRow}>
+              {renderSecondaryButton("globe", "FEUD Online", "Play FEUD together", handleMultiplayer, colors.primary, false, false, 750)}
+              {renderSecondaryButton("cpu", "IQ Online", "Compete on IQ", handleIQMultiplayer, "#9B59B6", false, false, 800)}
+            </View>
           </View>
         </Animated.View>
       </View>
@@ -691,7 +699,12 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xl,
     gap: Spacing.md,
   },
+  multiplayerRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
   secondaryButton: {
+    flex: 1,
     borderRadius: BorderRadius.md,
     overflow: "hidden",
   },
