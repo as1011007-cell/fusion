@@ -18,6 +18,7 @@ import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useMultiplayer, RoundResult } from "@/context/MultiplayerContext";
 import { useProfile, avatarImages } from "@/context/ProfileContext";
+import { useTheme } from "@/context/ThemeContext";
 import { useGame, Panel } from "@/context/GameContext";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -29,6 +30,8 @@ export default function MultiplayerGameScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { settings } = useProfile();
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
   const { panels } = useGame();
   
   const {
@@ -155,7 +158,7 @@ export default function MultiplayerGameScreen() {
 
   if (gameFinished) {
     return (
-      <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
+      <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
         <View style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
           <ThemedText style={styles.headerTitle}>Game Over!</ThemedText>
         </View>
@@ -220,7 +223,7 @@ export default function MultiplayerGameScreen() {
 
   if (!localQuestion) {
     return (
-      <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
+      <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
         <View style={[styles.loadingContainer, { paddingTop: insets.top + Spacing.xl }]}>
           <ThemedText style={styles.loadingText}>Loading game...</ThemedText>
         </View>
@@ -229,7 +232,7 @@ export default function MultiplayerGameScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
+    <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
         <Pressable onPress={handleBack} style={[styles.backButton, { backgroundColor: GameColors.surface }]}>
           <Feather name="x" size={24} color={GameColors.textPrimary} />
@@ -575,7 +578,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     borderRadius: BorderRadius.md,
     marginBottom: Spacing.sm,
-    backgroundColor: GameColors.backgroundDark,
   },
   myRow: {
     backgroundColor: GameColors.primary + "30",

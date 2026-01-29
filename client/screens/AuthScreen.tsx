@@ -12,6 +12,7 @@ import { GradientButton } from "@/components/GradientButton";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Auth">;
 
@@ -21,6 +22,8 @@ export default function AuthScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { login, register, forgotPassword, resetPassword, isLoading } = useAuth();
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
 
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
@@ -139,7 +142,7 @@ export default function AuthScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
+    <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
         <Pressable onPress={handleBack} style={styles.backButton}>
           <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />

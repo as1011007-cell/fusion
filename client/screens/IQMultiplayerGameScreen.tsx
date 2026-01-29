@@ -26,6 +26,7 @@ import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useMultiplayer, RoundResult } from "@/context/MultiplayerContext";
 import { useProfile, avatarImages } from "@/context/ProfileContext";
+import { useTheme } from "@/context/ThemeContext";
 import { IQDifficulty } from "@/context/IQContext";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -323,6 +324,8 @@ export default function IQMultiplayerGameScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { settings } = useProfile();
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
 
   const {
     playerId,
@@ -467,7 +470,7 @@ export default function IQMultiplayerGameScreen() {
     const sortedScores = [...finalScores].sort((a, b) => b.score - a.score);
     
     return (
-      <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
+      <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
         <View style={[styles.header, { paddingTop: insets.top + Spacing.xl }]}>
           <ThemedText style={styles.headerTitle}>IQ Challenge Complete!</ThemedText>
         </View>
@@ -553,7 +556,7 @@ export default function IQMultiplayerGameScreen() {
 
   if (!localQuestion) {
     return (
-      <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
+      <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
         <View style={[styles.loadingContainer, { paddingTop: insets.top + Spacing.xl }]}>
           <Feather name="cpu" size={48} color={IQColors.primary} />
           <ThemedText style={styles.loadingText}>Loading IQ Challenge...</ThemedText>
@@ -566,7 +569,7 @@ export default function IQMultiplayerGameScreen() {
   const difficultyColor = DIFFICULTY_COLORS[localQuestion.difficulty] || IQColors.primary;
 
   return (
-    <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
+    <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
         <Pressable
           onPress={handleBack}
@@ -735,7 +738,6 @@ export default function IQMultiplayerGameScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: GameColors.backgroundDark,
   },
   header: {
     flexDirection: "row",
@@ -1071,7 +1073,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.md,
     marginBottom: Spacing.sm,
-    backgroundColor: GameColors.backgroundDark,
   },
   myRow: {
     backgroundColor: IQColors.primary + "30",

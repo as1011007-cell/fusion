@@ -7,10 +7,13 @@ import * as Haptics from "expo-haptics";
 
 import { ThemedText } from "@/components/ThemedText";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function PrivacyPolicyScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -18,7 +21,7 @@ export default function PrivacyPolicyScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: GameColors.backgroundDark }]}>
+    <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
         <Pressable onPress={handleBack} style={styles.backButton}>
           <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
