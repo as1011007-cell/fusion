@@ -523,17 +523,19 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.secondaryButtons}>
-            {renderSecondaryButton("users", "Party Mode", "Play with friends", handlePartyMode, colors.secondary, false, false, 650)}
-            {renderSecondaryButton(
-              "zap",
-              "Daily Challenge",
-              gameState.dailyChallengeCompleted ? "Completed!" : "Win bonus rewards",
-              handleDailyChallenge,
-              colors.accent,
-              gameState.dailyChallengeCompleted,
-              !gameState.dailyChallengeCompleted,
-              700
-            )}
+            <View style={styles.partyDailyRow}>
+              {renderSecondaryButton("users", "Party Mode", "Play with friends", handlePartyMode, colors.secondary, false, false, 650)}
+              {renderSecondaryButton(
+                "zap",
+                "Daily Challenge",
+                gameState.dailyChallengeCompleted ? "Completed!" : "Win bonus rewards",
+                handleDailyChallenge,
+                colors.accent,
+                gameState.dailyChallengeCompleted,
+                !gameState.dailyChallengeCompleted,
+                700
+              )}
+            </View>
             <View style={styles.multiplayerRow}>
               <Animated.View entering={FadeInUp.delay(750).springify()} style={styles.compactButton}>
                 <Pressable onPress={handleMultiplayer}>
@@ -720,6 +722,10 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   multiplayerRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+  partyDailyRow: {
     flexDirection: "row",
     gap: Spacing.sm,
   },
