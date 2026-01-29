@@ -115,25 +115,38 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
+    let heartbeatInterval: NodeJS.Timeout | null = null;
+
     ws.onopen = () => {
       console.log("WebSocket connected");
       setConnected(true);
       setError(null);
+      
+      // Send heartbeat every 20 seconds to keep connection alive
+      heartbeatInterval = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "HEARTBEAT" }));
+        }
+      }, 20000);
     };
 
     ws.onclose = () => {
       console.log("WebSocket disconnected");
       setConnected(false);
+      if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+      }
+      // Only reconnect if we're in a room
       reconnectTimeoutRef.current = setTimeout(() => {
         if (room) {
+          console.log("Attempting to reconnect...");
           connect();
         }
-      }, 3000);
+      }, 2000);
     };
 
     ws.onerror = (e) => {
       console.error("WebSocket error:", e);
-      setError("Connection error. Please try again.");
     };
 
     ws.onmessage = (event) => {

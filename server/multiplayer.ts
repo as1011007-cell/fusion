@@ -93,9 +93,31 @@ export function setupMultiplayer(server: Server) {
 
   console.log('WebSocket server initialized for multiplayer');
 
+  // Ping all clients every 25 seconds to keep connections alive
+  const pingInterval = setInterval(() => {
+    wss.clients.forEach((ws) => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.ping();
+      }
+    });
+  }, 25000);
+
+  wss.on('close', () => {
+    clearInterval(pingInterval);
+  });
+
   wss.on('connection', (ws: WebSocket) => {
     let playerId: string | null = null;
     let currentRoomCode: string | null = null;
+    let isAlive = true;
+
+    // Handle pong responses
+    ws.on('pong', () => {
+      isAlive = true;
+    });
+
+    // Send initial ping
+    ws.ping();
 
     ws.on('message', (data: Buffer) => {
       try {
