@@ -29,6 +29,7 @@ import { ProfileProvider } from "@/context/ProfileContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { MultiplayerProvider } from "@/context/MultiplayerContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { IQProvider } from "@/context/IQContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -59,6 +60,7 @@ export default function App() {
           <ProfileProvider>
             <ThemeProvider>
               <GameProvider>
+                <IQProvider>
                 <MultiplayerProvider>
                 <SafeAreaProvider>
                   <GestureHandlerRootView style={styles.root}>
@@ -72,6 +74,7 @@ export default function App() {
                   </GestureHandlerRootView>
                 </SafeAreaProvider>
                 </MultiplayerProvider>
+                </IQProvider>
               </GameProvider>
             </ThemeProvider>
           </ProfileProvider>

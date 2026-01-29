@@ -16,6 +16,8 @@ import PrivacyPolicyScreen from "@/screens/PrivacyPolicyScreen";
 import IQSetupScreen from "@/screens/IQSetupScreen";
 import IQGameScreen from "@/screens/IQGameScreen";
 import IQResultsScreen from "@/screens/IQResultsScreen";
+import IQMultiplayerLobbyScreen from "@/screens/IQMultiplayerLobbyScreen";
+import IQMultiplayerGameScreen from "@/screens/IQMultiplayerGameScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { GameColors } from "@/constants/theme";
 
@@ -112,6 +114,12 @@ export default function RootStackNavigator() {
       <Stack.Screen
         name="IQResults"
         component={IQResultsScreen}
+        options={{ gestureEnabled: false }}
+      />
+      <Stack.Screen name="IQMultiplayerLobby" component={IQMultiplayerLobbyScreen} />
+      <Stack.Screen
+        name="IQMultiplayerGame"
+        component={IQMultiplayerGameScreen}
         options={{ gestureEnabled: false }}
       />
     </Stack.Navigator>
