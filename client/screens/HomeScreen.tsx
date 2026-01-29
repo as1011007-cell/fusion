@@ -221,7 +221,7 @@ export default function HomeScreen() {
     return (
       <Pressable 
         onPress={handlePlay} 
-        style={[styles.primaryButtonWrapper, { borderColor: colors.primary + "80" }]}
+        style={styles.primaryButtonWrapper}
         accessibilityLabel={`Play FEUD Fusion - ${config.playText}`}
         accessibilityHint="Start a new solo game"
         accessibilityRole="button"
@@ -250,7 +250,7 @@ export default function HomeScreen() {
     return (
       <Pressable 
         onPress={handleIQTest} 
-        style={[styles.primaryButtonWrapper, { borderColor: "#6C3483" }]}
+        style={styles.primaryButtonWrapper}
         accessibilityLabel="IQ Test"
         accessibilityHint="Start an IQ test challenge"
         accessibilityRole="button"
@@ -566,9 +566,7 @@ export default function HomeScreen() {
                 styles.themedButton,
                 { 
                   borderRadius: themeId === "ocean" ? 16 : themeId === "forest" ? 12 : themeId === "galaxy" ? 12 : 10,
-                  borderColor: colors.secondary + "60",
                   shadowColor: colors.secondary,
-                  shadowOpacity: 0.5,
                 }
               ]}>
                 <Pressable
@@ -600,9 +598,7 @@ export default function HomeScreen() {
                 gameState.dailyChallengeCompleted && styles.completedButton,
                 { 
                   borderRadius: themeId === "ocean" ? 16 : themeId === "forest" ? 12 : themeId === "galaxy" ? 12 : 10,
-                  borderColor: colors.accent + "60",
                   shadowColor: colors.accent,
-                  shadowOpacity: 0.5,
                 }
               ]}>
                 <Pressable
@@ -637,9 +633,7 @@ export default function HomeScreen() {
                 styles.themedButton,
                 { 
                   borderRadius: themeId === "ocean" ? 16 : themeId === "forest" ? 12 : themeId === "galaxy" ? 12 : 10,
-                  borderColor: colors.primary + "60",
                   shadowColor: colors.primary,
-                  shadowOpacity: 0.5,
                 }
               ]}>
                 <Pressable 
@@ -670,9 +664,7 @@ export default function HomeScreen() {
                 styles.themedButton,
                 { 
                   borderRadius: themeId === "ocean" ? 16 : themeId === "forest" ? 12 : themeId === "galaxy" ? 12 : 10,
-                  borderColor: "#6C348360",
                   shadowColor: "#9B59B6",
-                  shadowOpacity: 0.5,
                 }
               ]}>
                 <Pressable 
@@ -858,8 +850,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.5,
     shadowRadius: 12,
-    borderWidth: 3,
-    borderColor: "rgba(0,0,0,0.3)",
   },
   playButton: {
     flexDirection: "row",
@@ -919,8 +909,6 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     shadowOpacity: 0.5,
     shadowColor: "#000",
-    borderWidth: 3,
-    borderColor: "rgba(0,0,0,0.35)",
   },
   themedButtonInner: {
     flex: 1,
