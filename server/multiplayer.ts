@@ -18,6 +18,12 @@ interface ChatMessage {
   timestamp: number;
 }
 
+interface IQSettings {
+  difficulty: string;
+  category: string;
+  questionCount: number;
+}
+
 interface GameRoom {
   id: string;
   code: string;
@@ -33,6 +39,7 @@ interface GameRoom {
   maxPlayers: number;
   createdAt: Date;
   chatMessages: ChatMessage[];
+  iqSettings?: IQSettings;
 }
 
 const rooms = new Map<string, GameRoom>();
@@ -70,6 +77,7 @@ function getRoomState(room: GameRoom) {
     selectedPanelId: room.selectedPanelId,
     selectedPanelName: room.selectedPanelName,
     maxPlayers: room.maxPlayers,
+    iqSettings: room.iqSettings,
     players: Array.from(room.players.values()).map(p => ({
       id: p.id,
       name: p.name,
@@ -391,6 +399,41 @@ export function setupMultiplayer(server: Server) {
               type: 'CHAT_MESSAGE',
               message: chatMsg,
             });
+            break;
+          }
+
+          case 'UPDATE_IQ_SETTINGS': {
+            if (!currentRoomCode || !playerId) return;
+            const room = rooms.get(currentRoomCode);
+            if (!room || room.hostId !== playerId || room.status !== 'waiting') return;
+
+            room.iqSettings = {
+              difficulty: message.difficulty || 'all',
+              category: message.category || 'all',
+              questionCount: Math.min(Math.max(message.questionCount || 10, 5), 30),
+            };
+
+            broadcastToRoom(room, {
+              type: 'IQ_SETTINGS_UPDATED',
+              iqSettings: room.iqSettings,
+              room: getRoomState(room),
+            });
+            break;
+          }
+
+          case 'SET_IQ_SETTINGS': {
+            if (!currentRoomCode || !playerId) return;
+            const room = rooms.get(currentRoomCode);
+            if (!room) return;
+
+            // Allow initial setting only by host
+            if (room.hostId === playerId) {
+              room.iqSettings = {
+                difficulty: message.difficulty || 'all',
+                category: message.category || 'all',
+                questionCount: Math.min(Math.max(message.questionCount || 10, 5), 30),
+              };
+            }
             break;
           }
         }
