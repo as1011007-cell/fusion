@@ -535,8 +535,28 @@ export default function HomeScreen() {
               700
             )}
             <View style={styles.multiplayerRow}>
-              {renderSecondaryButton("globe", "FEUD Online", "Play FEUD together", handleMultiplayer, colors.primary, false, false, 750)}
-              {renderSecondaryButton("cpu", "IQ Online", "Compete on IQ", handleIQMultiplayer, "#9B59B6", false, false, 800)}
+              <Animated.View entering={FadeInUp.delay(750).springify()} style={styles.compactButton}>
+                <Pressable onPress={handleMultiplayer}>
+                  <LinearGradient
+                    colors={[colors.primary, colors.primary + "CC"]}
+                    style={styles.compactButtonInner}
+                  >
+                    <Feather name="globe" size={18} color="#fff" />
+                    <ThemedText style={styles.compactButtonText}>FEUD Online</ThemedText>
+                  </LinearGradient>
+                </Pressable>
+              </Animated.View>
+              <Animated.View entering={FadeInUp.delay(800).springify()} style={styles.compactButton}>
+                <Pressable onPress={handleIQMultiplayer}>
+                  <LinearGradient
+                    colors={["#9B59B6", "#8E44AD"]}
+                    style={styles.compactButtonInner}
+                  >
+                    <Feather name="cpu" size={18} color="#fff" />
+                    <ThemedText style={styles.compactButtonText}>IQ Online</ThemedText>
+                  </LinearGradient>
+                </Pressable>
+              </Animated.View>
             </View>
           </View>
         </Animated.View>
@@ -702,6 +722,26 @@ const styles = StyleSheet.create({
   multiplayerRow: {
     flexDirection: "row",
     gap: Spacing.sm,
+  },
+  compactButton: {
+    flex: 1,
+    borderRadius: BorderRadius.md,
+    overflow: "hidden",
+  },
+  compactButtonInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.xs,
+  },
+  compactButtonText: {
+    ...Typography.body,
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 13,
   },
   secondaryButton: {
     flex: 1,
