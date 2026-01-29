@@ -352,10 +352,13 @@ export default function HomeScreen() {
               />
             </View>
             <View style={styles.secondaryButtonContent}>
-              <ThemedText style={[styles.secondaryButtonText, { color: colors.primary === "#FF006E" ? GameColors.textPrimary : colors.primary }]}>
+              <ThemedText 
+                style={[styles.secondaryButtonText, { color: colors.primary === "#FF006E" ? GameColors.textPrimary : colors.primary }]}
+                numberOfLines={1}
+              >
                 {title}
               </ThemedText>
-              <ThemedText style={styles.secondaryButtonDesc}>{desc}</ThemedText>
+              <ThemedText style={styles.secondaryButtonDesc} numberOfLines={1}>{desc}</ThemedText>
             </View>
             {isCompleted ? (
               <Feather name="check-circle" size={20} color={colors.correct} />
@@ -544,7 +547,7 @@ export default function HomeScreen() {
               FUSION
             </ThemedText>
           </View>
-          <ThemedText style={styles.subtitle}>{config.tagline}</ThemedText>
+          <ThemedText style={styles.subtitle} numberOfLines={1} adjustsFontSizeToFit>{config.tagline}</ThemedText>
         </Animated.View>
 
         <Animated.View entering={FadeInUp.delay(600).springify()} style={styles.buttonsContainer}>
@@ -579,8 +582,8 @@ export default function HomeScreen() {
                     colors={[colors.primary, colors.primary + "CC"]}
                     style={styles.compactButtonInner}
                   >
-                    <Feather name="globe" size={18} color="#fff" />
-                    <ThemedText style={styles.compactButtonText}>FEUD Online</ThemedText>
+                    <Feather name="globe" size={16} color="#fff" />
+                    <ThemedText style={styles.compactButtonText} numberOfLines={1}>FEUD Online</ThemedText>
                   </LinearGradient>
                 </Pressable>
               </Animated.View>
@@ -595,8 +598,8 @@ export default function HomeScreen() {
                     colors={["#9B59B6", "#8E44AD"]}
                     style={styles.compactButtonInner}
                   >
-                    <Feather name="cpu" size={18} color="#fff" />
-                    <ThemedText style={styles.compactButtonText}>IQ Online</ThemedText>
+                    <Feather name="cpu" size={16} color="#fff" />
+                    <ThemedText style={styles.compactButtonText} numberOfLines={1}>IQ Online</ThemedText>
                   </LinearGradient>
                 </Pressable>
               </Animated.View>
@@ -700,25 +703,23 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     alignItems: "center",
-    marginBottom: Spacing["2xl"],
-    overflow: "visible",
+    marginBottom: Spacing.xl,
+    width: "100%",
   },
   titleRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
     flexWrap: "nowrap",
-    width: "100%",
-    overflow: "visible",
   },
   title: {
-    fontSize: Math.min(42, SCREEN_WIDTH * 0.11),
-    lineHeight: Math.min(52, SCREEN_WIDTH * 0.14),
+    fontSize: Math.min(36, SCREEN_WIDTH * 0.09),
+    lineHeight: Math.min(44, SCREEN_WIDTH * 0.11),
     color: GameColors.textPrimary,
-    letterSpacing: 4,
+    letterSpacing: 2,
     fontWeight: "900",
     textShadowColor: "rgba(0, 0, 0, 0.6)",
     textShadowOffset: { width: 0, height: 3 },
@@ -726,9 +727,9 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   titleAccent: {
-    fontSize: Math.min(42, SCREEN_WIDTH * 0.11),
-    lineHeight: Math.min(52, SCREEN_WIDTH * 0.14),
-    letterSpacing: 4,
+    fontSize: Math.min(36, SCREEN_WIDTH * 0.09),
+    lineHeight: Math.min(44, SCREEN_WIDTH * 0.11),
+    letterSpacing: 2,
     fontWeight: "900",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 12,
@@ -737,14 +738,16 @@ const styles = StyleSheet.create({
   subtitle: {
     ...Typography.body,
     color: GameColors.textSecondary,
-    marginTop: Spacing.md,
-    fontSize: 15,
-    letterSpacing: 0.5,
+    marginTop: Spacing.sm,
+    fontSize: Math.min(14, SCREEN_WIDTH * 0.035),
+    letterSpacing: 0.3,
     opacity: 0.9,
+    textAlign: "center",
   },
   buttonsContainer: {
     width: "100%",
-    maxWidth: 340,
+    maxWidth: Math.min(340, SCREEN_WIDTH - 48),
+    paddingHorizontal: Spacing.xs,
   },
   primaryButtonsRow: {
     flexDirection: "row",
@@ -774,8 +777,8 @@ const styles = StyleSheet.create({
     ...Typography.body,
     color: "#fff",
     fontWeight: "800",
-    fontSize: 15,
-    letterSpacing: 1.5,
+    fontSize: Math.min(14, SCREEN_WIDTH * 0.035),
+    letterSpacing: 1,
   },
   secondaryButtons: {
     marginTop: Spacing["2xl"],
@@ -813,8 +816,8 @@ const styles = StyleSheet.create({
     ...Typography.body,
     color: "#fff",
     fontWeight: "700",
-    fontSize: 14,
-    letterSpacing: 0.5,
+    fontSize: Math.min(13, SCREEN_WIDTH * 0.032),
+    letterSpacing: 0.3,
   },
   secondaryButtonWrapper: {
     flex: 1,
@@ -840,12 +843,12 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   secondaryButtonIcon: {
-    width: 46,
-    height: 46,
+    width: 40,
+    height: 40,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: Spacing.md,
-    borderRadius: 23,
+    marginRight: Spacing.sm,
+    borderRadius: 20,
     backgroundColor: "rgba(255,255,255,0.15)",
   },
   secondaryButtonContent: {
@@ -854,14 +857,14 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     ...Typography.body,
     fontWeight: "700",
-    fontSize: 15,
-    letterSpacing: 0.3,
+    fontSize: Math.min(14, SCREEN_WIDTH * 0.035),
+    letterSpacing: 0.2,
   },
   secondaryButtonDesc: {
     ...Typography.caption,
     color: "rgba(255,255,255,0.7)",
-    marginTop: 3,
-    fontSize: 12,
+    marginTop: 2,
+    fontSize: Math.min(11, SCREEN_WIDTH * 0.028),
   },
   liveBadge: {
     paddingHorizontal: Spacing.sm,
