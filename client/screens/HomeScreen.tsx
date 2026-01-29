@@ -219,7 +219,13 @@ export default function HomeScreen() {
     };
 
     return (
-      <Pressable onPress={handlePlay} style={styles.primaryButtonWrapper}>
+      <Pressable 
+        onPress={handlePlay} 
+        style={styles.primaryButtonWrapper}
+        accessibilityLabel={`Play FEUD Fusion - ${config.playText}`}
+        accessibilityHint="Start a new solo game"
+        accessibilityRole="button"
+      >
         <LinearGradient
           colors={gradientColors[themeId]}
           start={{ x: 0, y: 0 }}
@@ -240,7 +246,13 @@ export default function HomeScreen() {
 
   const renderIQButton = () => {
     return (
-      <Pressable onPress={handleIQTest} style={styles.primaryButtonWrapper}>
+      <Pressable 
+        onPress={handleIQTest} 
+        style={styles.primaryButtonWrapper}
+        accessibilityLabel="IQ Test"
+        accessibilityHint="Start an IQ test challenge"
+        accessibilityRole="button"
+      >
         <LinearGradient
           colors={["#9B59B6", "#8E44AD", "#7D3C98"]}
           start={{ x: 0, y: 0 }}
@@ -321,10 +333,14 @@ export default function HomeScreen() {
     };
 
     return (
-      <Animated.View entering={FadeInUp.delay(delay).springify()}>
+      <Animated.View entering={FadeInUp.delay(delay).springify()} style={styles.secondaryButtonWrapper}>
         <Pressable
           style={[styles.secondaryButton, isCompleted && styles.completedButton]}
           onPress={onPress}
+          accessibilityLabel={title}
+          accessibilityHint={desc}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: isCompleted }}
         >
           <View style={[styles.secondaryButtonInner, cardStyles[config.secondaryStyle]]}>
             <View style={[styles.secondaryButtonIcon, iconBgStyles[config.secondaryStyle]]}>
@@ -473,6 +489,9 @@ export default function HomeScreen() {
           onPressIn={() => { profileScale.value = withSpring(0.9); }}
           onPressOut={() => { profileScale.value = withSpring(1); }}
           style={[styles.profileButton, profileStyle]}
+          accessibilityLabel="Profile"
+          accessibilityHint="View your profile and settings"
+          accessibilityRole="button"
         >
           <LinearGradient
             colors={[colors.primary + "40", colors.secondary + "40"]}
@@ -483,11 +502,23 @@ export default function HomeScreen() {
         </AnimatedPressable>
 
         <View style={styles.currencyContainer}>
-          <Pressable onPress={handleShop} style={[styles.currencyBadge, { backgroundColor: colors.surface }]}>
+          <Pressable 
+            onPress={handleShop} 
+            style={[styles.currencyBadge, { backgroundColor: colors.surface }]}
+            accessibilityLabel={`${starPoints} star points`}
+            accessibilityHint="Open shop to spend star points"
+            accessibilityRole="button"
+          >
             <Feather name="star" size={16} color={colors.secondary} />
             <ThemedText style={[styles.currencyText, { color: colors.secondary }]}>{starPoints}</ThemedText>
           </Pressable>
-          <Pressable onPress={handleShop} style={[styles.currencyBadge, { backgroundColor: colors.surface }]}>
+          <Pressable 
+            onPress={handleShop} 
+            style={[styles.currencyBadge, { backgroundColor: colors.surface }]}
+            accessibilityLabel={`${totalCoins} coins`}
+            accessibilityHint="Open shop to spend coins"
+            accessibilityRole="button"
+          >
             <Feather name="disc" size={16} color={colors.accent} />
             <ThemedText style={[styles.currencyText, { color: colors.accent }]}>{totalCoins}</ThemedText>
           </Pressable>
@@ -538,7 +569,12 @@ export default function HomeScreen() {
             </View>
             <View style={styles.multiplayerRow}>
               <Animated.View entering={FadeInUp.delay(750).springify()} style={styles.compactButton}>
-                <Pressable onPress={handleMultiplayer}>
+                <Pressable 
+                  onPress={handleMultiplayer}
+                  accessibilityLabel="FEUD Online"
+                  accessibilityHint="Play FEUD with friends online"
+                  accessibilityRole="button"
+                >
                   <LinearGradient
                     colors={[colors.primary, colors.primary + "CC"]}
                     style={styles.compactButtonInner}
@@ -549,7 +585,12 @@ export default function HomeScreen() {
                 </Pressable>
               </Animated.View>
               <Animated.View entering={FadeInUp.delay(800).springify()} style={styles.compactButton}>
-                <Pressable onPress={handleIQMultiplayer}>
+                <Pressable 
+                  onPress={handleIQMultiplayer}
+                  accessibilityLabel="IQ Online"
+                  accessibilityHint="Play IQ Test with friends online"
+                  accessibilityRole="button"
+                >
                   <LinearGradient
                     colors={["#9B59B6", "#8E44AD"]}
                     style={styles.compactButtonInner}
@@ -706,6 +747,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: Spacing.lg,
+    minHeight: 56,
   },
   playIcon: {
     marginRight: Spacing.xs,
@@ -742,6 +784,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
     borderRadius: BorderRadius.md,
     gap: Spacing.xs,
+    minHeight: 48,
   },
   compactButtonText: {
     ...Typography.body,
@@ -749,10 +792,14 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 13,
   },
+  secondaryButtonWrapper: {
+    flex: 1,
+  },
   secondaryButton: {
     flex: 1,
     borderRadius: BorderRadius.md,
     overflow: "hidden",
+    minHeight: 72,
   },
   completedButton: {
     opacity: 0.7,
