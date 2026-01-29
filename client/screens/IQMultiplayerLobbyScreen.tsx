@@ -16,6 +16,7 @@ import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useMultiplayer, ChatMessage } from "@/context/MultiplayerContext";
 import { useProfile, avatarImages } from "@/context/ProfileContext";
+import { useTheme } from "@/context/ThemeContext";
 import { useIQ } from "@/context/IQContext";
 import { iqQuestions } from "@/data/iqQuestions";
 
@@ -34,6 +35,8 @@ export default function IQMultiplayerLobbyScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<IQMultiplayerLobbyRouteProp>();
   const { currentProfile, settings } = useProfile();
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
   const { getRandomQuestions } = useIQ();
   
   const { difficulty, category, questionCount } = route.params;
@@ -326,7 +329,7 @@ export default function IQMultiplayerLobbyScreen() {
 
       <View style={styles.buttonGroup}>
         <Pressable
-          style={[styles.modeButton, { backgroundColor: GameColors.surface, borderColor: IQColors.primary }]}
+          style={[styles.modeButton, { backgroundColor: colors.surface, borderColor: IQColors.primary }]}
           onPress={() => setMode("create")}
         >
           <View style={[styles.modeIconContainer, { backgroundColor: IQColors.primary + "20" }]}>
@@ -339,7 +342,7 @@ export default function IQMultiplayerLobbyScreen() {
         </Pressable>
 
         <Pressable
-          style={[styles.modeButton, { backgroundColor: GameColors.surface, borderColor: IQColors.secondary }]}
+          style={[styles.modeButton, { backgroundColor: colors.surface, borderColor: IQColors.secondary }]}
           onPress={() => setMode("join")}
         >
           <View style={[styles.modeIconContainer, { backgroundColor: IQColors.secondary + "20" }]}>
@@ -546,8 +549,8 @@ export default function IQMultiplayerLobbyScreen() {
                   style={[
                     styles.optionChip,
                     {
-                      backgroundColor: localDifficulty === opt ? IQColors.primary : GameColors.backgroundDark,
-                      borderColor: localDifficulty === opt ? IQColors.primary : GameColors.surface,
+                      backgroundColor: localDifficulty === opt ? IQColors.primary : colors.backgroundDark,
+                      borderColor: localDifficulty === opt ? IQColors.primary : colors.surface,
                       opacity: isHost ? 1 : 0.7,
                     }
                   ]}
@@ -556,7 +559,7 @@ export default function IQMultiplayerLobbyScreen() {
                 >
                   <ThemedText style={[
                     styles.optionChipText,
-                    { color: localDifficulty === opt ? GameColors.backgroundDark : GameColors.textPrimary }
+                    { color: localDifficulty === opt ? colors.backgroundDark : GameColors.textPrimary }
                   ]}>
                     {formatDifficulty(opt)}
                   </ThemedText>
@@ -579,8 +582,8 @@ export default function IQMultiplayerLobbyScreen() {
                   style={[
                     styles.optionChip,
                     {
-                      backgroundColor: localCategory === opt ? IQColors.primary : GameColors.backgroundDark,
-                      borderColor: localCategory === opt ? IQColors.primary : GameColors.surface,
+                      backgroundColor: localCategory === opt ? IQColors.primary : colors.backgroundDark,
+                      borderColor: localCategory === opt ? IQColors.primary : colors.surface,
                       opacity: isHost ? 1 : 0.7,
                     }
                   ]}
@@ -589,7 +592,7 @@ export default function IQMultiplayerLobbyScreen() {
                 >
                   <ThemedText style={[
                     styles.optionChipText,
-                    { color: localCategory === opt ? GameColors.backgroundDark : GameColors.textPrimary }
+                    { color: localCategory === opt ? colors.backgroundDark : GameColors.textPrimary }
                   ]}>
                     {formatCategory(opt)}
                   </ThemedText>
@@ -612,8 +615,8 @@ export default function IQMultiplayerLobbyScreen() {
                   style={[
                     styles.optionChip,
                     {
-                      backgroundColor: localQuestionCount === opt ? IQColors.primary : GameColors.backgroundDark,
-                      borderColor: localQuestionCount === opt ? IQColors.primary : GameColors.surface,
+                      backgroundColor: localQuestionCount === opt ? IQColors.primary : colors.backgroundDark,
+                      borderColor: localQuestionCount === opt ? IQColors.primary : colors.surface,
                       opacity: isHost ? 1 : 0.7,
                     }
                   ]}
@@ -622,7 +625,7 @@ export default function IQMultiplayerLobbyScreen() {
                 >
                   <ThemedText style={[
                     styles.optionChipText,
-                    { color: localQuestionCount === opt ? GameColors.backgroundDark : GameColors.textPrimary }
+                    { color: localQuestionCount === opt ? colors.backgroundDark : GameColors.textPrimary }
                   ]}>
                     {opt}
                   </ThemedText>
@@ -639,7 +642,7 @@ export default function IQMultiplayerLobbyScreen() {
         ) : null}
       </View>
 
-      <View style={[styles.playersSection, { backgroundColor: GameColors.surface }]}>
+      <View style={[styles.playersSection, { backgroundColor: colors.surface }]}>
         <ThemedText style={styles.playersSectionTitle}>
           Players ({room?.players.length}/{room?.maxPlayers})
         </ThemedText>
@@ -648,7 +651,7 @@ export default function IQMultiplayerLobbyScreen() {
             <Animated.View
               key={player.id}
               entering={FadeInDown.delay(index * 100)}
-              style={[styles.playerCard, { backgroundColor: GameColors.backgroundDark }]}
+              style={[styles.playerCard, { backgroundColor: colors.backgroundDark }]}
             >
               <Image
                 source={avatarImages[player.avatarId] || avatarImages["avatar-1"]}
@@ -673,7 +676,7 @@ export default function IQMultiplayerLobbyScreen() {
         </ScrollView>
       </View>
 
-      <View style={[styles.chatSection, { backgroundColor: GameColors.surface }]}>
+      <View style={[styles.chatSection, { backgroundColor: colors.surface }]}>
         <View style={styles.chatHeader}>
           <Feather name="message-circle" size={18} color={IQColors.primary} />
           <ThemedText style={styles.chatTitle}>Lobby Chat</ThemedText>
@@ -712,7 +715,7 @@ export default function IQMultiplayerLobbyScreen() {
         </ScrollView>
         <View style={styles.chatInputRow}>
           <TextInput
-            style={[styles.chatInput, { backgroundColor: GameColors.backgroundDark, color: GameColors.textPrimary }]}
+            style={[styles.chatInput, { backgroundColor: colors.backgroundDark, color: GameColors.textPrimary }]}
             placeholder="Type a message..."
             placeholderTextColor={GameColors.textSecondary}
             value={chatInput}
@@ -722,7 +725,7 @@ export default function IQMultiplayerLobbyScreen() {
             returnKeyType="send"
           />
           <Pressable 
-            style={[styles.chatSendBtn, { backgroundColor: chatInput.trim() ? IQColors.primary : GameColors.surface }]}
+            style={[styles.chatSendBtn, { backgroundColor: chatInput.trim() ? IQColors.primary : colors.surface }]}
             onPress={handleSendChat}
             disabled={!chatInput.trim()}
           >
@@ -775,7 +778,7 @@ export default function IQMultiplayerLobbyScreen() {
 
   return (
     <KeyboardAvoidingView 
-      style={[styles.container, { backgroundColor: GameColors.backgroundDark, paddingTop: insets.top + Spacing.md }]}
+      style={[styles.container, { backgroundColor: colors.backgroundDark, paddingTop: insets.top + Spacing.md }]}
       behavior="padding"
       keyboardVerticalOffset={0}
     >

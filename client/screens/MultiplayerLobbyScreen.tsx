@@ -17,6 +17,7 @@ import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useMultiplayer, MultiplayerPlayer, ChatMessage } from "@/context/MultiplayerContext";
 import { useProfile, avatarImages } from "@/context/ProfileContext";
+import { useTheme } from "@/context/ThemeContext";
 import { useGame } from "@/context/GameContext";
 import { allQuestions } from "@/data/questions";
 
@@ -26,6 +27,8 @@ export default function MultiplayerLobbyScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { currentProfile, settings } = useProfile();
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
   const { panels, getMultiplayerUnansweredQuestions, addMultiplayerAnsweredQuestions } = useGame();
   
   const {
@@ -256,11 +259,11 @@ export default function MultiplayerLobbyScreen() {
 
       <View style={styles.buttonGroup}>
         <Pressable
-          style={[styles.modeButton, { backgroundColor: GameColors.surface, borderColor: GameColors.accent }]}
+          style={[styles.modeButton, { backgroundColor: colors.surface, borderColor: colors.accent }]}
           onPress={() => setMode("create")}
         >
-          <View style={[styles.modeIconContainer, { backgroundColor: GameColors.accent + "20" }]}>
-            <Feather name="plus-circle" size={32} color={GameColors.accent} />
+          <View style={[styles.modeIconContainer, { backgroundColor: colors.accent + "20" }]}>
+            <Feather name="plus-circle" size={32} color={colors.accent} />
           </View>
           <ThemedText style={styles.modeButtonTitle}>Create Room</ThemedText>
           <ThemedText style={[styles.modeButtonDesc, { color: GameColors.textSecondary }]}>
@@ -269,11 +272,11 @@ export default function MultiplayerLobbyScreen() {
         </Pressable>
 
         <Pressable
-          style={[styles.modeButton, { backgroundColor: GameColors.surface, borderColor: GameColors.secondary }]}
+          style={[styles.modeButton, { backgroundColor: colors.surface, borderColor: colors.secondary }]}
           onPress={() => setMode("join")}
         >
-          <View style={[styles.modeIconContainer, { backgroundColor: GameColors.secondary + "20" }]}>
-            <Feather name="log-in" size={32} color={GameColors.secondary} />
+          <View style={[styles.modeIconContainer, { backgroundColor: colors.secondary + "20" }]}>
+            <Feather name="log-in" size={32} color={colors.secondary} />
           </View>
           <ThemedText style={styles.modeButtonTitle}>Join Room</ThemedText>
           <ThemedText style={[styles.modeButtonDesc, { color: GameColors.textSecondary }]}>
@@ -455,7 +458,7 @@ export default function MultiplayerLobbyScreen() {
         </View>
       </View>
 
-      <View style={[styles.playersSection, { backgroundColor: GameColors.surface }]}>
+      <View style={[styles.playersSection, { backgroundColor: colors.surface }]}>
         <ThemedText style={styles.playersSectionTitle}>
           Players ({room?.players.length}/{room?.maxPlayers})
         </ThemedText>
@@ -464,7 +467,7 @@ export default function MultiplayerLobbyScreen() {
             <Animated.View
               key={player.id}
               entering={FadeInDown.delay(index * 100)}
-              style={[styles.playerCard, { backgroundColor: GameColors.backgroundDark }]}
+              style={[styles.playerCard, { backgroundColor: colors.backgroundDark }]}
             >
               <Image
                 source={avatarImages[player.avatarId] || avatarImages["avatar-1"]}
@@ -490,7 +493,7 @@ export default function MultiplayerLobbyScreen() {
       </View>
 
       {isHost ? (
-        <View style={[styles.feudSection, { backgroundColor: GameColors.surface }]}>
+        <View style={[styles.feudSection, { backgroundColor: colors.surface }]}>
           <ThemedText style={styles.feudSectionTitle}>Select Feud</ThemedText>
           <ScrollView 
             horizontal 
@@ -501,14 +504,14 @@ export default function MultiplayerLobbyScreen() {
               style={[
                 styles.feudChip,
                 {
-                  backgroundColor: selectedPanelId === "mixed" ? GameColors.accent : GameColors.backgroundDark,
-                  borderColor: selectedPanelId === "mixed" ? GameColors.accent : GameColors.surface,
+                  backgroundColor: selectedPanelId === "mixed" ? colors.accent : colors.backgroundDark,
+                  borderColor: selectedPanelId === "mixed" ? colors.accent : colors.surface,
                 }
               ]}
               onPress={() => handlePanelSelect("mixed")}
             >
-              <Feather name="shuffle" size={16} color={selectedPanelId === "mixed" ? GameColors.backgroundDark : GameColors.textPrimary} />
-              <ThemedText style={[styles.feudChipText, { color: selectedPanelId === "mixed" ? GameColors.backgroundDark : GameColors.textPrimary }]}>
+              <Feather name="shuffle" size={16} color={selectedPanelId === "mixed" ? colors.backgroundDark : GameColors.textPrimary} />
+              <ThemedText style={[styles.feudChipText, { color: selectedPanelId === "mixed" ? colors.backgroundDark : GameColors.textPrimary }]}>
                 Mixed
               </ThemedText>
             </Pressable>
@@ -518,14 +521,14 @@ export default function MultiplayerLobbyScreen() {
                 style={[
                   styles.feudChip,
                   {
-                    backgroundColor: selectedPanelId === panel.id ? GameColors.accent : GameColors.backgroundDark,
-                    borderColor: selectedPanelId === panel.id ? GameColors.accent : GameColors.surface,
+                    backgroundColor: selectedPanelId === panel.id ? colors.accent : colors.backgroundDark,
+                    borderColor: selectedPanelId === panel.id ? colors.accent : colors.surface,
                   }
                 ]}
                 onPress={() => handlePanelSelect(panel.id)}
               >
-                <Feather name={panel.icon as any} size={16} color={selectedPanelId === panel.id ? GameColors.backgroundDark : GameColors.textPrimary} />
-                <ThemedText style={[styles.feudChipText, { color: selectedPanelId === panel.id ? GameColors.backgroundDark : GameColors.textPrimary }]}>
+                <Feather name={panel.icon as any} size={16} color={selectedPanelId === panel.id ? colors.backgroundDark : GameColors.textPrimary} />
+                <ThemedText style={[styles.feudChipText, { color: selectedPanelId === panel.id ? colors.backgroundDark : GameColors.textPrimary }]}>
                   {panel.name}
                 </ThemedText>
               </Pressable>
@@ -533,16 +536,16 @@ export default function MultiplayerLobbyScreen() {
           </ScrollView>
         </View>
       ) : (
-        <View style={[styles.feudInfoSection, { backgroundColor: GameColors.surface }]}>
+        <View style={[styles.feudInfoSection, { backgroundColor: colors.surface }]}>
           <View style={styles.feudInfoHeader}>
-            <Feather name="target" size={18} color={GameColors.accent} />
+            <Feather name="target" size={18} color={colors.accent} />
             <ThemedText style={styles.feudInfoLabel}>Selected Feud</ThemedText>
           </View>
-          <View style={[styles.selectedFeudDisplay, { backgroundColor: GameColors.backgroundDark }]}>
+          <View style={[styles.selectedFeudDisplay, { backgroundColor: colors.backgroundDark }]}>
             <Feather 
               name={room?.selectedPanelId === "mixed" ? "shuffle" : (panels.find(p => p.id === room?.selectedPanelId)?.icon as any || "users")} 
               size={20} 
-              color={GameColors.accent} 
+              color={colors.accent} 
             />
             <ThemedText style={[styles.selectedFeudText, { color: GameColors.textPrimary }]}>
               {room?.selectedPanelName || "Mixed"}
@@ -551,9 +554,9 @@ export default function MultiplayerLobbyScreen() {
         </View>
       )}
 
-      <View style={[styles.chatSection, { backgroundColor: GameColors.surface }]}>
+      <View style={[styles.chatSection, { backgroundColor: colors.surface }]}>
         <View style={styles.chatHeader}>
-          <Feather name="message-circle" size={18} color={GameColors.accent} />
+          <Feather name="message-circle" size={18} color={colors.accent} />
           <ThemedText style={styles.chatTitle}>Lobby Chat</ThemedText>
         </View>
         <ScrollView 
@@ -573,11 +576,13 @@ export default function MultiplayerLobbyScreen() {
                 entering={FadeInDown.duration(200)}
                 style={[
                   styles.chatBubble,
-                  msg.playerId === playerId ? styles.chatBubbleMine : styles.chatBubbleOther,
+                  msg.playerId === playerId 
+                    ? [styles.chatBubbleMine, { backgroundColor: colors.accent + "30" }] 
+                    : styles.chatBubbleOther,
                 ]}
               >
                 {msg.playerId !== playerId ? (
-                  <ThemedText style={[styles.chatSender, { color: GameColors.accent }]}>
+                  <ThemedText style={[styles.chatSender, { color: colors.accent }]}>
                     {msg.playerName}
                   </ThemedText>
                 ) : null}
@@ -588,7 +593,7 @@ export default function MultiplayerLobbyScreen() {
         </ScrollView>
         <View style={styles.chatInputRow}>
           <TextInput
-            style={[styles.chatInput, { backgroundColor: GameColors.backgroundDark, color: GameColors.textPrimary }]}
+            style={[styles.chatInput, { backgroundColor: colors.backgroundDark, color: GameColors.textPrimary }]}
             placeholder="Type a message..."
             placeholderTextColor={GameColors.textSecondary}
             value={chatInput}
@@ -598,11 +603,11 @@ export default function MultiplayerLobbyScreen() {
             returnKeyType="send"
           />
           <Pressable 
-            style={[styles.chatSendBtn, { backgroundColor: chatInput.trim() ? GameColors.accent : GameColors.surface }]}
+            style={[styles.chatSendBtn, { backgroundColor: chatInput.trim() ? colors.accent : colors.surface }]}
             onPress={handleSendChat}
             disabled={!chatInput.trim()}
           >
-            <Feather name="send" size={18} color={chatInput.trim() ? GameColors.backgroundDark : GameColors.textSecondary} />
+            <Feather name="send" size={18} color={chatInput.trim() ? colors.backgroundDark : GameColors.textSecondary} />
           </Pressable>
         </View>
       </View>
@@ -648,7 +653,7 @@ export default function MultiplayerLobbyScreen() {
 
   return (
     <KeyboardAvoidingView 
-      style={[styles.container, { backgroundColor: GameColors.backgroundDark, paddingTop: insets.top + Spacing.md }]}
+      style={[styles.container, { backgroundColor: colors.backgroundDark, paddingTop: insets.top + Spacing.md }]}
       behavior="padding"
       keyboardVerticalOffset={0}
     >
