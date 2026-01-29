@@ -558,69 +558,160 @@ export default function HomeScreen() {
 
           <View style={styles.secondaryButtons}>
             <View style={styles.partyDailyRow}>
-              <Animated.View entering={FadeInUp.delay(650).springify()} style={styles.simpleButton}>
+              <Animated.View entering={FadeInUp.delay(650).springify()} style={[
+                styles.themedButton,
+                { 
+                  borderRadius: themeId === "ocean" ? 20 : themeId === "forest" ? 14 : themeId === "galaxy" ? 16 : 10,
+                  borderWidth: themeId === "electric" ? 2 : themeId === "ocean" ? 2 : 0,
+                  borderColor: themeId === "electric" ? colors.secondary : themeId === "ocean" ? colors.secondary + "60" : "transparent",
+                  shadowColor: colors.secondary,
+                  shadowOpacity: themeId === "sunset" ? 0.4 : themeId === "galaxy" ? 0.5 : 0.25,
+                }
+              ]}>
                 <Pressable
                   onPress={handlePartyMode}
                   accessibilityLabel="Party Mode"
                   accessibilityHint="Play with friends locally"
                   accessibilityRole="button"
+                  style={{ flex: 1 }}
                 >
                   <LinearGradient
-                    colors={[colors.secondary, colors.secondary + "CC"]}
-                    style={styles.simpleButtonInner}
+                    colors={
+                      themeId === "electric" ? [colors.surface, colors.surface + "EE"] :
+                      themeId === "sunset" ? [colors.secondary, "#FF6B35"] :
+                      themeId === "ocean" ? [colors.secondary + "DD", colors.primary + "CC"] :
+                      themeId === "forest" ? [colors.secondary, "#2ED573"] :
+                      [colors.secondary, colors.accent + "CC"]
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[styles.themedButtonInner, { 
+                      borderRadius: themeId === "ocean" ? 18 : themeId === "forest" ? 12 : themeId === "galaxy" ? 14 : 8,
+                    }]}
                   >
-                    <ThemedText style={styles.simpleButtonText} numberOfLines={1}>Party Mode</ThemedText>
+                    <ThemedText style={[
+                      styles.themedButtonText, 
+                      { color: themeId === "electric" ? colors.secondary : "#fff" }
+                    ]} numberOfLines={1}>Party Mode</ThemedText>
                   </LinearGradient>
                 </Pressable>
               </Animated.View>
-              <Animated.View entering={FadeInUp.delay(700).springify()} style={[styles.simpleButton, gameState.dailyChallengeCompleted && styles.completedButton]}>
+              <Animated.View entering={FadeInUp.delay(700).springify()} style={[
+                styles.themedButton,
+                gameState.dailyChallengeCompleted && styles.completedButton,
+                { 
+                  borderRadius: themeId === "ocean" ? 20 : themeId === "forest" ? 14 : themeId === "galaxy" ? 16 : 10,
+                  borderWidth: themeId === "electric" ? 2 : themeId === "ocean" ? 2 : 0,
+                  borderColor: themeId === "electric" ? colors.accent : themeId === "ocean" ? colors.accent + "60" : "transparent",
+                  shadowColor: colors.accent,
+                  shadowOpacity: themeId === "sunset" ? 0.4 : themeId === "galaxy" ? 0.5 : 0.25,
+                }
+              ]}>
                 <Pressable
                   onPress={handleDailyChallenge}
                   accessibilityLabel="Daily Challenge"
                   accessibilityHint={gameState.dailyChallengeCompleted ? "Already completed" : "Win bonus rewards"}
                   accessibilityRole="button"
+                  style={{ flex: 1 }}
                 >
                   <LinearGradient
-                    colors={[colors.accent, colors.accent + "CC"]}
-                    style={styles.simpleButtonInner}
+                    colors={
+                      themeId === "electric" ? [colors.surface, colors.surface + "EE"] :
+                      themeId === "sunset" ? [colors.accent, "#FFAA00"] :
+                      themeId === "ocean" ? [colors.accent + "DD", colors.secondary + "CC"] :
+                      themeId === "forest" ? [colors.accent, "#F9CA24"] :
+                      [colors.accent, colors.primary + "CC"]
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[styles.themedButtonInner, { 
+                      borderRadius: themeId === "ocean" ? 18 : themeId === "forest" ? 12 : themeId === "galaxy" ? 14 : 8,
+                    }]}
                   >
-                    <ThemedText style={styles.simpleButtonText} numberOfLines={1}>
-                      {gameState.dailyChallengeCompleted ? "Completed" : "Daily Challenge"}
+                    <ThemedText style={[
+                      styles.themedButtonText, 
+                      { color: themeId === "electric" ? colors.accent : "#fff" }
+                    ]} numberOfLines={1}>
+                      {gameState.dailyChallengeCompleted ? "Completed" : "Daily"}
                     </ThemedText>
                   </LinearGradient>
                 </Pressable>
               </Animated.View>
             </View>
             <View style={styles.multiplayerRow}>
-              <Animated.View entering={FadeInUp.delay(750).springify()} style={styles.compactButton}>
+              <Animated.View entering={FadeInUp.delay(750).springify()} style={[
+                styles.themedButton,
+                { 
+                  borderRadius: themeId === "ocean" ? 20 : themeId === "forest" ? 14 : themeId === "galaxy" ? 16 : 10,
+                  borderWidth: themeId === "electric" ? 2 : themeId === "ocean" ? 2 : 0,
+                  borderColor: themeId === "electric" ? colors.primary : themeId === "ocean" ? colors.primary + "60" : "transparent",
+                  shadowColor: colors.primary,
+                  shadowOpacity: themeId === "sunset" ? 0.4 : themeId === "galaxy" ? 0.5 : 0.25,
+                }
+              ]}>
                 <Pressable 
                   onPress={handleMultiplayer}
                   accessibilityLabel="FEUD Online"
                   accessibilityHint="Play FEUD with friends online"
                   accessibilityRole="button"
+                  style={{ flex: 1 }}
                 >
                   <LinearGradient
-                    colors={[colors.primary, colors.primary + "CC"]}
-                    style={styles.compactButtonInner}
+                    colors={
+                      themeId === "electric" ? [colors.surface, colors.surface + "EE"] :
+                      themeId === "sunset" ? [colors.primary, "#FF4757"] :
+                      themeId === "ocean" ? [colors.primary + "DD", colors.secondary + "CC"] :
+                      themeId === "forest" ? [colors.primary, "#27AE60"] :
+                      [colors.primary, colors.secondary + "CC"]
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[styles.themedButtonInner, { 
+                      borderRadius: themeId === "ocean" ? 18 : themeId === "forest" ? 12 : themeId === "galaxy" ? 14 : 8,
+                    }]}
                   >
-                    <Feather name="globe" size={16} color="#fff" />
-                    <ThemedText style={styles.compactButtonText} numberOfLines={1}>FEUD Online</ThemedText>
+                    <ThemedText style={[
+                      styles.themedButtonText, 
+                      { color: themeId === "electric" ? colors.primary : "#fff" }
+                    ]} numberOfLines={1}>FEUD Online</ThemedText>
                   </LinearGradient>
                 </Pressable>
               </Animated.View>
-              <Animated.View entering={FadeInUp.delay(800).springify()} style={styles.compactButton}>
+              <Animated.View entering={FadeInUp.delay(800).springify()} style={[
+                styles.themedButton,
+                { 
+                  borderRadius: themeId === "ocean" ? 20 : themeId === "forest" ? 14 : themeId === "galaxy" ? 16 : 10,
+                  borderWidth: themeId === "electric" ? 2 : themeId === "ocean" ? 2 : 0,
+                  borderColor: themeId === "electric" ? "#9B59B6" : themeId === "ocean" ? "#9B59B6" + "60" : "transparent",
+                  shadowColor: "#9B59B6",
+                  shadowOpacity: themeId === "sunset" ? 0.4 : themeId === "galaxy" ? 0.5 : 0.25,
+                }
+              ]}>
                 <Pressable 
                   onPress={handleIQMultiplayer}
                   accessibilityLabel="IQ Online"
                   accessibilityHint="Play IQ Test with friends online"
                   accessibilityRole="button"
+                  style={{ flex: 1 }}
                 >
                   <LinearGradient
-                    colors={["#9B59B6", "#8E44AD"]}
-                    style={styles.compactButtonInner}
+                    colors={
+                      themeId === "electric" ? [colors.surface, colors.surface + "EE"] :
+                      themeId === "sunset" ? ["#9B59B6", "#8E44AD"] :
+                      themeId === "ocean" ? ["#9B59B6" + "DD", "#6C5CE7" + "CC"] :
+                      themeId === "forest" ? ["#9B59B6", "#8E44AD"] :
+                      ["#9B59B6", "#6C5CE7"]
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[styles.themedButtonInner, { 
+                      borderRadius: themeId === "ocean" ? 18 : themeId === "forest" ? 12 : themeId === "galaxy" ? 14 : 8,
+                    }]}
                   >
-                    <Feather name="cpu" size={16} color="#fff" />
-                    <ThemedText style={styles.compactButtonText} numberOfLines={1}>IQ Online</ThemedText>
+                    <ThemedText style={[
+                      styles.themedButtonText, 
+                      { color: themeId === "electric" ? "#9B59B6" : "#fff" }
+                    ]} numberOfLines={1}>IQ Online</ThemedText>
                   </LinearGradient>
                 </Pressable>
               </Animated.View>
@@ -813,31 +904,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: Spacing.sm,
   },
-  simpleButton: {
+  themedButton: {
     flex: 1,
-    borderRadius: 12,
     overflow: "hidden",
-    elevation: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
+    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
   },
-  simpleButtonInner: {
+  themedButtonInner: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: Spacing.md + 4,
+    paddingVertical: Spacing.md + 6,
     paddingHorizontal: Spacing.sm,
-    borderRadius: 12,
-    minHeight: 52,
+    minHeight: 54,
   },
-  simpleButtonText: {
+  themedButtonText: {
     ...Typography.body,
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: Math.min(14, SCREEN_WIDTH * 0.035),
-    letterSpacing: 0.5,
+    fontWeight: "800",
+    fontSize: Math.min(13, SCREEN_WIDTH * 0.033),
+    letterSpacing: 0.8,
     textAlign: "center",
+    textTransform: "uppercase",
   },
   compactButton: {
     flex: 1,
