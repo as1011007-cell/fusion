@@ -5,26 +5,37 @@ import { users, cloudSync } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { generateToken, authMiddleware, type AuthenticatedRequest } from "./middleware/auth";
+import { authRateLimiter, syncRateLimiter, apiRateLimiter } from "./middleware/rateLimit";
+import { 
+  validate, 
+  registerSchema, 
+  loginSchema, 
+  forgotPasswordSchema, 
+  resetPasswordSchema, 
+  deleteAccountSchema,
+  cloudSyncSaveSchema 
+} from "./middleware/validation";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  app.post("/api/auth/register", async (req, res) => {
+  app.get("/api/health", (_req, res) => {
+    res.json({ 
+      status: "healthy", 
+      timestamp: new Date().toISOString(),
+      version: "2.0.0"
+    });
+  });
+
+  app.post("/api/auth/register", authRateLimiter, validate(registerSchema), async (req, res) => {
     try {
       const { email, password, name } = req.body;
-
-      if (!email || !password) {
-        return res.status(400).json({ error: "Email and password are required" });
-      }
-
-      if (password.length < 6) {
-        return res.status(400).json({ error: "Password must be at least 6 characters" });
-      }
 
       const existingUser = await db.select().from(users).where(eq(users.email, email.toLowerCase())).limit(1);
       if (existingUser.length > 0) {
         return res.status(400).json({ error: "Email already registered" });
       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await bcrypt.hash(password, 12);
 
       const [newUser] = await db.insert(users).values({
         email: email.toLowerCase(),
@@ -32,8 +43,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: name || null,
       }).returning();
 
+      const token = generateToken({ userId: newUser.id, email: newUser.email });
+
       res.json({
         success: true,
+        token,
         user: {
           id: newUser.id,
           email: newUser.email,
@@ -46,13 +60,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/login", async (req, res) => {
+  app.post("/api/auth/login", authRateLimiter, validate(loginSchema), async (req, res) => {
     try {
       const { email, password } = req.body;
-
-      if (!email || !password) {
-        return res.status(400).json({ error: "Email and password are required" });
-      }
 
       const [user] = await db.select().from(users).where(eq(users.email, email.toLowerCase())).limit(1);
 
@@ -65,8 +75,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Invalid email or password" });
       }
 
+      const token = generateToken({ userId: user.id, email: user.email });
+
       res.json({
         success: true,
+        token,
         user: {
           id: user.id,
           email: user.email,
@@ -79,13 +92,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/forgot-password", async (req, res) => {
+  app.post("/api/auth/forgot-password", authRateLimiter, validate(forgotPasswordSchema), async (req, res) => {
     try {
       const { email } = req.body;
-
-      if (!email) {
-        return res.status(400).json({ error: "Email is required" });
-      }
 
       const [user] = await db.select().from(users).where(eq(users.email, email.toLowerCase())).limit(1);
 
@@ -113,17 +122,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/reset-password", async (req, res) => {
+  app.post("/api/auth/reset-password", authRateLimiter, validate(resetPasswordSchema), async (req, res) => {
     try {
       const { email, resetCode, newPassword } = req.body;
-
-      if (!email || !resetCode || !newPassword) {
-        return res.status(400).json({ error: "Email, reset code, and new password are required" });
-      }
-
-      if (newPassword.length < 6) {
-        return res.status(400).json({ error: "Password must be at least 6 characters" });
-      }
 
       const [user] = await db.select().from(users).where(eq(users.email, email.toLowerCase())).limit(1);
 
@@ -139,7 +140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Reset code has expired" });
       }
 
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
 
       await db.update(users)
         .set({
@@ -156,14 +157,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete account endpoint
-  app.delete("/api/auth/delete-account", async (req, res) => {
+  app.post("/api/auth/refresh", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const user = req.user!;
+      const token = generateToken({ userId: user.userId, email: user.email });
+      res.json({ success: true, token });
+    } catch (error) {
+      console.error("Token refresh error:", error);
+      res.status(500).json({ error: "Failed to refresh token" });
+    }
+  });
+
+  app.delete("/api/auth/delete-account", authRateLimiter, validate(deleteAccountSchema), async (req, res) => {
     try {
       const { userId, email, password } = req.body;
-
-      if (!userId || !email || !password) {
-        return res.status(400).json({ error: "User ID, email, and password are required" });
-      }
 
       const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
 
@@ -171,21 +178,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Verify email matches
       if (user.email.toLowerCase() !== email.toLowerCase()) {
         return res.status(400).json({ error: "Email does not match" });
       }
 
-      // Verify password
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
         return res.status(400).json({ error: "Incorrect password" });
       }
 
-      // Delete cloud sync data first
       await db.delete(cloudSync).where(eq(cloudSync.userId, userId));
-
-      // Delete user account
       await db.delete(users).where(eq(users.id, userId));
 
       res.json({ success: true, message: "Account deleted successfully" });
@@ -195,13 +197,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/cloud-sync/save", async (req, res) => {
+  app.post("/api/cloud-sync/save", syncRateLimiter, validate(cloudSyncSaveSchema), async (req, res) => {
     try {
       const { userId, email, data } = req.body;
-
-      if (!userId || !data) {
-        return res.status(400).json({ error: "Missing userId or data" });
-      }
 
       await db.insert(cloudSync)
         .values({
@@ -226,7 +224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/cloud-sync/load/:userId", async (req, res) => {
+  app.get("/api/cloud-sync/load/:userId", syncRateLimiter, async (req, res) => {
     try {
       const { userId } = req.params;
 
@@ -246,6 +244,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to load data" });
     }
   });
+
+  app.use("/api", apiRateLimiter);
 
   const httpServer = createServer(app);
 
