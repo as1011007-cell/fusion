@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { StyleSheet, View, Pressable, TextInput, ScrollView, Share, Alert, ActivityIndicator } from "react-native";
+import { StyleSheet, View, Pressable, TextInput, ScrollView, Share, Alert, ActivityIndicator, Platform, Keyboard } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
@@ -50,6 +51,8 @@ export default function IQMultiplayerLobbyScreen() {
     startGame,
     leaveRoom,
     sendChatMessage,
+    updateIQSettings,
+    setIQSettings,
     clearError,
     resetGameStarted,
   } = useMultiplayer();
@@ -58,16 +61,37 @@ export default function IQMultiplayerLobbyScreen() {
   const [joinCode, setJoinCode] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
   const [chatInput, setChatInput] = useState("");
+  const [localDifficulty, setLocalDifficulty] = useState(difficulty);
+  const [localCategory, setLocalCategory] = useState(category);
+  const [localQuestionCount, setLocalQuestionCount] = useState(questionCount);
   const codeInputRef = useRef<TextInput>(null);
   const chatScrollRef = useRef<ScrollView>(null);
+  const chatInputRef = useRef<TextInput>(null);
   const pulseScale = useSharedValue(1);
+
+  const difficultyOptions = ["all", "easy", "medium", "hard"];
+  const categoryOptions = ["all", "logical", "pattern", "verbal", "math", "spatial"];
+  const questionCountOptions = [5, 10, 15, 20, 25, 30];
 
   useEffect(() => {
     if (room) {
       setMode("lobby");
       setIsConnecting(false);
+      // Set initial IQ settings when host creates room
+      if (room.hostId === playerId && !room.iqSettings) {
+        setIQSettings(localDifficulty, localCategory, localQuestionCount);
+      }
     }
   }, [room]);
+
+  // Sync local settings with room settings from server
+  useEffect(() => {
+    if (room?.iqSettings) {
+      setLocalDifficulty(room.iqSettings.difficulty);
+      setLocalCategory(room.iqSettings.category);
+      setLocalQuestionCount(room.iqSettings.questionCount);
+    }
+  }, [room?.iqSettings]);
 
   useEffect(() => {
     if (error) {
@@ -203,10 +227,41 @@ export default function IQMultiplayerLobbyScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }
 
-    const gameQuestions = getRandomQuestions(questionCount, difficulty, category);
-    const panelName = `IQ Test - ${formatDifficulty(difficulty)} - ${formatCategory(category)}`;
+    // Use room settings (synced from server) or fallback to local
+    const useDiff = room?.iqSettings?.difficulty || localDifficulty;
+    const useCat = room?.iqSettings?.category || localCategory;
+    const useCount = room?.iqSettings?.questionCount || localQuestionCount;
+    
+    const gameQuestions = getRandomQuestions(useCount, useDiff, useCat);
+    const panelName = `IQ Test - ${formatDifficulty(useDiff)} - ${formatCategory(useCat)}`;
     
     startGame(gameQuestions, panelName);
+  };
+
+  const handleSettingChange = (type: "difficulty" | "category" | "questionCount", value: string | number) => {
+    if (!isHost) return;
+    
+    if (settings.hapticsEnabled) {
+      Haptics.selectionAsync();
+    }
+    
+    let newDiff = localDifficulty;
+    let newCat = localCategory;
+    let newCount = localQuestionCount;
+    
+    if (type === "difficulty") {
+      newDiff = value as string;
+      setLocalDifficulty(newDiff);
+    } else if (type === "category") {
+      newCat = value as string;
+      setLocalCategory(newCat);
+    } else if (type === "questionCount") {
+      newCount = value as number;
+      setLocalQuestionCount(newCount);
+    }
+    
+    // Broadcast to all players in real-time
+    updateIQSettings(newDiff, newCat, newCount);
   };
 
   const handleSendChat = () => {
@@ -473,23 +528,115 @@ export default function IQMultiplayerLobbyScreen() {
       <View style={[styles.settingsCard, { backgroundColor: IQColors.primary + "10", borderColor: IQColors.primary + "30", marginBottom: Spacing.lg }]}>
         <View style={styles.settingsHeaderRow}>
           <Feather name="cpu" size={18} color={IQColors.primary} />
-          <ThemedText style={[styles.settingsTitle, { color: IQColors.primary, marginLeft: Spacing.sm }]}>IQ Challenge Settings</ThemedText>
+          <ThemedText style={[styles.settingsTitle, { color: IQColors.primary, marginLeft: Spacing.sm }]}>
+            IQ Challenge Settings {isHost ? "(Host Controls)" : ""}
+          </ThemedText>
         </View>
-        <View style={styles.settingsRow}>
-          <Feather name="bar-chart-2" size={14} color={IQColors.secondary} />
-          <ThemedText style={styles.settingsLabel}>Difficulty:</ThemedText>
-          <ThemedText style={[styles.settingsValue, { color: IQColors.primary }]}>{formatDifficulty(difficulty)}</ThemedText>
+
+        <View style={styles.settingSection}>
+          <View style={styles.settingLabelRow}>
+            <Feather name="bar-chart-2" size={14} color={IQColors.secondary} />
+            <ThemedText style={styles.settingsLabel}>Difficulty:</ThemedText>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionScroll}>
+            <View style={styles.optionRow}>
+              {difficultyOptions.map((opt) => (
+                <Pressable
+                  key={opt}
+                  style={[
+                    styles.optionChip,
+                    {
+                      backgroundColor: localDifficulty === opt ? IQColors.primary : GameColors.backgroundDark,
+                      borderColor: localDifficulty === opt ? IQColors.primary : GameColors.surface,
+                      opacity: isHost ? 1 : 0.7,
+                    }
+                  ]}
+                  onPress={() => handleSettingChange("difficulty", opt)}
+                  disabled={!isHost}
+                >
+                  <ThemedText style={[
+                    styles.optionChipText,
+                    { color: localDifficulty === opt ? GameColors.backgroundDark : GameColors.textPrimary }
+                  ]}>
+                    {formatDifficulty(opt)}
+                  </ThemedText>
+                </Pressable>
+              ))}
+            </View>
+          </ScrollView>
         </View>
-        <View style={styles.settingsRow}>
-          <Feather name="grid" size={14} color={IQColors.secondary} />
-          <ThemedText style={styles.settingsLabel}>Category:</ThemedText>
-          <ThemedText style={[styles.settingsValue, { color: IQColors.primary }]}>{formatCategory(category)}</ThemedText>
+
+        <View style={styles.settingSection}>
+          <View style={styles.settingLabelRow}>
+            <Feather name="grid" size={14} color={IQColors.secondary} />
+            <ThemedText style={styles.settingsLabel}>Category:</ThemedText>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionScroll}>
+            <View style={styles.optionRow}>
+              {categoryOptions.map((opt) => (
+                <Pressable
+                  key={opt}
+                  style={[
+                    styles.optionChip,
+                    {
+                      backgroundColor: localCategory === opt ? IQColors.primary : GameColors.backgroundDark,
+                      borderColor: localCategory === opt ? IQColors.primary : GameColors.surface,
+                      opacity: isHost ? 1 : 0.7,
+                    }
+                  ]}
+                  onPress={() => handleSettingChange("category", opt)}
+                  disabled={!isHost}
+                >
+                  <ThemedText style={[
+                    styles.optionChipText,
+                    { color: localCategory === opt ? GameColors.backgroundDark : GameColors.textPrimary }
+                  ]}>
+                    {formatCategory(opt)}
+                  </ThemedText>
+                </Pressable>
+              ))}
+            </View>
+          </ScrollView>
         </View>
-        <View style={styles.settingsRow}>
-          <Feather name="hash" size={14} color={IQColors.secondary} />
-          <ThemedText style={styles.settingsLabel}>Questions:</ThemedText>
-          <ThemedText style={[styles.settingsValue, { color: IQColors.primary }]}>{questionCount}</ThemedText>
+
+        <View style={styles.settingSection}>
+          <View style={styles.settingLabelRow}>
+            <Feather name="hash" size={14} color={IQColors.secondary} />
+            <ThemedText style={styles.settingsLabel}>Questions:</ThemedText>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionScroll}>
+            <View style={styles.optionRow}>
+              {questionCountOptions.map((opt) => (
+                <Pressable
+                  key={opt}
+                  style={[
+                    styles.optionChip,
+                    {
+                      backgroundColor: localQuestionCount === opt ? IQColors.primary : GameColors.backgroundDark,
+                      borderColor: localQuestionCount === opt ? IQColors.primary : GameColors.surface,
+                      opacity: isHost ? 1 : 0.7,
+                    }
+                  ]}
+                  onPress={() => handleSettingChange("questionCount", opt)}
+                  disabled={!isHost}
+                >
+                  <ThemedText style={[
+                    styles.optionChipText,
+                    { color: localQuestionCount === opt ? GameColors.backgroundDark : GameColors.textPrimary }
+                  ]}>
+                    {opt}
+                  </ThemedText>
+                </Pressable>
+              ))}
+            </View>
+          </ScrollView>
         </View>
+
+        {!isHost ? (
+          <ThemedText style={[styles.hostNote, { color: GameColors.textSecondary }]}>
+            Only the host can change settings
+          </ThemedText>
+        ) : null}
       </View>
 
       <View style={[styles.playersSection, { backgroundColor: GameColors.surface }]}>
@@ -627,7 +774,11 @@ export default function IQMultiplayerLobbyScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: GameColors.backgroundDark, paddingTop: insets.top + Spacing.md }]}>
+    <KeyboardAvoidingView 
+      style={[styles.container, { backgroundColor: GameColors.backgroundDark, paddingTop: insets.top + Spacing.md }]}
+      behavior="padding"
+      keyboardVerticalOffset={0}
+    >
       <View style={styles.header}>
         <Pressable style={styles.backButton} onPress={handleBack}>
           <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
@@ -640,15 +791,16 @@ export default function IQMultiplayerLobbyScreen() {
 
       <ScrollView
         style={styles.content}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[styles.contentContainer, { paddingBottom: insets.bottom + Spacing.xl }]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {mode === "select" ? renderModeSelect() : null}
         {mode === "create" ? renderCreateRoom() : null}
         {mode === "join" ? renderJoinRoom() : null}
         {mode === "lobby" ? renderLobby() : null}
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -1013,5 +1165,38 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
+  },
+  settingSection: {
+    marginBottom: Spacing.md,
+  },
+  settingLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  optionScroll: {
+    marginHorizontal: -Spacing.sm,
+  },
+  optionRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
+  },
+  optionChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+  },
+  optionChipText: {
+    ...Typography.caption,
+    fontWeight: "600",
+  },
+  hostNote: {
+    ...Typography.caption,
+    textAlign: "center",
+    fontStyle: "italic",
+    marginTop: Spacing.sm,
   },
 });
