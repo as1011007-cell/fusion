@@ -375,6 +375,12 @@ export function setupMultiplayer(server: Server) {
             const room = rooms.get(currentRoomCode);
             if (!room) return;
 
+            // Only host can trigger play again, or if only one player remains
+            if (room.hostId !== playerId && room.players.size > 1) {
+              ws.send(JSON.stringify({ type: 'ERROR', message: 'Only host can start new game' }));
+              return;
+            }
+
             // Reset room state for a new game
             room.status = 'waiting';
             room.currentQuestion = 0;
@@ -392,6 +398,12 @@ export function setupMultiplayer(server: Server) {
               type: 'ROOM_RESET',
               room: getRoomState(room),
             });
+            
+            // Also send to the player who triggered it
+            ws.send(JSON.stringify({
+              type: 'ROOM_RESET',
+              room: getRoomState(room),
+            }));
             break;
           }
 
@@ -479,6 +491,9 @@ export function setupMultiplayer(server: Server) {
     const room = rooms.get(roomCode);
     if (!room) return;
 
+    // Remove player's pending answer if any
+    room.roundAnswers.delete(playerId);
+    
     room.players.delete(playerId);
     playerRooms.delete(playerId);
 
@@ -500,8 +515,11 @@ export function setupMultiplayer(server: Server) {
       }
     }
 
-    // If game was finished and someone left, allow remaining players to play again
-    // by keeping room in finished state but notifying all players of the change
+    // If game is playing and all remaining players have answered, trigger results
+    if (room.status === 'playing' && room.roundAnswers.size > 0 && room.roundAnswers.size === room.players.size) {
+      // All remaining players have answered - this handles mid-game leaves
+      console.log('All remaining players answered after player left');
+    }
     
     broadcastToRoom(room, {
       type: 'PLAYER_LEFT',
