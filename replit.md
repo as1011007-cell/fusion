@@ -32,13 +32,23 @@ The game features a vibrant "Electric Collision" aesthetic with neon accents, pe
 - Panels: Gen Z, Desi Parents, Hustlers, Artists, Office Workers, Small Town, Blonde, Elder Sister, Endo Warriors, Millennials, Boomers, Teachers, Nurses, Gamers, Introverts, Extroverts, Pet Parents, Fitness Buffs, Foodies, Remote Workers, New Parents, College Students, Travelers, Music Lovers, Bookworms, Tech Workers, Only Child, Middle Child
 
 ### Email/Password Authentication & Cloud Sync (January 2026)
-- Email/password registration and login system
+- Email/password registration and login system with JWT tokens
 - Password reset functionality with 6-character reset codes
-- Secure password hashing with bcrypt
+- Secure password hashing with bcrypt (12 rounds)
+- JWT-based session management with 7-day token expiry
 - AuthContext manages authentication state with AuthProvider wrapper
 - Cloud sync for logged-in users: Save/Load progress to cloud
 - Progress includes: profiles, avatars, settings, answered questions, XP
 - AuthScreen for login, registration, and password reset flows
+
+### API Security (January 2026)
+- JWT authentication for secure API access
+- Input validation with Zod schemas on all endpoints
+- Rate limiting to prevent abuse:
+  - Auth endpoints: 10 requests per 15 minutes
+  - Cloud sync: 30 requests per minute
+  - General API: 100 requests per minute
+- Health check endpoint at /api/health
 
 ### Level & Experience System (January 2026)
 - 11 progression titles: Newbie, Rising Star, Contender, Challenger, Champion, Elite, Master, Legend, Icon, Titan, Ultimate
@@ -59,13 +69,13 @@ The game features a vibrant "Electric Collision" aesthetic with neon accents, pe
 - 5 purchasable UI themes: Electric Collision (free), Sunset Vibes, Ocean Breeze, Forest Mist, Galaxy Night (1500 stars each)
 - Power card bundle purchase: +2 Skip, +2 Steal, +2 Double Bluff for 500 star points
 
-### Apple StoreKit Integration (January 2026)
-- Native iOS in-app purchases via expo-in-app-purchases
-- StoreKitService handles connection, product loading, purchases, and restore
+### In-App Purchase Integration (January 2026)
+- Native in-app purchases via expo-in-app-purchases for iOS and Android
+- InAppPurchaseService handles connection, product loading, purchases, and restore
 - Product IDs: com.feudfusion.starpoints5000, com.feudfusion.adfree, com.feudfusion.support
-- Uses StoreKit on iOS, falls back to Stripe on web
-- Restore Purchases button in Premium tab for iOS users
-- Products must be configured in App Store Connect with matching IDs
+- Uses StoreKit on iOS, Google Play Billing on Android, falls back to Stripe on web
+- Restore Purchases button in Premium tab for iOS/Android users
+- Products must be configured in App Store Connect and Google Play Console with matching IDs
 
 ### Stripe Integration
 - Stripe payments for real-money purchases using stripe-replit-sync
@@ -103,7 +113,9 @@ Preferred communication style: Simple, everyday language.
 ### Backend Architecture
 - **Server**: Express.js running on Node.js
 - **API Pattern**: RESTful routes prefixed with `/api`
-- **Storage**: Currently using in-memory storage (MemStorage class) with interface designed for easy database migration
+- **Authentication**: JWT-based auth with secure token management
+- **Security**: Rate limiting, input validation (Zod), bcrypt password hashing
+- **Storage**: PostgreSQL database with Drizzle ORM
 
 ### Data Layer
 - **ORM**: Drizzle ORM with PostgreSQL dialect configured

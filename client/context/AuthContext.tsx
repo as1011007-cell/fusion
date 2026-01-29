@@ -10,6 +10,7 @@ export type AuthUser = {
 
 type AuthContextType = {
   user: AuthUser | null;
+  token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   register: (email: string, password: string, name?: string) => Promise<{ success: boolean; error?: string }>;
@@ -18,6 +19,7 @@ type AuthContextType = {
   resetPassword: (email: string, resetCode: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
   deleteAccount: (password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  getAuthHeaders: () => Record<string, string>;
   error: string | null;
 };
 
@@ -25,37 +27,61 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadStoredUser();
+    loadStoredAuth();
   }, []);
 
-  const loadStoredUser = async () => {
+  const loadStoredAuth = async () => {
     try {
-      const userData = await AsyncStorage.getItem("authUser");
+      const [userData, storedToken] = await Promise.all([
+        AsyncStorage.getItem("authUser"),
+        AsyncStorage.getItem("authToken"),
+      ]);
       if (userData) {
         setUser(JSON.parse(userData));
       }
+      if (storedToken) {
+        setToken(storedToken);
+      }
     } catch (err) {
-      console.error("Error loading stored user:", err);
+      console.error("Error loading stored auth:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const saveUser = async (userData: AuthUser | null) => {
+  const saveAuth = async (userData: AuthUser | null, authToken: string | null) => {
     try {
-      if (userData) {
-        await AsyncStorage.setItem("authUser", JSON.stringify(userData));
+      if (userData && authToken) {
+        await Promise.all([
+          AsyncStorage.setItem("authUser", JSON.stringify(userData)),
+          AsyncStorage.setItem("authToken", authToken),
+        ]);
       } else {
-        await AsyncStorage.removeItem("authUser");
+        await Promise.all([
+          AsyncStorage.removeItem("authUser"),
+          AsyncStorage.removeItem("authToken"),
+        ]);
       }
       setUser(userData);
+      setToken(authToken);
     } catch (err) {
-      console.error("Error saving user:", err);
+      console.error("Error saving auth:", err);
     }
+  };
+
+  const getAuthHeaders = (): Record<string, string> => {
+    if (token) {
+      return {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      };
+    }
+    return { "Content-Type": "application/json" };
   };
 
   const register = async (email: string, password: string, name?: string): Promise<{ success: boolean; error?: string }> => {
@@ -76,8 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: data.error };
       }
 
-      await saveUser(data.user);
-      // Set flag to trigger cloud sync in ProfileContext
+      await saveAuth(data.user, data.token);
       await AsyncStorage.setItem("needsCloudSync", "true");
       return { success: true };
     } catch (err) {
@@ -107,8 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: data.error };
       }
 
-      await saveUser(data.user);
-      // Set flag to trigger cloud sync in ProfileContext
+      await saveAuth(data.user, data.token);
       await AsyncStorage.setItem("needsCloudSync", "true");
       return { success: true };
     } catch (err) {
@@ -188,7 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const baseUrl = getApiUrl();
       const response = await fetch(`${baseUrl}/api/auth/delete-account`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ userId: user.id, email: user.email, password }),
       });
 
@@ -199,8 +223,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: data.error };
       }
 
-      // Clear all local data
-      await saveUser(null);
+      await saveAuth(null, null);
       await AsyncStorage.removeItem("lastSyncedUserId");
       await AsyncStorage.removeItem("needsCloudSync");
       setError(null);
@@ -215,8 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await saveUser(null);
-    // Clear sync flag so next login will sync from cloud
+    await saveAuth(null, null);
     await AsyncStorage.removeItem("lastSyncedUserId");
     setError(null);
   };
@@ -225,14 +247,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        token,
         isLoading,
-        isAuthenticated: !!user,
+        isAuthenticated: !!user && !!token,
         register,
         login,
         forgotPassword,
         resetPassword,
         deleteAccount,
         logout,
+        getAuthHeaders,
         error,
       }}
     >
