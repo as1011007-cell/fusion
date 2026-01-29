@@ -586,10 +586,7 @@ export default function HomeScreen() {
                   >
                     <View style={styles.themedButtonShine} />
                     <View style={styles.themedButtonShineSmall} />
-                    <ThemedText style={[
-                      styles.themedButtonText, 
-                      { color: themeId === "electric" ? colors.secondary : "#fff" }
-                    ]} numberOfLines={1}>Party Mode</ThemedText>
+                    <ThemedText style={styles.themedButtonText} numberOfLines={1}>Party Mode</ThemedText>
                   </LinearGradient>
                 </Pressable>
               </Animated.View>
@@ -618,10 +615,7 @@ export default function HomeScreen() {
                   >
                     <View style={styles.themedButtonShine} />
                     <View style={styles.themedButtonShineSmall} />
-                    <ThemedText style={[
-                      styles.themedButtonText, 
-                      { color: "#fff" }
-                    ]} numberOfLines={1}>
+                    <ThemedText style={styles.themedButtonText} numberOfLines={1}>
                       {gameState.dailyChallengeCompleted ? "Done" : "Daily"}
                     </ThemedText>
                   </LinearGradient>
@@ -653,10 +647,7 @@ export default function HomeScreen() {
                   >
                     <View style={styles.themedButtonShine} />
                     <View style={styles.themedButtonShineSmall} />
-                    <ThemedText style={[
-                      styles.themedButtonText, 
-                      { color: "#fff" }
-                    ]} numberOfLines={1}>FEUD Online</ThemedText>
+                    <ThemedText style={styles.themedButtonText} numberOfLines={1}>FEUD Online</ThemedText>
                   </LinearGradient>
                 </Pressable>
               </Animated.View>
@@ -684,10 +675,7 @@ export default function HomeScreen() {
                   >
                     <View style={styles.themedButtonShine} />
                     <View style={styles.themedButtonShineSmall} />
-                    <ThemedText style={[
-                      styles.themedButtonText, 
-                      { color: "#fff" }
-                    ]} numberOfLines={1}>IQ Online</ThemedText>
+                    <ThemedText style={styles.themedButtonText} numberOfLines={1}>IQ Online</ThemedText>
                   </LinearGradient>
                 </Pressable>
               </Animated.View>
@@ -880,12 +868,12 @@ const styles = StyleSheet.create({
     marginRight: Spacing.sm,
   },
   primaryButtonText: {
-    ...Typography.body,
+    fontFamily: "Poppins_700Bold",
     color: "#fff",
-    fontWeight: "800",
-    fontSize: Math.min(14, SCREEN_WIDTH * 0.035),
-    letterSpacing: 1.2,
-    textShadowColor: "rgba(0,0,0,0.5)",
+    fontSize: Math.min(16, SCREEN_WIDTH * 0.04),
+    letterSpacing: 2.5,
+    textTransform: "uppercase",
+    textShadowColor: "rgba(0,0,0,0.6)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
@@ -938,12 +926,12 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.5)",
   },
   themedButtonText: {
-    ...Typography.body,
-    fontWeight: "800",
-    fontSize: Math.min(12, SCREEN_WIDTH * 0.03),
-    letterSpacing: 1,
+    fontFamily: "Poppins_700Bold",
+    fontSize: Math.min(13, SCREEN_WIDTH * 0.033),
+    letterSpacing: 2,
     textAlign: "center",
     textTransform: "uppercase",
+    color: "#fff",
     textShadowColor: "rgba(0,0,0,0.6)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
