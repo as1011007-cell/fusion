@@ -9,6 +9,12 @@ export interface MultiplayerPlayer {
   ready: boolean;
 }
 
+export interface IQSettings {
+  difficulty: string;
+  category: string;
+  questionCount: number;
+}
+
 export interface RoomState {
   id: string;
   code: string;
@@ -20,6 +26,7 @@ export interface RoomState {
   selectedPanelName: string;
   maxPlayers: number;
   players: MultiplayerPlayer[];
+  iqSettings?: IQSettings;
 }
 
 export interface RoundResult {
@@ -63,6 +70,8 @@ interface MultiplayerContextType {
   leaveRoom: () => void;
   playAgain: () => void;
   sendChatMessage: (message: string) => void;
+  updateIQSettings: (difficulty: string, category: string, questionCount: number) => void;
+  setIQSettings: (difficulty: string, category: string, questionCount: number) => void;
   clearError: () => void;
   clearResults: () => void;
   resetGameStarted: () => void;
@@ -208,6 +217,10 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
         setChatMessages(prev => [...prev.slice(-49), message.message]);
         break;
 
+      case "IQ_SETTINGS_UPDATED":
+        setRoom(message.room);
+        break;
+
       case "ROOM_EXPIRED":
         setRoom(null);
         setError("Room has expired");
@@ -324,6 +337,14 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
     }
   }, [send]);
 
+  const updateIQSettings = useCallback((difficulty: string, category: string, questionCount: number) => {
+    send({ type: "UPDATE_IQ_SETTINGS", difficulty, category, questionCount });
+  }, [send]);
+
+  const setIQSettings = useCallback((difficulty: string, category: string, questionCount: number) => {
+    send({ type: "SET_IQ_SETTINGS", difficulty, category, questionCount });
+  }, [send]);
+
   const clearError = useCallback(() => {
     setError(null);
   }, []);
@@ -376,6 +397,8 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
         leaveRoom,
         playAgain,
         sendChatMessage,
+        updateIQSettings,
+        setIQSettings,
         clearError,
         clearResults,
         resetGameStarted,
