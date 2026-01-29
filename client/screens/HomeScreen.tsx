@@ -214,7 +214,7 @@ export default function HomeScreen() {
     };
 
     return (
-      <Pressable onPress={handlePlay} style={styles.playButtonWrapper}>
+      <Pressable onPress={handlePlay} style={styles.primaryButtonWrapper}>
         <LinearGradient
           colors={gradientColors[themeId]}
           start={{ x: 0, y: 0 }}
@@ -223,11 +223,32 @@ export default function HomeScreen() {
         >
           <Feather 
             name={themeId === "galaxy" ? "send" : themeId === "ocean" ? "anchor" : themeId === "forest" ? "compass" : "play"} 
-            size={24} 
+            size={22} 
             color="#fff" 
             style={styles.playIcon} 
           />
-          <ThemedText style={styles.playButtonText}>{config.playText}</ThemedText>
+          <ThemedText style={styles.primaryButtonText}>{config.playText}</ThemedText>
+        </LinearGradient>
+      </Pressable>
+    );
+  };
+
+  const renderIQButton = () => {
+    return (
+      <Pressable onPress={handleIQTest} style={styles.primaryButtonWrapper}>
+        <LinearGradient
+          colors={["#9B59B6", "#8E44AD", "#7D3C98"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.playButton, { borderRadius: BorderRadius.lg }]}
+        >
+          <Feather 
+            name="cpu" 
+            size={22} 
+            color="#fff" 
+            style={styles.playIcon} 
+          />
+          <ThemedText style={styles.primaryButtonText}>IQ TEST</ThemedText>
         </LinearGradient>
       </Pressable>
     );
@@ -491,7 +512,10 @@ export default function HomeScreen() {
         </Animated.View>
 
         <Animated.View entering={FadeInUp.delay(600).springify()} style={styles.buttonsContainer}>
-          {renderPlayButton()}
+          <View style={styles.primaryButtonsRow}>
+            {renderPlayButton()}
+            {renderIQButton()}
+          </View>
 
           <View style={styles.secondaryButtons}>
             {renderSecondaryButton("users", "Party Mode", "Play with friends", handlePartyMode, colors.secondary, false, false, 650)}
@@ -506,7 +530,6 @@ export default function HomeScreen() {
               700
             )}
             {renderSecondaryButton("globe", "Multiplayer", "Play across devices", handleMultiplayer, colors.primary, false, false, 750)}
-            {renderSecondaryButton("cpu", "IQ Test", "Test your intelligence", handleIQTest, "#9B59B6", false, false, 800)}
           </View>
         </Animated.View>
       </View>
@@ -638,7 +661,12 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 340,
   },
-  playButtonWrapper: {
+  primaryButtonsRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  primaryButtonWrapper: {
+    flex: 1,
     borderRadius: BorderRadius.lg,
     overflow: "hidden",
     elevation: 8,
@@ -647,17 +675,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: Spacing.lg + 4,
+    paddingVertical: Spacing.lg,
   },
   playIcon: {
-    marginRight: Spacing.sm,
+    marginRight: Spacing.xs,
   },
-  playButtonText: {
-    ...Typography.h2,
+  primaryButtonText: {
+    ...Typography.body,
     color: "#fff",
     fontWeight: "800",
-    fontSize: 20,
-    letterSpacing: 2,
+    fontSize: 14,
+    letterSpacing: 1,
   },
   secondaryButtons: {
     marginTop: Spacing.xl,
