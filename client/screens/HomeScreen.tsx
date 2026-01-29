@@ -221,20 +221,22 @@ export default function HomeScreen() {
     return (
       <Pressable 
         onPress={handlePlay} 
-        style={styles.primaryButtonWrapper}
+        style={[styles.primaryButtonWrapper, { borderColor: colors.primary + "80" }]}
         accessibilityLabel={`Play FEUD Fusion - ${config.playText}`}
         accessibilityHint="Start a new solo game"
         accessibilityRole="button"
       >
         <LinearGradient
-          colors={gradientColors[themeId]}
+          colors={[colors.primary, colors.secondary, colors.primary + "DD"]}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          end={{ x: 0.5, y: 1 }}
           style={[styles.playButton, buttonStyles[config.playButtonStyle]]}
         >
+          <View style={styles.playButtonShine} />
+          <View style={styles.playButtonShineSmall} />
           <Feather 
             name={themeId === "galaxy" ? "send" : themeId === "ocean" ? "anchor" : themeId === "forest" ? "compass" : "play"} 
-            size={22} 
+            size={20} 
             color="#fff" 
             style={styles.playIcon} 
           />
@@ -248,7 +250,7 @@ export default function HomeScreen() {
     return (
       <Pressable 
         onPress={handleIQTest} 
-        style={styles.primaryButtonWrapper}
+        style={[styles.primaryButtonWrapper, { borderColor: "#6C3483" }]}
         accessibilityLabel="IQ Test"
         accessibilityHint="Start an IQ test challenge"
         accessibilityRole="button"
@@ -256,12 +258,14 @@ export default function HomeScreen() {
         <LinearGradient
           colors={["#9B59B6", "#8E44AD", "#7D3C98"]}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          end={{ x: 0.5, y: 1 }}
           style={[styles.playButton, { borderRadius: BorderRadius.lg }]}
         >
+          <View style={styles.playButtonShine} />
+          <View style={styles.playButtonShineSmall} />
           <Feather 
             name="cpu" 
-            size={22} 
+            size={20} 
             color="#fff" 
             style={styles.playIcon} 
           />
@@ -561,11 +565,10 @@ export default function HomeScreen() {
               <Animated.View entering={FadeInUp.delay(650).springify()} style={[
                 styles.themedButton,
                 { 
-                  borderRadius: themeId === "ocean" ? 18 : themeId === "forest" ? 14 : themeId === "galaxy" ? 14 : 12,
-                  borderWidth: 1.5,
-                  borderColor: themeId === "electric" ? colors.secondary : "rgba(255,255,255,0.25)",
+                  borderRadius: themeId === "ocean" ? 16 : themeId === "forest" ? 12 : themeId === "galaxy" ? 12 : 10,
+                  borderColor: colors.secondary + "60",
                   shadowColor: colors.secondary,
-                  shadowOpacity: themeId === "sunset" ? 0.5 : themeId === "galaxy" ? 0.6 : 0.35,
+                  shadowOpacity: 0.5,
                 }
               ]}>
                 <Pressable
@@ -576,19 +579,15 @@ export default function HomeScreen() {
                   style={{ flex: 1 }}
                 >
                   <LinearGradient
-                    colors={
-                      themeId === "electric" ? [colors.secondary + "20", colors.surface] :
-                      themeId === "sunset" ? [colors.secondary, "#FF6B35", colors.secondary + "CC"] :
-                      themeId === "ocean" ? [colors.secondary, colors.primary + "DD"] :
-                      themeId === "forest" ? [colors.secondary, "#2ED573", colors.secondary + "CC"] :
-                      [colors.secondary, colors.accent, colors.secondary + "CC"]
-                    }
+                    colors={[colors.secondary, colors.secondary + "CC", colors.secondary + "99"]}
                     start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
+                    end={{ x: 0.5, y: 1 }}
                     style={[styles.themedButtonInner, { 
-                      borderRadius: themeId === "ocean" ? 16 : themeId === "forest" ? 12 : themeId === "galaxy" ? 12 : 10,
+                      borderRadius: themeId === "ocean" ? 14 : themeId === "forest" ? 10 : themeId === "galaxy" ? 10 : 8,
                     }]}
                   >
+                    <View style={styles.themedButtonShine} />
+                    <View style={styles.themedButtonShineSmall} />
                     <ThemedText style={[
                       styles.themedButtonText, 
                       { color: themeId === "electric" ? colors.secondary : "#fff" }
@@ -600,11 +599,10 @@ export default function HomeScreen() {
                 styles.themedButton,
                 gameState.dailyChallengeCompleted && styles.completedButton,
                 { 
-                  borderRadius: themeId === "ocean" ? 18 : themeId === "forest" ? 14 : themeId === "galaxy" ? 14 : 12,
-                  borderWidth: 1.5,
-                  borderColor: themeId === "electric" ? colors.accent : "rgba(255,255,255,0.25)",
+                  borderRadius: themeId === "ocean" ? 16 : themeId === "forest" ? 12 : themeId === "galaxy" ? 12 : 10,
+                  borderColor: colors.accent + "60",
                   shadowColor: colors.accent,
-                  shadowOpacity: themeId === "sunset" ? 0.5 : themeId === "galaxy" ? 0.6 : 0.35,
+                  shadowOpacity: 0.5,
                 }
               ]}>
                 <Pressable
@@ -615,22 +613,18 @@ export default function HomeScreen() {
                   style={{ flex: 1 }}
                 >
                   <LinearGradient
-                    colors={
-                      themeId === "electric" ? [colors.accent + "20", colors.surface] :
-                      themeId === "sunset" ? [colors.accent, "#FFAA00", colors.accent + "CC"] :
-                      themeId === "ocean" ? [colors.accent, colors.secondary + "DD"] :
-                      themeId === "forest" ? [colors.accent, "#F9CA24", colors.accent + "CC"] :
-                      [colors.accent, colors.primary, colors.accent + "CC"]
-                    }
+                    colors={[colors.accent, colors.accent + "CC", colors.accent + "99"]}
                     start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
+                    end={{ x: 0.5, y: 1 }}
                     style={[styles.themedButtonInner, { 
-                      borderRadius: themeId === "ocean" ? 16 : themeId === "forest" ? 12 : themeId === "galaxy" ? 12 : 10,
+                      borderRadius: themeId === "ocean" ? 14 : themeId === "forest" ? 10 : themeId === "galaxy" ? 10 : 8,
                     }]}
                   >
+                    <View style={styles.themedButtonShine} />
+                    <View style={styles.themedButtonShineSmall} />
                     <ThemedText style={[
                       styles.themedButtonText, 
-                      { color: themeId === "electric" ? colors.accent : "#fff" }
+                      { color: "#fff" }
                     ]} numberOfLines={1}>
                       {gameState.dailyChallengeCompleted ? "Done" : "Daily"}
                     </ThemedText>
@@ -642,11 +636,10 @@ export default function HomeScreen() {
               <Animated.View entering={FadeInUp.delay(750).springify()} style={[
                 styles.themedButton,
                 { 
-                  borderRadius: themeId === "ocean" ? 18 : themeId === "forest" ? 14 : themeId === "galaxy" ? 14 : 12,
-                  borderWidth: 1.5,
-                  borderColor: themeId === "electric" ? colors.primary : "rgba(255,255,255,0.25)",
+                  borderRadius: themeId === "ocean" ? 16 : themeId === "forest" ? 12 : themeId === "galaxy" ? 12 : 10,
+                  borderColor: colors.primary + "60",
                   shadowColor: colors.primary,
-                  shadowOpacity: themeId === "sunset" ? 0.5 : themeId === "galaxy" ? 0.6 : 0.35,
+                  shadowOpacity: 0.5,
                 }
               ]}>
                 <Pressable 
@@ -657,22 +650,18 @@ export default function HomeScreen() {
                   style={{ flex: 1 }}
                 >
                   <LinearGradient
-                    colors={
-                      themeId === "electric" ? [colors.primary + "20", colors.surface] :
-                      themeId === "sunset" ? [colors.primary, "#FF4757", colors.primary + "CC"] :
-                      themeId === "ocean" ? [colors.primary, colors.secondary + "DD"] :
-                      themeId === "forest" ? [colors.primary, "#27AE60", colors.primary + "CC"] :
-                      [colors.primary, colors.secondary, colors.primary + "CC"]
-                    }
+                    colors={[colors.primary, colors.primary + "CC", colors.primary + "99"]}
                     start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
+                    end={{ x: 0.5, y: 1 }}
                     style={[styles.themedButtonInner, { 
-                      borderRadius: themeId === "ocean" ? 16 : themeId === "forest" ? 12 : themeId === "galaxy" ? 12 : 10,
+                      borderRadius: themeId === "ocean" ? 14 : themeId === "forest" ? 10 : themeId === "galaxy" ? 10 : 8,
                     }]}
                   >
+                    <View style={styles.themedButtonShine} />
+                    <View style={styles.themedButtonShineSmall} />
                     <ThemedText style={[
                       styles.themedButtonText, 
-                      { color: themeId === "electric" ? colors.primary : "#fff" }
+                      { color: "#fff" }
                     ]} numberOfLines={1}>FEUD Online</ThemedText>
                   </LinearGradient>
                 </Pressable>
@@ -680,11 +669,10 @@ export default function HomeScreen() {
               <Animated.View entering={FadeInUp.delay(800).springify()} style={[
                 styles.themedButton,
                 { 
-                  borderRadius: themeId === "ocean" ? 18 : themeId === "forest" ? 14 : themeId === "galaxy" ? 14 : 12,
-                  borderWidth: 1.5,
-                  borderColor: themeId === "electric" ? "#9B59B6" : "rgba(255,255,255,0.25)",
+                  borderRadius: themeId === "ocean" ? 16 : themeId === "forest" ? 12 : themeId === "galaxy" ? 12 : 10,
+                  borderColor: "#6C348360",
                   shadowColor: "#9B59B6",
-                  shadowOpacity: themeId === "sunset" ? 0.5 : themeId === "galaxy" ? 0.6 : 0.35,
+                  shadowOpacity: 0.5,
                 }
               ]}>
                 <Pressable 
@@ -695,22 +683,18 @@ export default function HomeScreen() {
                   style={{ flex: 1 }}
                 >
                   <LinearGradient
-                    colors={
-                      themeId === "electric" ? ["#9B59B6" + "20", colors.surface] :
-                      themeId === "sunset" ? ["#9B59B6", "#8E44AD", "#9B59B6" + "CC"] :
-                      themeId === "ocean" ? ["#9B59B6", "#6C5CE7" + "DD"] :
-                      themeId === "forest" ? ["#9B59B6", "#8E44AD", "#9B59B6" + "CC"] :
-                      ["#9B59B6", "#6C5CE7", "#9B59B6" + "CC"]
-                    }
+                    colors={["#9B59B6", "#8E44AD", "#7D3C98"]}
                     start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
+                    end={{ x: 0.5, y: 1 }}
                     style={[styles.themedButtonInner, { 
-                      borderRadius: themeId === "ocean" ? 16 : themeId === "forest" ? 12 : themeId === "galaxy" ? 12 : 10,
+                      borderRadius: themeId === "ocean" ? 14 : themeId === "forest" ? 10 : themeId === "galaxy" ? 10 : 8,
                     }]}
                   >
+                    <View style={styles.themedButtonShine} />
+                    <View style={styles.themedButtonShineSmall} />
                     <ThemedText style={[
                       styles.themedButtonText, 
-                      { color: themeId === "electric" ? "#9B59B6" : "#fff" }
+                      { color: "#fff" }
                     ]} numberOfLines={1}>IQ Online</ThemedText>
                   </LinearGradient>
                 </Pressable>
@@ -867,26 +851,40 @@ const styles = StyleSheet.create({
   },
   primaryButtonWrapper: {
     flex: 1,
-    borderRadius: 14,
+    borderRadius: 16,
     overflow: "hidden",
-    elevation: 16,
+    elevation: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.45,
-    shadowRadius: 16,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.25)",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    borderWidth: 3,
+    borderColor: "rgba(0,0,0,0.3)",
   },
   playButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: Spacing.lg + 4,
-    minHeight: 62,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.3)",
-    borderBottomWidth: 2,
-    borderBottomColor: "rgba(0,0,0,0.2)",
+    paddingVertical: Spacing.lg + 6,
+    minHeight: 64,
+  },
+  playButtonShine: {
+    position: "absolute",
+    top: 4,
+    left: "15%",
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "rgba(255,255,255,0.7)",
+  },
+  playButtonShineSmall: {
+    position: "absolute",
+    top: 16,
+    left: "10%",
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "rgba(255,255,255,0.5)",
   },
   playIcon: {
     marginRight: Spacing.sm,
@@ -897,9 +895,9 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     fontSize: Math.min(14, SCREEN_WIDTH * 0.035),
     letterSpacing: 1.2,
-    textShadowColor: "rgba(0,0,0,0.3)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   secondaryButtons: {
     marginTop: Spacing["2xl"],
@@ -916,23 +914,40 @@ const styles = StyleSheet.create({
   themedButton: {
     flex: 1,
     overflow: "hidden",
-    elevation: 12,
-    shadowOffset: { width: 0, height: 6 },
-    shadowRadius: 14,
-    shadowOpacity: 0.4,
+    elevation: 10,
+    shadowOffset: { width: 0, height: 5 },
+    shadowRadius: 10,
+    shadowOpacity: 0.5,
     shadowColor: "#000",
+    borderWidth: 3,
+    borderColor: "rgba(0,0,0,0.35)",
   },
   themedButtonInner: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: Spacing.md + 8,
+    paddingVertical: Spacing.md + 10,
     paddingHorizontal: Spacing.sm,
-    minHeight: 56,
-    borderTopWidth: 1.5,
-    borderTopColor: "rgba(255,255,255,0.35)",
-    borderBottomWidth: 2,
-    borderBottomColor: "rgba(0,0,0,0.25)",
+    minHeight: 58,
+    position: "relative",
+  },
+  themedButtonShine: {
+    position: "absolute",
+    top: 5,
+    left: "12%",
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "rgba(255,255,255,0.8)",
+  },
+  themedButtonShineSmall: {
+    position: "absolute",
+    top: 14,
+    left: "8%",
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: "rgba(255,255,255,0.5)",
   },
   themedButtonText: {
     ...Typography.body,
@@ -941,9 +956,9 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textAlign: "center",
     textTransform: "uppercase",
-    textShadowColor: "rgba(0,0,0,0.4)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    textShadowColor: "rgba(0,0,0,0.6)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   compactButton: {
     flex: 1,
