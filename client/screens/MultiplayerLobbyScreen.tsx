@@ -248,7 +248,7 @@ export default function MultiplayerLobbyScreen() {
 
   const renderModeSelect = () => (
     <Animated.View entering={FadeIn.duration(300)} style={styles.modeSelect}>
-      <ThemedText style={styles.title}>Multiplayer</ThemedText>
+      <ThemedText style={styles.title}>FEUD Online</ThemedText>
       <ThemedText style={[styles.subtitle, { color: GameColors.textSecondary }]}>
         Play with friends on different devices
       </ThemedText>
@@ -652,7 +652,7 @@ export default function MultiplayerLobbyScreen() {
           <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
         </Pressable>
         <ThemedText style={styles.headerTitle}>
-          {mode === "lobby" ? "Game Lobby" : "Multiplayer"}
+          {mode === "lobby" ? "FEUD Lobby" : "FEUD Online"}
         </ThemedText>
         <View style={styles.headerSpacer} />
       </View>
