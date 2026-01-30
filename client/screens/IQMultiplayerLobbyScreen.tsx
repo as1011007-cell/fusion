@@ -76,6 +76,10 @@ export default function IQMultiplayerLobbyScreen() {
   const categoryOptions = ["all", "logical", "pattern", "verbal", "math", "spatial"];
   const questionCountOptions = [5, 10, 15, 20, 25, 30];
 
+  // Compute isHost early so it's available for all handlers
+  const isHost = room?.hostId === playerId;
+  const currentPlayer = room?.players.find(p => p.id === playerId);
+
   useEffect(() => {
     if (room) {
       setMode("lobby");
@@ -295,9 +299,6 @@ export default function IQMultiplayerLobbyScreen() {
     if (cat === "all") return "All Categories";
     return cat.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
   };
-
-  const isHost = room?.hostId === playerId;
-  const currentPlayer = room?.players.find(p => p.id === playerId);
 
   const renderModeSelect = () => (
     <Animated.View entering={FadeIn.duration(300)} style={styles.modeSelect}>
