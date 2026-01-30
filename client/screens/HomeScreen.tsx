@@ -168,11 +168,6 @@ export default function HomeScreen() {
     navigation.navigate("MultiplayerLobby");
   };
 
-  const handleWatchVideo = async () => {
-    if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    await WebBrowser.openBrowserAsync("https://www.youtube.com/shorts/lNtZIhTYpmQ");
-  };
-
   const handleIQMultiplayer = () => {
     if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate("IQMultiplayerLobby", { difficulty: "all", category: "all", questionCount: 20 });
@@ -686,27 +681,6 @@ export default function HomeScreen() {
                 </Pressable>
               </Animated.View>
             </View>
-            <Animated.View entering={FadeInUp.delay(850).springify()} style={styles.videoButtonWrapper}>
-              <Pressable 
-                onPress={handleWatchVideo}
-                accessibilityLabel="Watch Video"
-                accessibilityHint="Watch gameplay video on YouTube"
-                accessibilityRole="button"
-                style={styles.videoButton}
-              >
-                <LinearGradient
-                  colors={["#FF0000", "#CC0000", "#990000"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0.5, y: 1 }}
-                  style={styles.videoButtonInner}
-                >
-                  <View style={styles.themedButtonShine} />
-                  <View style={styles.themedButtonShineSmall} />
-                  <Feather name="play-circle" size={16} color="#fff" style={{ marginRight: 6 }} />
-                  <ThemedText style={styles.videoButtonText}>Watch Gameplay</ThemedText>
-                </LinearGradient>
-              </Pressable>
-            </Animated.View>
           </View>
         </Animated.View>
       </View>
@@ -960,41 +934,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     lineHeight: 18,
     includeFontPadding: false,
-  },
-  videoButtonWrapper: {
-    width: "100%",
-    marginTop: Spacing.sm,
-  },
-  videoButton: {
-    width: "100%",
-    borderRadius: 10,
-    overflow: "hidden",
-    elevation: 4,
-    shadowColor: "#FF0000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  videoButtonInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: Math.min(12, SCREEN_WIDTH * 0.03),
-    paddingHorizontal: Spacing.lg,
-    borderRadius: 8,
-    position: "relative",
-    overflow: "hidden",
-  },
-  videoButtonText: {
-    fontFamily: "Poppins_700Bold",
-    fontSize: Math.min(12, SCREEN_WIDTH * 0.03),
-    letterSpacing: 1.5,
-    textAlign: "center",
-    textTransform: "uppercase",
-    color: "#fff",
-    lineHeight: 18,
-    includeFontPadding: false,
-    textAlignVertical: "center",
   },
   compactButton: {
     flex: 1,
