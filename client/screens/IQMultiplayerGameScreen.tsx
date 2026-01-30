@@ -475,7 +475,11 @@ export default function IQMultiplayerGameScreen() {
           <ThemedText style={styles.headerTitle}>IQ Challenge Complete!</ThemedText>
         </View>
 
-        <ScrollView style={styles.content} contentContainerStyle={styles.resultsContainerFinal}>
+        <ScrollView 
+          style={styles.content} 
+          contentContainerStyle={[styles.resultsContainerFinal, { paddingBottom: insets.bottom + Spacing["5xl"] }]}
+          showsVerticalScrollIndicator={false}
+        >
           <Animated.View entering={ZoomIn.duration(500)} style={styles.winnerSection}>
             <View style={[styles.iqBadge, { backgroundColor: IQColors.primary }]}>
               <Feather name="cpu" size={32} color={GameColors.textPrimary} />
@@ -1010,7 +1014,7 @@ const styles = StyleSheet.create({
   },
   resultsContainerFinal: {
     padding: Spacing.lg,
-    paddingBottom: Spacing["5xl"],
+    flexGrow: 1,
   },
   winnerSection: {
     alignItems: "center",

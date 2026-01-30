@@ -431,6 +431,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: Spacing.lg,
+    flexGrow: 1,
   },
   logoContainer: {
     alignItems: "center",
@@ -462,6 +463,8 @@ const styles = StyleSheet.create({
   iqContainer: {
     alignItems: "center",
     marginBottom: Spacing["2xl"],
+    overflow: "visible",
+    paddingVertical: Spacing.md,
   },
   iqLabel: {
     ...Typography.body,
@@ -475,6 +478,8 @@ const styles = StyleSheet.create({
     textShadowColor: GameColors.primary,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 20,
+    includeFontPadding: false,
+    lineHeight: 110,
   },
   statsGrid: {
     flexDirection: "row",
