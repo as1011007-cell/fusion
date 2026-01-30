@@ -144,6 +144,7 @@ export function setupMultiplayer(server: Server) {
               maxPlayers: message.maxPlayers || 8,
               createdAt: new Date(),
               chatMessages: [],
+              iqSettings: message.iqSettings || undefined,
             };
 
             const player: Player = {

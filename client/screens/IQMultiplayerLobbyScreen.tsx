@@ -80,10 +80,6 @@ export default function IQMultiplayerLobbyScreen() {
     if (room) {
       setMode("lobby");
       setIsConnecting(false);
-      // Set initial IQ settings when host creates room
-      if (room.hostId === playerId && !room.iqSettings) {
-        setIQSettings(localDifficulty, localCategory, localQuestionCount);
-      }
     }
   }, [room]);
 
@@ -154,7 +150,12 @@ export default function IQMultiplayerLobbyScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     setIsConnecting(true);
-    createRoom(currentProfile?.name || "Player", currentProfile?.avatarId || "avatar-1");
+    createRoom(
+      currentProfile?.name || "Player", 
+      currentProfile?.avatarId || "avatar-1",
+      8,
+      { difficulty: localDifficulty, category: localCategory, questionCount: localQuestionCount }
+    );
   };
 
   const handleJoinRoom = (code?: string) => {

@@ -60,7 +60,7 @@ interface MultiplayerContextType {
   winner: { id: string; name: string; score: number } | null;
   isDraw: boolean;
   chatMessages: ChatMessage[];
-  createRoom: (playerName: string, avatarId: string, maxPlayers?: number) => void;
+  createRoom: (playerName: string, avatarId: string, maxPlayers?: number, iqSettings?: IQSettings) => void;
   joinRoom: (roomCode: string, playerName: string, avatarId: string) => void;
   setReady: (ready: boolean) => void;
   selectPanel: (panelId: string, panelName: string) => void;
@@ -277,7 +277,7 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
     });
   }, [connect]);
 
-  const createRoom = useCallback(async (playerName: string, avatarId: string, maxPlayers = 8) => {
+  const createRoom = useCallback(async (playerName: string, avatarId: string, maxPlayers = 8, iqSettings?: IQSettings) => {
     try {
       await waitForConnection();
       send({
@@ -285,6 +285,7 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
         playerName,
         avatarId,
         maxPlayers,
+        iqSettings,
       });
     } catch (e) {
       setError("Could not connect. Please try again.");
