@@ -528,6 +528,10 @@ export default function IQMultiplayerGameScreen() {
                       #{index + 1}
                     </ThemedText>
                   </View>
+                  <Image
+                    source={avatarImages[player.avatarId || "avatar-1"] || avatarImages["avatar-1"]}
+                    style={styles.leaderboardAvatar}
+                  />
                   <View style={styles.playerInfo}>
                     <ThemedText style={styles.playerNameText}>{player.name}</ThemedText>
                     <ThemedText style={styles.iqSmallText}>IQ ~{iqEstimate}</ThemedText>
@@ -1082,6 +1086,14 @@ const styles = StyleSheet.create({
     backgroundColor: IQColors.primary + "30",
     borderWidth: 1,
     borderColor: IQColors.primary,
+  },
+  leaderboardAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: Spacing.sm,
+    borderWidth: 2,
+    borderColor: GameColors.surface,
   },
   rankContainer: {
     width: 40,

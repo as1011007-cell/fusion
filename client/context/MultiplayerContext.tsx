@@ -56,7 +56,7 @@ interface MultiplayerContextType {
   gameFinished: boolean;
   gameStarted: boolean;
   roomReset: boolean;
-  finalScores: { id: string; name: string; score: number }[];
+  finalScores: { id: string; name: string; score: number; avatarId?: string }[];
   winner: { id: string; name: string; score: number } | null;
   isDraw: boolean;
   chatMessages: ChatMessage[];
@@ -91,7 +91,7 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
   const [answeredCount, setAnsweredCount] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);
   const [roomReset, setRoomReset] = useState(false);
-  const [finalScores, setFinalScores] = useState<{ id: string; name: string; score: number }[]>([]);
+  const [finalScores, setFinalScores] = useState<{ id: string; name: string; score: number; avatarId?: string }[]>([]);
   const [winner, setWinner] = useState<{ id: string; name: string; score: number } | null>(null);
   const [isDraw, setIsDraw] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);

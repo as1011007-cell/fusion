@@ -195,6 +195,10 @@ export default function MultiplayerGameScreen() {
                     #{index + 1}
                   </ThemedText>
                 </View>
+                <Image
+                  source={avatarImages[player.avatarId || "avatar-1"] || avatarImages["avatar-1"]}
+                  style={styles.leaderboardAvatar}
+                />
                 <ThemedText style={styles.playerNameText}>{player.name}</ThemedText>
                 <ThemedText style={[styles.scoreText, { color: GameColors.accent }]}>
                   {player.score}
@@ -583,6 +587,14 @@ const styles = StyleSheet.create({
     backgroundColor: GameColors.primary + "30",
     borderWidth: 1,
     borderColor: GameColors.primary,
+  },
+  leaderboardAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: Spacing.md,
+    borderWidth: 2,
+    borderColor: GameColors.surface,
   },
   rankContainer: {
     width: 48,
