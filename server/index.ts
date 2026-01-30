@@ -406,9 +406,10 @@ function setupErrorHandler(app: express.Application) {
     res.sendFile(privacyPath);
   });
 
-  // Support page redirect
+  // Support page
   app.get('/support', (_req, res) => {
-    res.redirect('mailto:support@feudfusion.app');
+    const supportPath = path.resolve(process.cwd(), "server", "templates", "support.html");
+    res.sendFile(supportPath);
   });
 
   // OAuth callback handler for Google login

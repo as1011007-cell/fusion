@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support - Feud Fusion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: #ffffff;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .logo {
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+    
+    .tagline {
+      color: #a0a0a0;
+      font-size: 14px;
+    }
+    
+    .support-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    
+    .subtitle {
+      color: #a0a0a0;
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    
+    .email-section {
+      background: rgba(72, 219, 251, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 30px;
+      border: 1px solid rgba(72, 219, 251, 0.3);
+    }
+    
+    .email-label {
+      font-size: 12px;
+      color: #48dbfb;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    
+    .email-address {
+      font-size: 18px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+    
+    .email-address a {
+      color: #48dbfb;
+      text-decoration: none;
+    }
+    
+    .email-address a:hover {
+      text-decoration: underline;
+    }
+    
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 30px 0;
+      color: #666;
+      font-size: 12px;
+    }
+    
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .divider span {
+      padding: 0 15px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      font-size: 14px;
+      color: #a0a0a0;
+      margin-bottom: 8px;
+    }
+    
+    input, textarea {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: #ffffff;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      transition: border-color 0.3s, background 0.3s;
+    }
+    
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #48dbfb;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    
+    input::placeholder, textarea::placeholder {
+      color: #666;
+    }
+    
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+      border: none;
+      border-radius: 12px;
+      color: #ffffff;
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 15px;
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(238, 90, 36, 0.4);
+    }
+    
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+    
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 30px;
+      color: #a0a0a0;
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.3s;
+    }
+    
+    .back-link:hover {
+      color: #48dbfb;
+    }
+    
+    .success-message {
+      display: none;
+      background: rgba(46, 213, 115, 0.1);
+      border: 1px solid rgba(46, 213, 115, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      color: #2ed573;
+      margin-top: 20px;
+    }
+    
+    .success-message.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">Feud Fusion</div>
+      <p class="tagline">Think From Every Perspective</p>
+    </div>
+    
+    <div class="support-card">
+      <h1>Contact Support</h1>
+      <p class="subtitle">We're here to help! Reach out with any questions or feedback.</p>
+      
+      <div class="email-section">
+        <p class="email-label">Email Us Directly</p>
+        <p class="email-address">
+          <a href="mailto:as1011007@gmail.com">as1011007@gmail.com</a>
+        </p>
+      </div>
+      
+      <div class="divider"><span>OR SEND A MESSAGE</span></div>
+      
+      <form id="supportForm" action="mailto:as1011007@gmail.com" method="POST" enctype="text/plain">
+        <div class="form-group">
+          <label for="name">Your Name</label>
+          <input type="text" id="name" name="name" placeholder="Enter your name" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="email">Your Email</label>
+          <input type="email" id="email" name="email" placeholder="Enter your email" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="subject">Subject</label>
+          <input type="text" id="subject" name="subject" placeholder="What's this about?" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" placeholder="Tell us how we can help..." required></textarea>
+        </div>
+        
+        <button type="submit" class="submit-btn">SEND MESSAGE</button>
+      </form>
+      
+      <div id="successMessage" class="success-message">
+        Thank you! Your email client will open to send the message.
+      </div>
+    </div>
+    
+    <a href="/" class="back-link">Back to Feud Fusion</a>
+  </div>
+  
+  <script>
+    document.getElementById('supportForm').addEventListener('submit', function(e) {
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const subject = document.getElementById('subject').value;
+      const message = document.getElementById('message').value;
+      
+      const body = `Name: ${name}%0D%0AEmail: ${email}%0D%0A%0D%0AMessage:%0D%0A${encodeURIComponent(message)}`;
+      const mailtoLink = `mailto:as1011007@gmail.com?subject=${encodeURIComponent(subject)}&body=${body}`;
+      
+      e.preventDefault();
+      window.location.href = mailtoLink;
+      
+      document.getElementById('successMessage').classList.add('show');
+    });
+  </script>
+</body>
+</html>
