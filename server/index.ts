@@ -206,6 +206,11 @@ function configureExpoAndLanding(app: express.Application) {
   app.use("/assets", express.static(path.resolve(process.cwd(), "assets")));
   app.use(express.static(path.resolve(process.cwd(), "static-build")));
 
+  // Google site verification
+  app.get("/google5558d3209820d790.html", (_req: Request, res: Response) => {
+    res.type("text/html").send("google-site-verification: google5558d3209820d790.html");
+  });
+
   log("Expo routing: Checking expo-platform header on / and /manifest");
 }
 
