@@ -323,8 +323,7 @@ function AnimatedTimer({
 export default function IQMultiplayerGameScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  const { settings, addExperience } = useProfile();
-  const xpAwardedRef = useRef(false);
+  const { settings } = useProfile();
   const { currentTheme } = useTheme();
   const colors = currentTheme.colors;
 
@@ -388,15 +387,6 @@ export default function IQMultiplayerGameScreen() {
       });
     }
   }, [roomReset, room?.status]);
-
-  useEffect(() => {
-    if (gameFinished && !xpAwardedRef.current && finalScores.length > 0) {
-      const myScore = finalScores.find(p => p.id === playerId)?.score || 0;
-      const xpEarned = Math.floor(myScore / 5) + 10;
-      addExperience(xpEarned);
-      xpAwardedRef.current = true;
-    }
-  }, [gameFinished, finalScores, playerId, addExperience]);
 
   const handleBack = () => {
     if (settings.hapticsEnabled) {

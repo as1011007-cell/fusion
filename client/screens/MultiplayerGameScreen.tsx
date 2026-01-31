@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { StyleSheet, View, Pressable, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -29,8 +29,7 @@ const TOTAL_ROUNDS = 10;
 export default function MultiplayerGameScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  const { settings, addExperience } = useProfile();
-  const xpAwardedRef = useRef(false);
+  const { settings } = useProfile();
   const { currentTheme } = useTheme();
   const colors = currentTheme.colors;
   const { panels } = useGame();
@@ -87,15 +86,6 @@ export default function MultiplayerGameScreen() {
       setTimerActive(false);
     }
   }, [roundResults]);
-
-  useEffect(() => {
-    if (gameFinished && !xpAwardedRef.current && finalScores.length > 0) {
-      const myScore = finalScores.find(p => p.id === playerId)?.score || 0;
-      const xpEarned = Math.floor(myScore / 5) + 10;
-      addExperience(xpEarned);
-      xpAwardedRef.current = true;
-    }
-  }, [gameFinished, finalScores, playerId, addExperience]);
 
   const handleBack = () => {
     if (settings.hapticsEnabled) {
