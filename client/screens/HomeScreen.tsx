@@ -90,12 +90,10 @@ export default function HomeScreen() {
 
   useEffect(() => {
     setStarPointsCallback(addStarPoints);
-    return () => setStarPointsCallback(null);
   }, [addStarPoints, setStarPointsCallback]);
 
   useEffect(() => {
     setXPCallback(addExperience);
-    return () => setXPCallback(() => {});
   }, [addExperience, setXPCallback]);
 
   useEffect(() => {
