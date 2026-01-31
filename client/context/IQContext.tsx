@@ -103,29 +103,41 @@ export function IQProvider({ children }: { children: ReactNode }) {
     difficulty?: string,
     category?: string
   ): IQQuestion[] => {
-    let filtered = [...iqQuestions];
-
-    if (difficulty && difficulty !== "all") {
-      filtered = filtered.filter(q => q.difficulty === difficulty);
+    // Filter questions based on difficulty and category
+    let filtered = iqQuestions;
+    
+    if ((difficulty && difficulty !== "all") || (category && category !== "all")) {
+      filtered = iqQuestions.filter(q => 
+        (difficulty === "all" || !difficulty || q.difficulty === difficulty) &&
+        (category === "all" || !category || q.category === category)
+      );
+      // Fall back to all questions if filters return nothing
+      if (filtered.length === 0) {
+        filtered = iqQuestions;
+      }
     }
 
-    if (category && category !== "all") {
-      filtered = filtered.filter(q => q.category === category);
-    }
-
-    // If no questions match filters, fall back to all questions
-    if (filtered.length === 0) {
-      filtered = [...iqQuestions];
-    }
-
+    // Prefer unanswered questions
     const unanswered = filtered.filter(
       q => !gameState.sessionAnsweredIds.has(q.id)
     );
 
     const source = unanswered.length >= count ? unanswered : filtered;
+    const actualCount = Math.min(count, source.length);
 
-    const shuffled = source.sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, Math.min(count, shuffled.length));
+    // Fisher-Yates shuffle (only shuffle what we need) - O(count) instead of O(n log n)
+    const result: typeof source = [];
+    const indices = new Set<number>();
+    
+    while (result.length < actualCount && indices.size < source.length) {
+      const idx = Math.floor(Math.random() * source.length);
+      if (!indices.has(idx)) {
+        indices.add(idx);
+        result.push(source[idx]);
+      }
+    }
+    
+    return result;
   }, [gameState.sessionAnsweredIds]);
 
   const startGame = useCallback((
