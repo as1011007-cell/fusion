@@ -57,7 +57,13 @@ export default function MultiplayerLobbyScreen() {
   const codeInputRef = useRef<TextInput>(null);
   const chatInputRef = useRef<TextInput>(null);
   const chatScrollRef = useRef<ScrollView>(null);
+  const roomRef = useRef(room);
   const pulseScale = useSharedValue(1);
+
+  // Keep roomRef updated with latest room state
+  useEffect(() => {
+    roomRef.current = room;
+  }, [room]);
 
   useEffect(() => {
     if (room) {
@@ -187,9 +193,12 @@ export default function MultiplayerLobbyScreen() {
   const handleStartGame = () => {
     Keyboard.dismiss();
     chatInputRef.current?.blur();
-    if (!room) return;
     
-    const players = room.players;
+    // Use ref to get latest room state (avoids stale closures)
+    const currentRoom = roomRef.current;
+    if (!currentRoom) return;
+    
+    const players = currentRoom.players;
     const allReady = players.every(p => p.ready);
     if (!allReady) {
       Alert.alert("Not Ready", "All players must be ready to start");

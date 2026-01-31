@@ -70,7 +70,13 @@ export default function IQMultiplayerLobbyScreen() {
   const codeInputRef = useRef<TextInput>(null);
   const chatScrollRef = useRef<ScrollView>(null);
   const chatInputRef = useRef<TextInput>(null);
+  const roomRef = useRef(room);
   const pulseScale = useSharedValue(1);
+  
+  // Keep roomRef updated with latest room state
+  useEffect(() => {
+    roomRef.current = room;
+  }, [room]);
 
   const difficultyOptions = ["all", "easy", "medium", "hard"];
   const categoryOptions = ["all", "logical", "pattern", "verbal", "math", "spatial"];
@@ -222,10 +228,12 @@ export default function IQMultiplayerLobbyScreen() {
   const handleStartGame = () => {
     Keyboard.dismiss();
     chatInputRef.current?.blur();
-    if (!room) return;
     
-    // Re-fetch current room state to avoid stale closures
-    const players = room.players;
+    // Use ref to get latest room state (avoids stale closures)
+    const currentRoom = roomRef.current;
+    if (!currentRoom) return;
+    
+    const players = currentRoom.players;
     const allReady = players.every(p => p.ready);
     
     if (!allReady) {
@@ -243,9 +251,9 @@ export default function IQMultiplayerLobbyScreen() {
     }
 
     // Use room settings (synced from server) or fallback to local
-    const useDiff = room?.iqSettings?.difficulty || localDifficulty;
-    const useCat = room?.iqSettings?.category || localCategory;
-    const useCount = room?.iqSettings?.questionCount || localQuestionCount;
+    const useDiff = currentRoom.iqSettings?.difficulty || localDifficulty;
+    const useCat = currentRoom.iqSettings?.category || localCategory;
+    const useCount = currentRoom.iqSettings?.questionCount || localQuestionCount;
     
     const gameQuestions = getRandomQuestions(useCount, useDiff, useCat);
     const panelName = `IQ Test - ${formatDifficulty(useDiff)} - ${formatCategory(useCat)}`;
