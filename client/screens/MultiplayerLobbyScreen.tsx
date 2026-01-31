@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { StyleSheet, View, Pressable, TextInput, ScrollView, Share, Alert, Platform, ActivityIndicator } from "react-native";
+import { StyleSheet, View, Pressable, TextInput, ScrollView, Share, Alert, Platform, ActivityIndicator, Keyboard } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -171,6 +171,7 @@ export default function MultiplayerLobbyScreen() {
   };
 
   const handleToggleReady = () => {
+    Keyboard.dismiss();
     if (!room || !playerId) return;
     const currentPlayer = room.players.find(p => p.id === playerId);
     if (currentPlayer) {
@@ -182,15 +183,17 @@ export default function MultiplayerLobbyScreen() {
   };
 
   const handleStartGame = () => {
+    Keyboard.dismiss();
     if (!room) return;
     
-    const allReady = room.players.every(p => p.ready);
+    const players = room.players;
+    const allReady = players.every(p => p.ready);
     if (!allReady) {
       Alert.alert("Not Ready", "All players must be ready to start");
       return;
     }
     
-    if (room.players.length < 2) {
+    if (players.length < 2) {
       Alert.alert("Need More Players", "At least 2 players required to start");
       return;
     }

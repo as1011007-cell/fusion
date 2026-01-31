@@ -207,6 +207,7 @@ export default function IQMultiplayerLobbyScreen() {
   };
 
   const handleToggleReady = () => {
+    Keyboard.dismiss();
     if (!room || !playerId) return;
     const currentPlayer = room.players.find(p => p.id === playerId);
     if (currentPlayer) {
@@ -218,15 +219,19 @@ export default function IQMultiplayerLobbyScreen() {
   };
 
   const handleStartGame = () => {
+    Keyboard.dismiss();
     if (!room) return;
     
-    const allReady = room.players.every(p => p.ready);
+    // Re-fetch current room state to avoid stale closures
+    const players = room.players;
+    const allReady = players.every(p => p.ready);
+    
     if (!allReady) {
       Alert.alert("Not Ready", "All players must be ready to start");
       return;
     }
     
-    if (room.players.length < 2) {
+    if (players.length < 2) {
       Alert.alert("Need More Players", "At least 2 players required to start");
       return;
     }
