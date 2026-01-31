@@ -55,6 +55,7 @@ export default function MultiplayerLobbyScreen() {
   const [selectedPanelId, setSelectedPanelId] = useState<string>("mixed");
   const [chatInput, setChatInput] = useState("");
   const codeInputRef = useRef<TextInput>(null);
+  const chatInputRef = useRef<TextInput>(null);
   const chatScrollRef = useRef<ScrollView>(null);
   const pulseScale = useSharedValue(1);
 
@@ -172,6 +173,7 @@ export default function MultiplayerLobbyScreen() {
 
   const handleToggleReady = () => {
     Keyboard.dismiss();
+    chatInputRef.current?.blur();
     if (!room || !playerId) return;
     const currentPlayer = room.players.find(p => p.id === playerId);
     if (currentPlayer) {
@@ -184,6 +186,7 @@ export default function MultiplayerLobbyScreen() {
 
   const handleStartGame = () => {
     Keyboard.dismiss();
+    chatInputRef.current?.blur();
     if (!room) return;
     
     const players = room.players;
@@ -596,6 +599,7 @@ export default function MultiplayerLobbyScreen() {
         </ScrollView>
         <View style={styles.chatInputRow}>
           <TextInput
+            ref={chatInputRef}
             style={[styles.chatInput, { backgroundColor: colors.backgroundDark, color: GameColors.textPrimary }]}
             placeholder="Type a message..."
             placeholderTextColor={GameColors.textSecondary}

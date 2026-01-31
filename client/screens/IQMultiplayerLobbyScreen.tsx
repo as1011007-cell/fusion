@@ -208,6 +208,7 @@ export default function IQMultiplayerLobbyScreen() {
 
   const handleToggleReady = () => {
     Keyboard.dismiss();
+    chatInputRef.current?.blur();
     if (!room || !playerId) return;
     const currentPlayer = room.players.find(p => p.id === playerId);
     if (currentPlayer) {
@@ -220,6 +221,7 @@ export default function IQMultiplayerLobbyScreen() {
 
   const handleStartGame = () => {
     Keyboard.dismiss();
+    chatInputRef.current?.blur();
     if (!room) return;
     
     // Re-fetch current room state to avoid stale closures
@@ -722,6 +724,7 @@ export default function IQMultiplayerLobbyScreen() {
         </ScrollView>
         <View style={styles.chatInputRow}>
           <TextInput
+            ref={chatInputRef}
             style={[styles.chatInput, { backgroundColor: colors.backgroundDark, color: GameColors.textPrimary }]}
             placeholder="Type a message..."
             placeholderTextColor={GameColors.textSecondary}
