@@ -37,7 +37,7 @@ export default function IQMultiplayerLobbyScreen() {
   const { currentProfile, settings } = useProfile();
   const { currentTheme } = useTheme();
   const colors = currentTheme.colors;
-  const { getRandomQuestions } = useIQ();
+  const { getRandomQuestions, markQuestionsAnswered } = useIQ();
   
   const { difficulty, category, questionCount } = route.params;
   
@@ -261,6 +261,9 @@ export default function IQMultiplayerLobbyScreen() {
     if (gameQuestions.length === 0) {
       gameQuestions = getRandomQuestions(useCount, "all", "all");
     }
+    
+    // Mark questions as answered to prevent repeats in future games
+    markQuestionsAnswered(gameQuestions.map(q => q.id));
     
     const panelName = `IQ Test - ${formatDifficulty(useDiff)} - ${formatCategory(useCat)}`;
     

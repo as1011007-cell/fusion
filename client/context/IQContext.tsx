@@ -50,6 +50,7 @@ type IQContextType = {
   endGame: () => IQGameResult;
   resetGame: () => void;
   getRandomQuestions: (count: number, difficulty?: string, category?: string) => IQQuestion[];
+  markQuestionsAnswered: (questionIds: string[]) => void;
 };
 
 const initialGameState: IQGameState = {
@@ -340,6 +341,17 @@ export function IQProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const markQuestionsAnswered = useCallback((questionIds: string[]) => {
+    if (questionIds.length === 0) return;
+    
+    setGameState(prev => {
+      const newAnsweredIds = new Set(prev.sessionAnsweredIds);
+      questionIds.forEach(id => newAnsweredIds.add(id));
+      saveSessionData(newAnsweredIds);
+      return { ...prev, sessionAnsweredIds: newAnsweredIds };
+    });
+  }, []);
+
   const currentQuestion = gameState.questions[gameState.currentQuestionIndex] || null;
   const questionNumber = gameState.currentQuestionIndex + 1;
   const totalQuestions = gameState.questions.length;
@@ -359,6 +371,7 @@ export function IQProvider({ children }: { children: ReactNode }) {
     endGame,
     resetGame,
     getRandomQuestions,
+    markQuestionsAnswered,
   };
 
   return (
