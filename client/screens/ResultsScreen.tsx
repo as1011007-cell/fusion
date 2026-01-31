@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { StyleSheet, View, ScrollView, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -32,8 +32,9 @@ export default function ResultsScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { gameState, resetGame, totalCoins } = useGame();
   const { currentTheme } = useTheme();
-  const { settings } = useProfile();
+  const { settings, addExperience } = useProfile();
   const colors = currentTheme.colors;
+  const xpAwardedRef = useRef(false);
 
   const scoreScale = useSharedValue(0);
 
@@ -48,6 +49,12 @@ export default function ResultsScreen() {
         withSpring(1, { damping: 10 })
       )
     );
+    
+    if (!xpAwardedRef.current) {
+      const xpEarned = Math.floor(gameState.score / 5) + 10;
+      addExperience(xpEarned);
+      xpAwardedRef.current = true;
+    }
   }, []);
 
   const scoreStyle = useAnimatedStyle(() => ({

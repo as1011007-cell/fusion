@@ -192,8 +192,9 @@ export default function IQResultsScreen() {
   const route = useRoute<RouteProps>();
   const { resetGame } = useIQ();
   const { currentTheme } = useTheme();
-  const { settings } = useProfile();
+  const { settings, addExperience } = useProfile();
   const colors = currentTheme.colors;
+  const xpAwardedRef = useRef(false);
 
   const { finalScore, correctCount, avgTime, iqEstimate, totalQuestions, categoryBreakdown } = route.params;
 
@@ -203,6 +204,12 @@ export default function IQResultsScreen() {
   useEffect(() => {
     if (settings.hapticsEnabled) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+    
+    if (!xpAwardedRef.current) {
+      const xpEarned = Math.floor(finalScore / 5) + 10;
+      addExperience(xpEarned);
+      xpAwardedRef.current = true;
     }
   }, []);
 
