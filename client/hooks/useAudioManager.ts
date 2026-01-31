@@ -2,13 +2,13 @@ import { useEffect, useCallback, useState } from "react";
 import { useAudioPlayer } from "expo-audio";
 import { useProfile } from "@/context/ProfileContext";
 
-const BACKGROUND_MUSIC_URL = "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3";
+const backgroundMusic = require("../../assets/sounds/background-music.mp3");
 
 export function useAudioManager() {
   const { settings } = useProfile();
   const [isReady, setIsReady] = useState(false);
   
-  const player = useAudioPlayer(BACKGROUND_MUSIC_URL);
+  const player = useAudioPlayer(backgroundMusic);
 
   useEffect(() => {
     if (player) {
