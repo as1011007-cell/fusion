@@ -255,7 +255,13 @@ export default function IQMultiplayerLobbyScreen() {
     const useCat = currentRoom.iqSettings?.category || localCategory;
     const useCount = currentRoom.iqSettings?.questionCount || localQuestionCount;
     
-    const gameQuestions = getRandomQuestions(useCount, useDiff, useCat);
+    let gameQuestions = getRandomQuestions(useCount, useDiff, useCat);
+    
+    // Fallback: if no questions found, get all questions without filters
+    if (gameQuestions.length === 0) {
+      gameQuestions = getRandomQuestions(useCount, "all", "all");
+    }
+    
     const panelName = `IQ Test - ${formatDifficulty(useDiff)} - ${formatCategory(useCat)}`;
     
     startGame(gameQuestions, panelName);

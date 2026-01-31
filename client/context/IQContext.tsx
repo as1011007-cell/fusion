@@ -113,6 +113,11 @@ export function IQProvider({ children }: { children: ReactNode }) {
       filtered = filtered.filter(q => q.category === category);
     }
 
+    // If no questions match filters, fall back to all questions
+    if (filtered.length === 0) {
+      filtered = [...iqQuestions];
+    }
+
     const unanswered = filtered.filter(
       q => !gameState.sessionAnsweredIds.has(q.id)
     );
@@ -120,7 +125,7 @@ export function IQProvider({ children }: { children: ReactNode }) {
     const source = unanswered.length >= count ? unanswered : filtered;
 
     const shuffled = source.sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, count);
+    return shuffled.slice(0, Math.min(count, shuffled.length));
   }, [gameState.sessionAnsweredIds]);
 
   const startGame = useCallback((
