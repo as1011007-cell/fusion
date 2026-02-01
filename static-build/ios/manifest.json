@@ -1,11 +1,11 @@
 {
-  "id": "4965ab42-3e5e-4db1-a0ae-16be6bfd43b5",
-  "createdAt": "2026-02-01T03:14:19.265Z",
+  "id": "42fc8509-a8ed-42e9-a7dd-efe789c76fcc",
+  "createdAt": "2026-02-01T03:54:35.061Z",
   "runtimeVersion": "exposdk:54.0.0",
   "launchAsset": {
-    "key": "bundle-1769915659265-15077",
+    "key": "bundle-1769918075061-19778",
     "contentType": "application/javascript",
-    "url": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/1769915659265-15077/_expo/static/js/ios/bundle.js"
+    "url": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/1769918075061-19778/_expo/static/js/ios/bundle.js"
   },
   "assets": [],
   "metadata": {},
@@ -38,13 +38,13 @@
           "backgroundColor": "#0A0E27",
           "foregroundImage": "./assets/images/android-icon-foreground.png",
           "monochromeImage": "./assets/images/android-icon-monochrome.png",
-          "foregroundImageUrl": "http://127.0.0.1:8081/assets/./assets/images/android-icon-foreground.png",
-          "monochromeImageUrl": "http://127.0.0.1:8081/assets/./assets/images/android-icon-monochrome.png"
+          "foregroundImageUrl": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/assets/./assets/images/android-icon-foreground.png",
+          "monochromeImageUrl": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/assets/./assets/images/android-icon-monochrome.png"
         },
         "edgeToEdgeEnabled": true,
         "predictiveBackGestureEnabled": false,
         "package": "com.feudfusionwhatwouldtheysay.app",
-        "versionCode": 5,
+        "versionCode": 20,
         "permissions": [
           "INTERNET",
           "VIBRATE"
@@ -98,7 +98,7 @@
       "androidStatusBar": {
         "backgroundColor": "#0A0E27"
       },
-      "iconUrl": "http://127.0.0.1:8081/assets/./assets/images/icon.png",
+      "iconUrl": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/assets/./assets/images/icon.png",
       "hostUri": "dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/ios"
     },
     "expoGo": {
