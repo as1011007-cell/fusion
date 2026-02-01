@@ -9,11 +9,17 @@
     },
     "preview": {
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_DOMAIN": "feudfusion.com"
+      },
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
+      "env": {
+        "EXPO_PUBLIC_DOMAIN": "feudfusion.com"
+      },
       "android": {
         "buildType": "app-bundle"
       },
