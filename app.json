@@ -54,7 +54,13 @@
           }
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "./plugins/withPlayGamesServices.js",
+        {
+          "appId": "YOUR_PLAY_GAMES_APP_ID"
+        }
+      ]
     ],
     "experiments": {
       "reactCompiler": true

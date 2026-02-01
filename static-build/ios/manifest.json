@@ -1,11 +1,11 @@
 {
-  "id": "5a5b23cd-30ed-4c38-86f9-ae730aff9661",
-  "createdAt": "2026-02-01T05:19:58.048Z",
+  "id": "c231aded-5964-4fe6-9d8c-591e385a06dc",
+  "createdAt": "2026-02-01T05:52:00.631Z",
   "runtimeVersion": "exposdk:54.0.0",
   "launchAsset": {
-    "key": "bundle-1769923198048-21137",
+    "key": "bundle-1769925120631-22596",
     "contentType": "application/javascript",
-    "url": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/1769923198048-21137/_expo/static/js/ios/bundle.js"
+    "url": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/1769925120631-22596/_expo/static/js/ios/bundle.js"
   },
   "assets": [],
   "metadata": {},
@@ -38,8 +38,8 @@
           "backgroundColor": "#0A0E27",
           "foregroundImage": "./assets/images/android-icon-foreground.png",
           "monochromeImage": "./assets/images/android-icon-monochrome.png",
-          "foregroundImageUrl": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/assets/./assets/images/android-icon-foreground.png",
-          "monochromeImageUrl": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/assets/./assets/images/android-icon-monochrome.png"
+          "foregroundImageUrl": "http://127.0.0.1:8081/assets/./assets/images/android-icon-foreground.png",
+          "monochromeImageUrl": "http://127.0.0.1:8081/assets/./assets/images/android-icon-monochrome.png"
         },
         "edgeToEdgeEnabled": true,
         "predictiveBackGestureEnabled": false,
@@ -68,7 +68,13 @@
             }
           }
         ],
-        "expo-web-browser"
+        "expo-web-browser",
+        [
+          "./plugins/withPlayGamesServices.js",
+          {
+            "appId": "YOUR_PLAY_GAMES_APP_ID"
+          }
+        ]
       ],
       "experiments": {
         "reactCompiler": true
@@ -99,7 +105,7 @@
       "androidStatusBar": {
         "backgroundColor": "#0A0E27"
       },
-      "iconUrl": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/assets/./assets/images/icon.png",
+      "iconUrl": "http://127.0.0.1:8081/assets/./assets/images/icon.png",
       "hostUri": "dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/ios"
     },
     "expoGo": {
