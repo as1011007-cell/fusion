@@ -33,7 +33,8 @@
       "versionCode": 20,
       "permissions": [
         "INTERNET",
-        "VIBRATE"
+        "VIBRATE",
+        "com.android.vending.BILLING"
       ]
     },
     "web": {

@@ -1,11 +1,11 @@
 {
-  "id": "c602f7eb-572b-42bf-8615-cf699070d45d",
-  "createdAt": "2026-02-01T03:54:35.061Z",
+  "id": "99d46728-eafa-448f-94cf-7b4f7b86eb69",
+  "createdAt": "2026-02-01T05:19:58.048Z",
   "runtimeVersion": "exposdk:54.0.0",
   "launchAsset": {
-    "key": "bundle-1769918075061-19778",
+    "key": "bundle-1769923198048-21137",
     "contentType": "application/javascript",
-    "url": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/1769918075061-19778/_expo/static/js/android/bundle.js"
+    "url": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/1769923198048-21137/_expo/static/js/android/bundle.js"
   },
   "assets": [],
   "metadata": {},
@@ -47,7 +47,8 @@
         "versionCode": 20,
         "permissions": [
           "INTERNET",
-          "VIBRATE"
+          "VIBRATE",
+          "com.android.vending.BILLING"
         ]
       },
       "web": {
