@@ -1,3 +1,4 @@
+// Build: Feb 1, 2026 - Always-on deployment
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
