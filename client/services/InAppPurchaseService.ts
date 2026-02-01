@@ -1,9 +1,9 @@
 import { Platform } from "react-native";
 
 export const PRODUCT_IDS = {
-  STAR_POINTS_5000: "com.feudfusion.starpoints5000",
-  AD_FREE: "com.feudfusion.adfree",
-  SUPPORT_DEVELOPER: "com.feudfusion.support",
+  STAR_POINTS_5000: "starpoints-5000",
+  AD_FREE: "ad-free",
+  SUPPORT_DEVELOPER: "support-developer",
 } as const;
 
 export type ProductId = (typeof PRODUCT_IDS)[keyof typeof PRODUCT_IDS];
