@@ -1,0 +1,117 @@
+{
+  "id": "43a5a352-85a0-4c82-8293-a56df948fc1a",
+  "createdAt": "2026-02-01T01:27:01.141Z",
+  "runtimeVersion": "exposdk:54.0.0",
+  "launchAsset": {
+    "key": "bundle-1769909221141-6010",
+    "contentType": "application/javascript",
+    "url": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/1769909221141-6010/_expo/static/js/ios/bundle.js"
+  },
+  "assets": [],
+  "metadata": {},
+  "extra": {
+    "eas": {},
+    "expoClient": {
+      "name": "Feud Fusion",
+      "slug": "feudfusionwhatwouldtheysay",
+      "version": "1.0.0",
+      "orientation": "portrait",
+      "icon": "./assets/images/icon.png",
+      "scheme": "feudfusion",
+      "userInterfaceStyle": "dark",
+      "newArchEnabled": true,
+      "ios": {
+        "supportsTablet": true,
+        "bundleIdentifier": "com.feudfusionwhatwouldtheysay.app",
+        "usesGameCenter": true,
+        "entitlements": {
+          "com.apple.developer.game-center": true
+        },
+        "infoPlist": {
+          "ITSAppUsesNonExemptEncryption": false,
+          "GCSupportsGameCenterLogin": true,
+          "NSPhotoLibraryUsageDescription": "Feud Fusion needs access to your photo library so you can select a custom profile picture to personalize your player avatar. For example, you can choose a photo of yourself to display on leaderboards and in multiplayer games."
+        }
+      },
+      "android": {
+        "adaptiveIcon": {
+          "backgroundColor": "#0A0E27",
+          "foregroundImage": "./assets/images/android-icon-foreground.png",
+          "monochromeImage": "./assets/images/android-icon-monochrome.png",
+          "foregroundImageUrl": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/assets/./assets/images/android-icon-foreground.png",
+          "monochromeImageUrl": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/assets/./assets/images/android-icon-monochrome.png"
+        },
+        "edgeToEdgeEnabled": true,
+        "predictiveBackGestureEnabled": false,
+        "package": "com.feudfusionwhatwouldtheysay.app",
+        "versionCode": 5,
+        "permissions": [
+          "INTERNET",
+          "VIBRATE"
+        ]
+      },
+      "web": {
+        "output": "single",
+        "favicon": "./assets/images/favicon.png"
+      },
+      "plugins": [
+        [
+          "expo-splash-screen",
+          {
+            "image": "./assets/images/splash-icon.png",
+            "imageWidth": 200,
+            "resizeMode": "contain",
+            "backgroundColor": "#0A0E27",
+            "dark": {
+              "backgroundColor": "#0A0E27"
+            }
+          }
+        ],
+        "expo-web-browser"
+      ],
+      "experiments": {
+        "reactCompiler": true
+      },
+      "_internal": {
+        "isDebug": false,
+        "projectRoot": "/home/runner/workspace",
+        "dynamicConfigPath": {},
+        "staticConfigPath": "/home/runner/workspace/app.json",
+        "packageJsonPath": "/home/runner/workspace/package.json",
+        "pluginHistory": {
+          "expo-splash-screen": {
+            "name": "expo-splash-screen",
+            "version": "31.0.13"
+          },
+          "expo-web-browser": {
+            "name": "expo-web-browser",
+            "version": "15.0.10"
+          }
+        }
+      },
+      "sdkVersion": "54.0.0",
+      "platforms": [
+        "ios",
+        "android",
+        "web"
+      ],
+      "androidStatusBar": {
+        "backgroundColor": "#0A0E27"
+      },
+      "iconUrl": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/assets/./assets/images/icon.png",
+      "hostUri": "dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/ios"
+    },
+    "expoGo": {
+      "debuggerHost": "dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/ios",
+      "developer": {
+        "tool": "expo-cli",
+        "projectRoot": "/home/runner/workspace"
+      },
+      "packagerOpts": {
+        "dev": false
+      },
+      "mainModuleName": "client/index"
+    },
+    "scopeKey": "@anonymous/feudfusionwhatwouldtheysay-3892fda6-9076-4ecf-a661-f820aae59d7c"
+  }
+}
