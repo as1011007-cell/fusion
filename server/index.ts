@@ -1,17 +1,13 @@
-// Build: Feb 1, 2026 - Always-on deployment
+// Build: Feb 1, 2026 - Always-on deployment (No Stripe)
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import * as fs from "fs";
 import * as path from "path";
-import { initStripe } from "./stripeInit";
-import { WebhookHandlers } from "./webhookHandlers";
-import { getStripePublishableKey, getUncachableStripeClient } from "./stripeClient";
 import { setupMultiplayer } from "./multiplayer";
 
 const app = express();
 const log = console.log;
-let stripeInitialized = false;
 
 declare module "http" {
   interface IncomingMessage {
@@ -238,163 +234,8 @@ function setupErrorHandler(app: express.Application) {
 
 (async () => {
   setupCors(app);
-
-  app.post(
-    '/api/stripe/webhook',
-    express.raw({ type: 'application/json' }),
-    async (req, res) => {
-      const signature = req.headers['stripe-signature'];
-
-      if (!signature) {
-        return res.status(400).json({ error: 'Missing stripe-signature' });
-      }
-
-      try {
-        const sig = Array.isArray(signature) ? signature[0] : signature;
-
-        if (!Buffer.isBuffer(req.body)) {
-          console.error('STRIPE WEBHOOK ERROR: req.body is not a Buffer');
-          return res.status(500).json({ error: 'Webhook processing error' });
-        }
-
-        await WebhookHandlers.processWebhook(req.body as Buffer, sig);
-        res.status(200).json({ received: true });
-      } catch (error: any) {
-        console.error('Webhook error:', error.message);
-        res.status(400).json({ error: 'Webhook processing error' });
-      }
-    }
-  );
-
   setupBodyParsing(app);
   setupRequestLogging(app);
-
-  stripeInitialized = await initStripe();
-
-  app.get('/api/stripe/publishable-key', async (_req, res) => {
-    try {
-      const publishableKey = await getStripePublishableKey();
-      res.json({ publishableKey });
-    } catch (error) {
-      res.status(500).json({ error: 'Stripe not configured' });
-    }
-  });
-
-  app.post('/api/stripe/create-checkout', async (req, res) => {
-    try {
-      const { priceId, successUrl, cancelUrl } = req.body;
-      const stripe = await getUncachableStripeClient();
-
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        line_items: [{ price: priceId, quantity: 1 }],
-        mode: 'payment',
-        success_url: successUrl,
-        cancel_url: cancelUrl,
-      });
-
-      res.json({ url: session.url, sessionId: session.id });
-    } catch (error: any) {
-      console.error('Checkout error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.get('/api/stripe/verify-payment/:sessionId', async (req, res) => {
-    try {
-      const { sessionId } = req.params;
-      const stripe = await getUncachableStripeClient();
-
-      const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-      if (session.payment_status === 'paid') {
-        res.json({ 
-          success: true, 
-          paymentStatus: session.payment_status,
-          metadata: session.metadata 
-        });
-      } else {
-        res.json({ 
-          success: false, 
-          paymentStatus: session.payment_status 
-        });
-      }
-    } catch (error: any) {
-      console.error('Payment verification error:', error);
-      res.status(500).json({ error: error.message, success: false });
-    }
-  });
-
-  app.get('/api/stripe/products', async (_req, res) => {
-    try {
-      const stripe = await getUncachableStripeClient();
-      const products = await stripe.products.list({ active: true });
-      const prices = await stripe.prices.list({ active: true });
-
-      const productsWithPrices = products.data.map(product => ({
-        ...product,
-        prices: prices.data.filter(price => price.product === product.id),
-      }));
-
-      res.json({ products: productsWithPrices });
-    } catch (error: any) {
-      console.error('Products error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  // Payment success/cancel pages
-  app.get('/payment-success', (_req, res) => {
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Payment Successful</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <style>
-            body { font-family: -apple-system, sans-serif; background: #1a1a2e; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
-            .container { padding: 40px; }
-            h1 { color: #00ff88; font-size: 28px; }
-            p { color: #ccc; font-size: 16px; margin-top: 10px; }
-            .btn { display: inline-block; margin-top: 24px; padding: 14px 32px; background: linear-gradient(135deg, #00ff88, #00cc6a); color: #1a1a2e; font-size: 16px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; text-decoration: none; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>Payment Successful!</h1>
-            <p>Thank you for your purchase. Tap the button below to return to the app.</p>
-            <button class="btn" onclick="window.close(); window.history.back();">Return to App</button>
-          </div>
-        </body>
-      </html>
-    `);
-  });
-
-  app.get('/payment-cancel', (_req, res) => {
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Payment Cancelled</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <style>
-            body { font-family: -apple-system, sans-serif; background: #1a1a2e; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
-            .container { padding: 40px; }
-            h1 { color: #ff6b6b; font-size: 28px; }
-            p { color: #ccc; font-size: 16px; margin-top: 10px; }
-            .btn { display: inline-block; margin-top: 24px; padding: 14px 32px; background: linear-gradient(135deg, #ff6b6b, #cc5555); color: #fff; font-size: 16px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; text-decoration: none; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>Payment Cancelled</h1>
-            <p>Your payment was not completed. Tap the button below to return to the app.</p>
-            <button class="btn" onclick="window.close(); window.history.back();">Return to App</button>
-          </div>
-        </body>
-      </html>
-    `);
-  });
 
   // Privacy Policy page
   app.get('/privacy', (_req, res) => {
@@ -415,7 +256,6 @@ function setupErrorHandler(app: express.Application) {
 
   // OAuth callback handler for Google login
   app.get('/auth/callback', (req, res) => {
-    // This page handles the OAuth redirect and passes tokens back to the app
     res.send(`
       <!DOCTYPE html>
       <html>
@@ -438,12 +278,10 @@ function setupErrorHandler(app: express.Application) {
             <p>Please wait while we complete your login.</p>
           </div>
           <script>
-            // Pass the hash fragment (with access token) back to opener if present
             if (window.opener) {
               window.opener.postMessage({ type: 'oauth', url: window.location.href }, '*');
               setTimeout(() => window.close(), 1000);
             } else {
-              // If no opener, show a message to return to the app
               document.querySelector('h1').textContent = 'Login Complete!';
               document.querySelector('p').textContent = 'You can close this window and return to the app.';
               document.querySelector('.spinner').style.display = 'none';

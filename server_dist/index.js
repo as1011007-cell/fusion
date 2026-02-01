@@ -335,109 +335,6 @@ async function registerRoutes(app2) {
 import * as fs from "fs";
 import * as path from "path";
 
-// server/stripeInit.ts
-import { runMigrations } from "stripe-replit-sync";
-
-// server/stripeClient.ts
-import Stripe from "stripe";
-function getCredentials() {
-  const secretKey = process.env.STRIPE_SECRET_KEY;
-  if (!secretKey) {
-    throw new Error("STRIPE_SECRET_KEY not found in environment variables");
-  }
-  const publishableKey = secretKey.startsWith("sk_live_") || secretKey.startsWith("rk_live_") ? process.env.STRIPE_PUBLISHABLE_KEY || "pk_live_placeholder" : process.env.STRIPE_PUBLISHABLE_KEY || "pk_test_placeholder";
-  return {
-    publishableKey,
-    secretKey
-  };
-}
-async function getUncachableStripeClient() {
-  const { secretKey } = getCredentials();
-  return new Stripe(secretKey);
-}
-async function getStripePublishableKey() {
-  const { publishableKey } = getCredentials();
-  return publishableKey;
-}
-async function getStripeSecretKey() {
-  const { secretKey } = getCredentials();
-  return secretKey;
-}
-var stripeSync = null;
-var stripeSyncKey = "";
-async function getStripeSync() {
-  const currentKey = await getStripeSecretKey();
-  if (!stripeSync || stripeSyncKey !== currentKey) {
-    const { StripeSync } = await import("stripe-replit-sync");
-    stripeSync = new StripeSync({
-      poolConfig: {
-        connectionString: process.env.DATABASE_URL,
-        max: 2
-      },
-      stripeSecretKey: currentKey
-    });
-    stripeSyncKey = currentKey;
-  }
-  return stripeSync;
-}
-
-// server/stripeInit.ts
-async function initStripe() {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    console.log("DATABASE_URL not set - Stripe integration will be disabled");
-    return false;
-  }
-  try {
-    console.log("Initializing Stripe schema...");
-    await runMigrations({ databaseUrl });
-    console.log("Stripe schema ready");
-    const stripeSync2 = await getStripeSync();
-    console.log("Setting up managed webhook...");
-    const replitDomains = process.env.REPLIT_DOMAINS;
-    if (replitDomains) {
-      const webhookBaseUrl = `https://${replitDomains.split(",")[0]}`;
-      try {
-        const result = await stripeSync2.findOrCreateManagedWebhook(
-          `${webhookBaseUrl}/api/stripe/webhook`
-        );
-        if (result?.webhook?.url) {
-          console.log(`Webhook configured: ${result.webhook.url}`);
-        } else {
-          console.log("Webhook setup skipped - no URL returned");
-        }
-      } catch (webhookError) {
-        console.log("Webhook setup skipped - not in production environment");
-      }
-    } else {
-      console.log("REPLIT_DOMAINS not set - webhook setup skipped");
-    }
-    console.log("Syncing Stripe data...");
-    stripeSync2.syncBackfill().then(() => {
-      console.log("Stripe data synced");
-    }).catch((err) => {
-      console.error("Error syncing Stripe data:", err);
-    });
-    return true;
-  } catch (error) {
-    console.error("Failed to initialize Stripe:", error);
-    return false;
-  }
-}
-
-// server/webhookHandlers.ts
-var WebhookHandlers = class {
-  static async processWebhook(payload, signature) {
-    if (!Buffer.isBuffer(payload)) {
-      throw new Error(
-        "STRIPE WEBHOOK ERROR: Payload must be a Buffer. Received type: " + typeof payload + ". This usually means express.json() parsed the body before reaching this handler. FIX: Ensure webhook route is registered BEFORE app.use(express.json())."
-      );
-    }
-    const sync = await getStripeSync();
-    await sync.processWebhook(payload, signature);
-  }
-};
-
 // server/multiplayer.ts
 import { WebSocketServer, WebSocket } from "ws";
 var rooms = /* @__PURE__ */ new Map();
@@ -853,7 +750,6 @@ function setupMultiplayer(server) {
 // server/index.ts
 var app = express();
 var log = console.log;
-var stripeInitialized = false;
 function setupCors(app2) {
   app2.use((req, res, next) => {
     const origins = /* @__PURE__ */ new Set();
@@ -1013,143 +909,8 @@ function setupErrorHandler(app2) {
 }
 (async () => {
   setupCors(app);
-  app.post(
-    "/api/stripe/webhook",
-    express.raw({ type: "application/json" }),
-    async (req, res) => {
-      const signature = req.headers["stripe-signature"];
-      if (!signature) {
-        return res.status(400).json({ error: "Missing stripe-signature" });
-      }
-      try {
-        const sig = Array.isArray(signature) ? signature[0] : signature;
-        if (!Buffer.isBuffer(req.body)) {
-          console.error("STRIPE WEBHOOK ERROR: req.body is not a Buffer");
-          return res.status(500).json({ error: "Webhook processing error" });
-        }
-        await WebhookHandlers.processWebhook(req.body, sig);
-        res.status(200).json({ received: true });
-      } catch (error) {
-        console.error("Webhook error:", error.message);
-        res.status(400).json({ error: "Webhook processing error" });
-      }
-    }
-  );
   setupBodyParsing(app);
   setupRequestLogging(app);
-  stripeInitialized = await initStripe();
-  app.get("/api/stripe/publishable-key", async (_req, res) => {
-    try {
-      const publishableKey = await getStripePublishableKey();
-      res.json({ publishableKey });
-    } catch (error) {
-      res.status(500).json({ error: "Stripe not configured" });
-    }
-  });
-  app.post("/api/stripe/create-checkout", async (req, res) => {
-    try {
-      const { priceId, successUrl, cancelUrl } = req.body;
-      const stripe = await getUncachableStripeClient();
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
-        line_items: [{ price: priceId, quantity: 1 }],
-        mode: "payment",
-        success_url: successUrl,
-        cancel_url: cancelUrl
-      });
-      res.json({ url: session.url, sessionId: session.id });
-    } catch (error) {
-      console.error("Checkout error:", error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-  app.get("/api/stripe/verify-payment/:sessionId", async (req, res) => {
-    try {
-      const { sessionId } = req.params;
-      const stripe = await getUncachableStripeClient();
-      const session = await stripe.checkout.sessions.retrieve(sessionId);
-      if (session.payment_status === "paid") {
-        res.json({
-          success: true,
-          paymentStatus: session.payment_status,
-          metadata: session.metadata
-        });
-      } else {
-        res.json({
-          success: false,
-          paymentStatus: session.payment_status
-        });
-      }
-    } catch (error) {
-      console.error("Payment verification error:", error);
-      res.status(500).json({ error: error.message, success: false });
-    }
-  });
-  app.get("/api/stripe/products", async (_req, res) => {
-    try {
-      const stripe = await getUncachableStripeClient();
-      const products = await stripe.products.list({ active: true });
-      const prices = await stripe.prices.list({ active: true });
-      const productsWithPrices = products.data.map((product) => ({
-        ...product,
-        prices: prices.data.filter((price) => price.product === product.id)
-      }));
-      res.json({ products: productsWithPrices });
-    } catch (error) {
-      console.error("Products error:", error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-  app.get("/payment-success", (_req, res) => {
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Payment Successful</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <style>
-            body { font-family: -apple-system, sans-serif; background: #1a1a2e; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
-            .container { padding: 40px; }
-            h1 { color: #00ff88; font-size: 28px; }
-            p { color: #ccc; font-size: 16px; margin-top: 10px; }
-            .btn { display: inline-block; margin-top: 24px; padding: 14px 32px; background: linear-gradient(135deg, #00ff88, #00cc6a); color: #1a1a2e; font-size: 16px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; text-decoration: none; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>Payment Successful!</h1>
-            <p>Thank you for your purchase. Tap the button below to return to the app.</p>
-            <button class="btn" onclick="window.close(); window.history.back();">Return to App</button>
-          </div>
-        </body>
-      </html>
-    `);
-  });
-  app.get("/payment-cancel", (_req, res) => {
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Payment Cancelled</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <style>
-            body { font-family: -apple-system, sans-serif; background: #1a1a2e; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
-            .container { padding: 40px; }
-            h1 { color: #ff6b6b; font-size: 28px; }
-            p { color: #ccc; font-size: 16px; margin-top: 10px; }
-            .btn { display: inline-block; margin-top: 24px; padding: 14px 32px; background: linear-gradient(135deg, #ff6b6b, #cc5555); color: #fff; font-size: 16px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; text-decoration: none; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>Payment Cancelled</h1>
-            <p>Your payment was not completed. Tap the button below to return to the app.</p>
-            <button class="btn" onclick="window.close(); window.history.back();">Return to App</button>
-          </div>
-        </body>
-      </html>
-    `);
-  });
   app.get("/privacy", (_req, res) => {
     const privacyPath = path.resolve(
       process.cwd(),
@@ -1186,12 +947,10 @@ function setupErrorHandler(app2) {
             <p>Please wait while we complete your login.</p>
           </div>
           <script>
-            // Pass the hash fragment (with access token) back to opener if present
             if (window.opener) {
               window.opener.postMessage({ type: 'oauth', url: window.location.href }, '*');
               setTimeout(() => window.close(), 1000);
             } else {
-              // If no opener, show a message to return to the app
               document.querySelector('h1').textContent = 'Login Complete!';
               document.querySelector('p').textContent = 'You can close this window and return to the app.';
               document.querySelector('.spinner').style.display = 'none';
