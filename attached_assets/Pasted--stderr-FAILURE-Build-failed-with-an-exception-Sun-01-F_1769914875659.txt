@@ -1,0 +1,243 @@
+
+[stderr] 
+FAILURE: Build failed with an exception.
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+* What went wrong:
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+Execution failed for task ':expo-in-app-purchases:compileReleaseJavaWithJavac'.
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+> Compilation failed; see the compiler output below.
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  Note: /home/expo/workingdir/build/node_modules/expo-in-app-purchases/android/src/main/java/expo/modules/inapppurchases/BillingManager.java uses unchecked or unsafe operations.
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  /home/expo/workingdir/build/node_modules/expo-in-app-purchases/android/src/main/java/expo/modules/inapppurchases/InAppPurchasesModule.java:9: error: cannot find symbol
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  import expo.modules.core.ExportedModule;
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+                          ^
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    symbol:   class ExportedModule
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    location: package expo.modules.core
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  /home/expo/workingdir/build/node_modules/expo-in-app-purchases/android/src/main/java/expo/modules/inapppurchases/InAppPurchasesModule.java:13: error: cannot find symbol
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  import expo.modules.core.interfaces.ExpoMethod;
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+                                     ^
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    symbol:   class ExpoMethod
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    location: package expo.modules.core.interfaces
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  /home/expo/workingdir/build/node_modules/expo-in-app-purchases/android/src/main/java/expo/modules/inapppurchases/InAppPurchasesPackage.java:9: error: cannot find symbol
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  import expo.modules.core.ExportedModule;
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+                          ^
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    symbol:   class ExportedModule
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    location: package expo.modules.core
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  /home/expo/workingdir/build/node_modules/expo-in-app-purchases/android/src/main/java/expo/modules/inapppurchases/InAppPurchasesPackage.java:13: error: cannot find symbol
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    public List<ExportedModule> createExportedModules(Context context) {
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+                ^
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    symbol:   class ExportedModule
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    location: class InAppPurchasesPackage
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  /home/expo/workingdir/build/node_modules/expo-in-app-purchases/android/src/main/java/expo/modules/inapppurchases/InAppPurchasesModule.java:41: error: cannot find symbol
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    @ExpoMethod
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+     ^
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    symbol:   class ExpoMethod
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    location: class InAppPurchasesModule
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  /home/expo/workingdir/build/node_modules/expo-in-app-purchases/android/src/main/java/expo/modules/inapppurchases/InAppPurchasesModule.java:52: error: cannot find symbol
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    @ExpoMethod
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+     ^
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    symbol:   class ExpoMethod
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    location: class InAppPurchasesModule
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  /home/expo/workingdir/build/node_modules/expo-in-app-purchases/android/src/main/java/expo/modules/inapppurchases/InAppPurchasesModule.java:57: error: cannot find symbol
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    @ExpoMethod
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+     ^
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    symbol:   class ExpoMethod
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    location: class InAppPurchasesModule
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  /home/expo/workingdir/build/node_modules/expo-in-app-purchases/android/src/main/java/expo/modules/inapppurchases/InAppPurchasesModule.java:66: error: cannot find symbol
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    @ExpoMethod
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+     ^
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    symbol:   class ExpoMethod
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    location: class InAppPurchasesModule
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  /home/expo/workingdir/build/node_modules/expo-in-app-purchases/android/src/main/java/expo/modules/inapppurchases/InAppPurchasesModule.java:71: error: cannot find symbol
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    @ExpoMethod
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+     ^
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    symbol:   class ExpoMethod
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    location: class InAppPurchasesModule
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  /home/expo/workingdir/build/node_modules/expo-in-app-purchases/android/src/main/java/expo/modules/inapppurchases/InAppPurchasesModule.java:76: error: cannot find symbol
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    @ExpoMethod
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+     ^
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    symbol:   class ExpoMethod
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    location: class InAppPurchasesModule
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  /home/expo/workingdir/build/node_modules/expo-in-app-purchases/android/src/main/java/expo/modules/inapppurchases/InAppPurchasesModule.java:85: error: cannot find symbol
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    @ExpoMethod
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+     ^
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    symbol:   class ExpoMethod
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    location: class InAppPurchasesModule
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  /home/expo/workingdir/build/node_modules/expo-in-app-purchases/android/src/main/java/expo/modules/inapppurchases/InAppPurchasesPackage.java:14: error: cannot find symbol
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+      return Collections.singletonList((ExportedModule) new InAppPurchasesModule(context));
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+                                        ^
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    symbol:   class ExportedModule
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    location: class InAppPurchasesPackage
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  Note: Recompile with -Xlint:unchecked for details.
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  /home/expo/workingdir/build/node_modules/expo-in-app-purchases/android/src/main/java/expo/modules/inapppurchases/InAppPurchasesModule.java:31: error: method does not override or implement a method from a supertype
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    @Override
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    ^
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  /home/expo/workingdir/build/node_modules/expo-in-app-purchases/android/src/main/java/expo/modules/inapppurchases/InAppPurchasesPackage.java:12: error: method does not override or implement a method from a supertype
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    @Override
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    ^
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  /home/expo/workingdir/build/node_modules/expo-in-app-purchases/android/src/main/java/expo/modules/inapppurchases/InAppPurchasesModule.java:18: error: cannot find symbol
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  public class InAppPurchasesModule extends ExportedModule implements RegistryLifecycleListener {
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+                                            ^
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+    symbol: class ExportedModule
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+  15 errors
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+* Try:
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+> Check your code and dependencies to fix the compilation error(s)
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+> Run with --scan to get full insights.
+Sun, 01 Feb 2026 02:58:35 GMT
+[stderr] 
+BUILD FAILED

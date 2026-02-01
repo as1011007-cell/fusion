@@ -1,11 +1,11 @@
 {
-  "id": "43a5a352-85a0-4c82-8293-a56df948fc1a",
-  "createdAt": "2026-02-01T01:27:01.141Z",
+  "id": "760998bf-5deb-4322-8ff1-40a47f718bec",
+  "createdAt": "2026-02-01T03:02:49.535Z",
   "runtimeVersion": "exposdk:54.0.0",
   "launchAsset": {
-    "key": "bundle-1769909221141-6010",
+    "key": "bundle-1769914969535-12020",
     "contentType": "application/javascript",
-    "url": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/1769909221141-6010/_expo/static/js/ios/bundle.js"
+    "url": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/1769914969535-12020/_expo/static/js/ios/bundle.js"
   },
   "assets": [],
   "metadata": {},
@@ -38,8 +38,8 @@
           "backgroundColor": "#0A0E27",
           "foregroundImage": "./assets/images/android-icon-foreground.png",
           "monochromeImage": "./assets/images/android-icon-monochrome.png",
-          "foregroundImageUrl": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/assets/./assets/images/android-icon-foreground.png",
-          "monochromeImageUrl": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/assets/./assets/images/android-icon-monochrome.png"
+          "foregroundImageUrl": "http://127.0.0.1:8081/assets/./assets/images/android-icon-foreground.png",
+          "monochromeImageUrl": "http://127.0.0.1:8081/assets/./assets/images/android-icon-monochrome.png"
         },
         "edgeToEdgeEnabled": true,
         "predictiveBackGestureEnabled": false,
@@ -98,7 +98,7 @@
       "androidStatusBar": {
         "backgroundColor": "#0A0E27"
       },
-      "iconUrl": "https://dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/assets/./assets/images/icon.png",
+      "iconUrl": "http://127.0.0.1:8081/assets/./assets/images/icon.png",
       "hostUri": "dfd7cbc3-0a7d-4dcc-9859-5b5ecabf8935-00-1sqddfuuh0log.riker.replit.dev/ios"
     },
     "expoGo": {
