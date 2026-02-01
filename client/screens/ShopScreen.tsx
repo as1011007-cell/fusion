@@ -277,9 +277,19 @@ export default function ShopScreen() {
   };
 
   const handlePurchaseStarPoints = () => {
-    if (isNative && storeKitReady) {
-      handlePurchaseStarPointsNative();
+    if (isIOS) {
+      // iOS uses Apple in-app purchases
+      if (storeKitReady) {
+        handlePurchaseStarPointsNative();
+      } else {
+        Alert.alert(
+          "App Store Purchase",
+          "In-app purchases are available through the App Store. Please download from the App Store to make purchases.",
+          [{ text: "OK" }]
+        );
+      }
     } else {
+      // Android and Web use Stripe
       handlePurchaseStarPointsStripe();
     }
   };
@@ -387,9 +397,19 @@ export default function ShopScreen() {
   };
 
   const handlePurchaseAdFree = () => {
-    if (isNative && storeKitReady) {
-      handlePurchaseAdFreeNative();
+    if (isIOS) {
+      // iOS uses Apple in-app purchases
+      if (storeKitReady) {
+        handlePurchaseAdFreeNative();
+      } else {
+        Alert.alert(
+          "App Store Purchase",
+          "In-app purchases are available through the App Store. Please download from the App Store to make purchases.",
+          [{ text: "OK" }]
+        );
+      }
     } else {
+      // Android and Web use Stripe
       handlePurchaseAdFreeStripe();
     }
   };
@@ -499,9 +519,19 @@ export default function ShopScreen() {
   };
 
   const handleSupportDeveloper = () => {
-    if (isNative && storeKitReady) {
-      handleSupportDeveloperNative();
+    if (isIOS) {
+      // iOS uses Apple in-app purchases
+      if (storeKitReady) {
+        handleSupportDeveloperNative();
+      } else {
+        Alert.alert(
+          "App Store Purchase",
+          "In-app purchases are available through the App Store. Please download from the App Store to make purchases.",
+          [{ text: "OK" }]
+        );
+      }
     } else {
+      // Android and Web use Stripe
       handleSupportDeveloperStripe();
     }
   };
