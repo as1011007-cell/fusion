@@ -36,8 +36,8 @@ import { useLastTurnSounds } from "@/hooks/useLastTurnSounds";
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CHAMBER_SIZE = Math.min(SCREEN_WIDTH * 0.75, 280);
-const SLOT_SIZE = CHAMBER_SIZE * 0.28;
+const CHAMBER_SIZE = Math.min(SCREEN_WIDTH - 60, 320);
+const SLOT_SIZE = CHAMBER_SIZE / 4;
 
 export default function LastTurnGameScreen() {
   const insets = useSafeAreaInsets();
@@ -254,7 +254,7 @@ export default function LastTurnGameScreen() {
     const isCrash = isRevealed && room?.chamberSlots[index];
     
     const angle = (index * 60) - 90;
-    const radius = (CHAMBER_SIZE - SLOT_SIZE) / 2 - 8;
+    const radius = (CHAMBER_SIZE / 2) - (SLOT_SIZE / 2) - 10;
     const x = Math.cos((angle * Math.PI) / 180) * radius;
     const y = Math.sin((angle * Math.PI) / 180) * radius;
 
