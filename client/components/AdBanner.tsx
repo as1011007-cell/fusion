@@ -2,15 +2,17 @@ import React, { useState, useEffect, useRef } from "react";
 import { View, StyleSheet, Pressable, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { useTheme } from "@/context/ThemeContext";
 import { GameColors, Spacing, BorderRadius } from "@/constants/theme";
 
-// Dynamically import to avoid Metro web bundling errors
+const isExpoGo = Constants.appOwnership === 'expo';
+
 let InterstitialAd: any = null;
 let AdEventType: any = null;
 let TestIds: any = null;
 
-if (Platform.OS !== 'web') {
+if (Platform.OS !== 'web' && !isExpoGo) {
   try {
     const ads = require('react-native-google-mobile-ads');
     InterstitialAd = ads.InterstitialAd;
@@ -70,8 +72,8 @@ export function AdBanner({ style }: AdBannerProps) {
     }
   };
 
-  // Hide completely on web to prevent any native component interference
-  if (isAdFree || Platform.OS === 'web') {
+  // Hide completely on web or Expo Go to prevent native component errors
+  if (isAdFree || Platform.OS === 'web' || isExpoGo) {
     return null;
   }
 

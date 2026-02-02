@@ -1,15 +1,32 @@
-import {
-  InterstitialAd,
-  AdEventType,
-  TestIds,
-} from 'react-native-google-mobile-ads';
+import Constants from 'expo-constants';
+
+const isExpoGo = Constants.appOwnership === 'expo';
+
+let InterstitialAd: any = null;
+let AdEventType: any = null;
+let TestIds: any = null;
+
+if (!isExpoGo) {
+  try {
+    const mobileAds = require('react-native-google-mobile-ads');
+    InterstitialAd = mobileAds.InterstitialAd;
+    AdEventType = mobileAds.AdEventType;
+    TestIds = mobileAds.TestIds;
+  } catch (e) {
+    console.warn('Google Mobile Ads not available:', e);
+  }
+}
 
 const INTERSTITIAL_AD_UNIT_ID = 'ca-app-pub-9336364822145619/1234567890';
 
-let interstitialInstance: ReturnType<typeof InterstitialAd.createForAdRequest> | null = null;
+let interstitialInstance: any = null;
 let isLoaded = false;
 
 function createInterstitial() {
+  if (isExpoGo || !InterstitialAd) {
+    return null;
+  }
+  
   try {
     const adUnitId = __DEV__ ? TestIds.INTERSTITIAL : INTERSTITIAL_AD_UNIT_ID;
     return InterstitialAd.createForAdRequest(adUnitId, {
@@ -22,6 +39,11 @@ function createInterstitial() {
 }
 
 export function initInterstitialAd() {
+  if (isExpoGo || !InterstitialAd) {
+    console.log('Ads not available in Expo Go');
+    return;
+  }
+  
   interstitialInstance = createInterstitial();
   if (!interstitialInstance) return;
   
@@ -45,7 +67,7 @@ export function initInterstitialAd() {
 }
 
 export function showInterstitialAd(): boolean {
-  if (!interstitialInstance) {
+  if (isExpoGo || !interstitialInstance) {
     return false;
   }
   
