@@ -20,6 +20,7 @@ import { useMultiplayer, RoundResult } from "@/context/MultiplayerContext";
 import { useProfile, avatarImages } from "@/context/ProfileContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useGame, Panel } from "@/context/GameContext";
+import { initInterstitialAd, showInterstitialAd } from "@/services/InterstitialAdService";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -30,7 +31,7 @@ export default function MultiplayerGameScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { settings } = useProfile();
-  const { currentTheme } = useTheme();
+  const { currentTheme, isAdFree } = useTheme();
   const colors = currentTheme.colors;
   const { panels } = useGame();
   
@@ -86,6 +87,17 @@ export default function MultiplayerGameScreen() {
       setTimerActive(false);
     }
   }, [roundResults]);
+
+  // Show interstitial ad when multiplayer game ends (skip if ad-free)
+  useEffect(() => {
+    if (gameFinished && !isAdFree) {
+      initInterstitialAd();
+      const adTimer = setTimeout(() => {
+        showInterstitialAd();
+      }, 1500);
+      return () => clearTimeout(adTimer);
+    }
+  }, [gameFinished, isAdFree]);
 
   const handleBack = () => {
     if (settings.hapticsEnabled) {

@@ -28,6 +28,7 @@ import { useMultiplayer, RoundResult } from "@/context/MultiplayerContext";
 import { useProfile, avatarImages } from "@/context/ProfileContext";
 import { useTheme } from "@/context/ThemeContext";
 import { IQDifficulty } from "@/context/IQContext";
+import { initInterstitialAd, showInterstitialAd } from "@/services/InterstitialAdService";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -324,7 +325,7 @@ export default function IQMultiplayerGameScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { settings } = useProfile();
-  const { currentTheme } = useTheme();
+  const { currentTheme, isAdFree } = useTheme();
   const colors = currentTheme.colors;
 
   const {
@@ -387,6 +388,17 @@ export default function IQMultiplayerGameScreen() {
       });
     }
   }, [roomReset, room?.status]);
+
+  // Show interstitial ad when IQ multiplayer game ends (skip if ad-free)
+  useEffect(() => {
+    if (gameFinished && !isAdFree) {
+      initInterstitialAd();
+      const adTimer = setTimeout(() => {
+        showInterstitialAd();
+      }, 1500);
+      return () => clearTimeout(adTimer);
+    }
+  }, [gameFinished, isAdFree]);
 
   const handleBack = () => {
     if (settings.hapticsEnabled) {
