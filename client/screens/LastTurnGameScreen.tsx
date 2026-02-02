@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { StyleSheet, View, Pressable, Dimensions, Alert } from "react-native";
+import { StyleSheet, View, Pressable, Dimensions, Alert, TextInput, ScrollView, Keyboard } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -54,12 +54,16 @@ export default function LastTurnGameScreen() {
     pullSlot,
     passAction,
     forcePlayer,
+    answerTruth,
     leaveRoom,
     playAgain,
   } = useLastTurn();
 
   const [showingAction, setShowingAction] = useState(false);
   const [showForceModal, setShowForceModal] = useState(false);
+  const [truthAnswer, setTruthAnswer] = useState("");
+  const [showTruthAnswer, setShowTruthAnswer] = useState(false);
+  const truthInputRef = useRef<TextInput>(null);
   
   const chamberRotation = useSharedValue(0);
   const pulseScale = useSharedValue(1);
@@ -127,6 +131,22 @@ export default function LastTurnGameScreen() {
     }
   }, [gameFinished, isAdFree]);
 
+  // Show last truth answer when received
+  useEffect(() => {
+    if (room?.lastTruthAnswer) {
+      setShowTruthAnswer(true);
+      const timer = setTimeout(() => setShowTruthAnswer(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [room?.lastTruthAnswer]);
+
+  // Focus truth input when it's my turn in truth mode
+  useEffect(() => {
+    if (room?.gameMode === 'truth' && room?.awaitingTruthAnswer && isMyTurn) {
+      setTimeout(() => truthInputRef.current?.focus(), 500);
+    }
+  }, [room?.awaitingTruthAnswer, isMyTurn, room?.gameMode]);
+
   const chamberStyle = useAnimatedStyle(() => ({
     transform: [
       { rotate: `${chamberRotation.value}deg` },
@@ -144,6 +164,16 @@ export default function LastTurnGameScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }
     pullSlot();
+  };
+
+  const handleSubmitTruth = () => {
+    if (!truthAnswer.trim()) return;
+    Keyboard.dismiss();
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    answerTruth(truthAnswer.trim());
+    setTruthAnswer("");
   };
 
   const handlePass = () => {
@@ -284,6 +314,95 @@ export default function LastTurnGameScreen() {
     );
   };
 
+  const renderTruthMode = () => {
+    if (room?.gameMode !== 'truth') return null;
+
+    // Show another player's answer
+    if (showTruthAnswer && room?.lastTruthAnswer && room.lastTruthAnswer.playerId !== playerId) {
+      return (
+        <Animated.View entering={FadeIn} style={[styles.truthAnswerOverlay, { backgroundColor: colors.surface }]}>
+          <View style={styles.truthAnswerHeader}>
+            <Feather name="message-circle" size={20} color={colors.accent} />
+            <ThemedText style={[styles.truthAnswerName, { color: colors.accent }]}>
+              {room.lastTruthAnswer.playerName} answered:
+            </ThemedText>
+          </View>
+          <ThemedText style={[styles.truthAnswerText, { color: GameColors.textPrimary }]}>
+            "{room.lastTruthAnswer.answer}"
+          </ThemedText>
+        </Animated.View>
+      );
+    }
+
+    // Show question and input for current player
+    if (room?.awaitingTruthAnswer && room?.truthQuestion) {
+      return (
+        <Animated.View entering={FadeInDown} style={[styles.truthContainer, { backgroundColor: colors.surface }]}>
+          <View style={styles.truthHeader}>
+            <Feather name="help-circle" size={20} color={colors.secondary} />
+            <ThemedText style={[styles.truthTitle, { color: colors.secondary }]}>TRUTH OR RISK</ThemedText>
+            <View style={[styles.truthTimer, { backgroundColor: room.truthAnswerTimer <= 10 ? "#FF4444" : colors.primary + "30" }]}>
+              <ThemedText style={[styles.truthTimerText, { color: room.truthAnswerTimer <= 10 ? "#FFF" : colors.primary }]}>
+                {room.truthAnswerTimer}s
+              </ThemedText>
+            </View>
+          </View>
+          
+          <ThemedText style={[styles.truthQuestion, { color: GameColors.textPrimary }]}>
+            {room.truthQuestion}
+          </ThemedText>
+
+          {isMyTurn ? (
+            <View style={styles.truthInputContainer}>
+              <TextInput
+                ref={truthInputRef}
+                style={[styles.truthInput, { backgroundColor: colors.backgroundDark, color: GameColors.textPrimary, borderColor: colors.primary + "50" }]}
+                placeholder="Type your honest answer..."
+                placeholderTextColor={GameColors.textSecondary}
+                value={truthAnswer}
+                onChangeText={setTruthAnswer}
+                multiline
+                maxLength={500}
+                returnKeyType="done"
+                blurOnSubmit
+              />
+              <View style={styles.truthActions}>
+                <Pressable
+                  style={[styles.truthSubmitBtn, { backgroundColor: truthAnswer.trim() ? colors.primary : colors.surface }]}
+                  onPress={handleSubmitTruth}
+                  disabled={!truthAnswer.trim()}
+                >
+                  <Feather name="send" size={18} color={truthAnswer.trim() ? "#FFF" : GameColors.textSecondary} />
+                  <ThemedText style={[styles.truthSubmitText, { color: truthAnswer.trim() ? "#FFF" : GameColors.textSecondary }]}>
+                    Answer Truthfully
+                  </ThemedText>
+                </Pressable>
+                <ThemedText style={[styles.truthOrText, { color: GameColors.textSecondary }]}>or</ThemedText>
+                <Pressable
+                  style={[styles.truthRiskBtn, { backgroundColor: "#FF4444" + "30", borderColor: "#FF4444" }]}
+                  onPress={handlePull}
+                >
+                  <Feather name="zap" size={18} color="#FF4444" />
+                  <ThemedText style={[styles.truthRiskText, { color: "#FF4444" }]}>
+                    Risk the Chamber
+                  </ThemedText>
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.truthWaiting}>
+              <ThemedText style={[styles.truthWaitingText, { color: GameColors.textSecondary }]}>
+                Waiting for {currentTurnPlayer?.name} to answer...
+              </ThemedText>
+            </View>
+          )}
+        </Animated.View>
+      );
+    }
+
+    return null;
+  };
+
   const renderGameFinished = () => (
     <Animated.View entering={FadeIn} style={[styles.finishedOverlay, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 20 }]}>
       <Animated.View entering={ZoomIn.delay(300)} style={styles.finishedContent}>
@@ -415,6 +534,7 @@ export default function LastTurnGameScreen() {
       </View>
 
       {renderActionFeedback()}
+      {renderTruthMode()}
 
       <View style={styles.chamberContainer}>
         <ThemedText style={[styles.turnIndicator, { color: isMyTurn ? colors.primary : GameColors.textSecondary }]}>
@@ -716,6 +836,115 @@ const styles = StyleSheet.create({
   homeButtonText: {
     fontSize: 16,
     fontFamily: "Poppins_700Bold",
+  },
+  truthContainer: {
+    marginHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  truthHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
+  },
+  truthTitle: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: "Poppins_700Bold",
+    letterSpacing: 2,
+  },
+  truthTimer: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+  },
+  truthTimerText: {
+    fontSize: 14,
+    fontFamily: "Poppins_700Bold",
+  },
+  truthQuestion: {
+    fontSize: 16,
+    fontFamily: "Poppins_700Bold",
+    lineHeight: 24,
+    marginBottom: Spacing.md,
+  },
+  truthInputContainer: {
+    gap: Spacing.md,
+  },
+  truthInput: {
+    borderWidth: 1,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    fontSize: 14,
+    minHeight: 80,
+    maxHeight: 120,
+    textAlignVertical: "top",
+  },
+  truthActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  truthSubmitBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    gap: Spacing.xs,
+  },
+  truthSubmitText: {
+    fontSize: 13,
+    fontFamily: "Poppins_700Bold",
+  },
+  truthOrText: {
+    fontSize: 12,
+  },
+  truthRiskBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 2,
+    gap: Spacing.xs,
+  },
+  truthRiskText: {
+    fontSize: 13,
+    fontFamily: "Poppins_700Bold",
+  },
+  truthWaiting: {
+    alignItems: "center",
+    paddingVertical: Spacing.lg,
+  },
+  truthWaitingText: {
+    fontSize: 14,
+    fontStyle: "italic",
+  },
+  truthAnswerOverlay: {
+    marginHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  truthAnswerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  truthAnswerName: {
+    fontSize: 14,
+    fontFamily: "Poppins_700Bold",
+  },
+  truthAnswerText: {
+    fontSize: 16,
+    fontStyle: "italic",
+    lineHeight: 24,
   },
   modalOverlay: {
     ...StyleSheet.absoluteFillObject,

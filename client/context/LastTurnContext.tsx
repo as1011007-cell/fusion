@@ -25,6 +25,9 @@ export interface LastTurnRoomState {
   crashSlotIndex: number; // the slot that causes crash
   gameMode: "classic" | "silent" | "countdown" | "truth";
   turnTimer: number; // seconds remaining for current turn
+  truthAnswerTimer: number; // seconds to type answer in truth mode
+  awaitingTruthAnswer: boolean; // waiting for player to type answer
+  lastTruthAnswer: { playerId: string; playerName: string; answer: string } | null;
   maxPlayers: number;
   forcedPlayerId: string | null; // player being forced to pull
   lastCrashPlayerId: string | null; // player who got last crash (for revenge)
@@ -185,7 +188,36 @@ export function LastTurnProvider({ children }: { children: ReactNode }) {
         break;
 
       case "TRUTH_QUESTION":
-        setRoom(prev => prev ? { ...prev, truthQuestion: message.question } : null);
+        setRoom(prev => prev ? { 
+          ...prev, 
+          truthQuestion: message.question,
+          awaitingTruthAnswer: true,
+          truthAnswerTimer: 45,
+        } : null);
+        break;
+
+      case "TRUTH_TIMER_UPDATE":
+        setRoom(prev => prev ? { ...prev, truthAnswerTimer: message.timer } : null);
+        break;
+
+      case "TRUTH_ANSWERED":
+        setRoom(prev => prev ? { 
+          ...prev, 
+          awaitingTruthAnswer: false,
+          lastTruthAnswer: {
+            playerId: message.playerId,
+            playerName: message.playerName,
+            answer: message.answer,
+          },
+        } : null);
+        break;
+
+      case "TRUTH_SKIPPED":
+        setRoom(prev => prev ? { 
+          ...prev, 
+          awaitingTruthAnswer: false,
+          truthQuestion: null,
+        } : null);
         break;
 
       case "GAME_FINISHED":

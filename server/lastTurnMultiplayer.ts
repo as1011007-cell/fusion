@@ -41,6 +41,9 @@ interface LastTurnRoom {
   crashSlotIndex: number;
   gameMode: 'classic' | 'silent' | 'countdown' | 'truth';
   turnTimer: number;
+  truthAnswerTimer: number; // seconds to type answer in truth mode
+  awaitingTruthAnswer: boolean; // waiting for player to type answer
+  lastTruthAnswer: { playerId: string; playerName: string; answer: string } | null;
   maxPlayers: number;
   turnOrder: string[];
   currentTurnIndex: number;
@@ -49,6 +52,7 @@ interface LastTurnRoom {
   truthQuestions: string[];
   currentTruthQuestion: string | null;
   turnTimerInterval: NodeJS.Timeout | null;
+  truthAnswerTimerInterval: NodeJS.Timeout | null;
   chatMessages: ChatMessage[];
   createdAt: Date;
 }
@@ -57,21 +61,106 @@ const rooms = new Map<string, LastTurnRoom>();
 const playerRooms = new Map<string, string>();
 
 const TRUTH_QUESTIONS = [
-  "What's the most embarrassing thing you've done in public?",
-  "Have you ever lied to get out of work or school?",
-  "What's a secret you've never told anyone?",
-  "Who was your first celebrity crush?",
-  "What's the dumbest thing you've argued about?",
-  "Have you ever pretended to like a gift you hated?",
-  "What's the longest you've gone without showering?",
-  "Have you ever snooped through someone's phone?",
-  "What's your most irrational fear?",
-  "Have you ever blamed someone else for something you did?",
-  "What's the weirdest thing you've eaten?",
-  "Have you ever had a crush on a friend's partner?",
+  "What's the most embarrassing song on your playlist?",
+  "What's your most irrational fear that you've never told anyone?",
+  "What's the weirdest thing you've done when you were home alone?",
   "What's the most childish thing you still do?",
-  "Have you ever ghosted someone?",
-  "What's your most embarrassing autocorrect fail?",
+  "What's a lie you've told that you still feel guilty about?",
+  "What's the most embarrassing thing you've googled?",
+  "What's the worst outfit you've worn thinking you looked good?",
+  "What's the pettiest reason you've stopped talking to someone?",
+  "What's the most embarrassing autocorrect fail you've sent?",
+  "What's something you pretend to understand but actually don't?",
+  "What's the dumbest thing you've cried over?",
+  "What's your most embarrassing nickname and how did you get it?",
+  "What's the longest you've gone without showering?",
+  "What's the weirdest food combination you secretly enjoy?",
+  "What's the most ridiculous thing you've done to impress someone?",
+  "What's the most embarrassing thing your parents have caught you doing?",
+  "What's a secret skill you have that nobody knows about?",
+  "What's the worst date you've ever been on?",
+  "What's the most embarrassing thing in your search history right now?",
+  "What's the cringiest thing you've posted on social media?",
+  "What's the weirdest dream you've ever had?",
+  "What's the most embarrassing thing you've said to a crush?",
+  "What's the longest grudge you've held and why?",
+  "What's the laziest thing you've ever done?",
+  "What's something you've done that you'd judge someone else for?",
+  "What's the most money you've wasted on something stupid?",
+  "What's the most embarrassing song you know all the words to?",
+  "What's a weird habit you have that you hope nobody notices?",
+  "What's the most embarrassing voicemail you've left?",
+  "What's the biggest lie you've told on a resume or dating app?",
+  "What's the most childish thing you've argued about?",
+  "What's something you've blamed on someone else but was actually your fault?",
+  "What's the most embarrassing thing you've done in public?",
+  "What's the worst gift you've ever received and had to pretend to like?",
+  "What's something you do when no one is watching?",
+  "What's the most embarrassing thing in your camera roll right now?",
+  "What's your guilty pleasure TV show that you're ashamed to admit?",
+  "What's the pettiest thing you've done to get revenge?",
+  "What's the most ridiculous excuse you've used to get out of something?",
+  "What's the most embarrassing way you've tried to get someone's attention?",
+  "What's the worst haircut you've ever had?",
+  "What's something you're too embarrassed to ask for help with?",
+  "What's the most cringe pickup line you've ever used or fallen for?",
+  "What's the most embarrassing thing you've done at work or school?",
+  "What's something you've stalked someone's profile for way too long?",
+  "What's the most embarrassing ringtone you've ever had?",
+  "What's the weirdest compliment you've ever received?",
+  "What's the most desperate thing you've done when hungry?",
+  "What's the worst advice you've ever given?",
+  "What's something you pretend not to like but secretly love?",
+  "What's the most embarrassing thing you've done drunk or tired?",
+  "What's the funniest thing you've accidentally said out loud?",
+  "What's the most embarrassing misunderstanding you've had?",
+  "What's the silliest thing you're competitive about?",
+  "What's the most embarrassing thing saved in your notes app?",
+  "What's something you've done to avoid someone you know in public?",
+  "What's the most awkward thing you've overheard about yourself?",
+  "What's the most embarrassing thing you believed as a kid?",
+  "What's the worst fashion trend you followed?",
+  "What's something embarrassing you've done to save money?",
+  "What's the most cringe thing you've done to seem cool?",
+  "What's a question you've always wanted to ask but were too afraid to?",
+  "What's the most embarrassing thing you've accidentally liked on social media?",
+  "What's the weirdest thing you've collected?",
+  "What's the most embarrassing song you've been caught singing?",
+  "What's the longest you've binged a show and what show was it?",
+  "What's the most awkward text you've sent to the wrong person?",
+  "What's something you've pretended to know about to fit in?",
+  "What's the most embarrassing photo you still have?",
+  "What's the strangest thing you've eaten when nothing else was available?",
+  "What's the most embarrassing thing that's happened during a video call?",
+  "What's a secret snack combo you love but would never admit?",
+  "What's the most embarrassing thing you've done in front of your crush?",
+  "What's something you've hidden from your family that you can share now?",
+  "What's the most ridiculous thing you've spent hours doing?",
+  "What's your most embarrassing habit?",
+  "What's the weirdest thing you find attractive?",
+  "What's the most embarrassing thing you've done for attention?",
+  "What's a movie that made you cry that you're embarrassed about?",
+  "What's the most awkward conversation you've ever had?",
+  "What's something you thought was cool as a teenager that's cringe now?",
+  "What's the most embarrassing thing you've said to someone important?",
+  "What's a fear you have that you know is completely irrational?",
+  "What's the most embarrassing purchase in your bank statement?",
+  "What's the worst thing you've done to avoid exercising?",
+  "What's something you've done that you wish you could unsend?",
+  "What's the most embarrassing typo you've ever made?",
+  "What's the weirdest thing you've done to procrastinate?",
+  "What's the most awkward hug or handshake you've experienced?",
+  "What's something you've practiced in the mirror?",
+  "What's the most embarrassing thing on your bucket list?",
+  "What's the dumbest injury you've ever gotten?",
+  "What's something you've done to fit in that totally backfired?",
+  "What's the most embarrassing thing you've worn by accident?",
+  "What's a conspiracy theory you secretly believe?",
+  "What's the most embarrassing thing you've asked Siri or Alexa?",
+  "What's the longest you've gone pretending to understand something?",
+  "What's the most dramatic thing you've done over something small?",
+  "What's something weird that gives you the ick?",
+  "What's the most embarrassing thing you've said thinking no one could hear?",
 ];
 
 function generateRoomCode(): string {
@@ -124,6 +213,9 @@ function getRoomState(room: LastTurnRoom) {
     crashSlotIndex: room.status === 'finished' ? room.crashSlotIndex : -1, // Only reveal at end
     gameMode: room.gameMode,
     turnTimer: room.turnTimer,
+    truthAnswerTimer: room.truthAnswerTimer,
+    awaitingTruthAnswer: room.awaitingTruthAnswer,
+    lastTruthAnswer: room.lastTruthAnswer,
     maxPlayers: room.maxPlayers,
     forcedPlayerId: room.forcedPlayerId,
     lastCrashPlayerId: room.lastCrashPlayerId,
@@ -161,6 +253,8 @@ function startNewRound(room: LastTurnRoom) {
   room.currentRound++;
   room.forcedPlayerId = null;
   room.currentTruthQuestion = null;
+  room.awaitingTruthAnswer = false;
+  room.lastTruthAnswer = null;
   
   // Get next player for the new round
   const nextPlayer = getNextPlayer(room);
@@ -178,8 +272,81 @@ function startNewRound(room: LastTurnRoom) {
     room: getRoomState(room),
   });
   
-  // Start turn timer
-  startTurnTimer(room);
+  // In truth mode, send a question to the current player
+  if (room.gameMode === 'truth' && nextPlayer) {
+    sendTruthQuestion(room, nextPlayer);
+  } else {
+    // Start turn timer for non-truth modes
+    startTurnTimer(room);
+  }
+}
+
+function sendTruthQuestion(room: LastTurnRoom, playerId: string) {
+  // Pick a random question and remove it from the list (no repeats)
+  if (room.truthQuestions.length === 0) {
+    room.truthQuestions = shuffleArray([...TRUTH_QUESTIONS]);
+  }
+  
+  const question = room.truthQuestions.pop() || TRUTH_QUESTIONS[0];
+  room.currentTruthQuestion = question;
+  room.awaitingTruthAnswer = true;
+  room.truthAnswerTimer = 45; // 45 seconds to type answer
+  
+  const player = room.players.get(playerId);
+  
+  // Broadcast question to all players
+  broadcastToRoom(room, {
+    type: 'TRUTH_QUESTION',
+    question,
+    playerId,
+    playerName: player?.name || 'Player',
+    room: getRoomState(room),
+  });
+  
+  // Start truth answer timer
+  startTruthAnswerTimer(room);
+}
+
+function startTruthAnswerTimer(room: LastTurnRoom) {
+  if (room.truthAnswerTimerInterval) {
+    clearInterval(room.truthAnswerTimerInterval);
+  }
+  
+  room.truthAnswerTimerInterval = setInterval(() => {
+    room.truthAnswerTimer--;
+    
+    // Broadcast timer update every 5 seconds
+    if (room.truthAnswerTimer % 5 === 0 || room.truthAnswerTimer <= 10) {
+      broadcastToRoom(room, {
+        type: 'TRUTH_TIMER_UPDATE',
+        timer: room.truthAnswerTimer,
+        room: getRoomState(room),
+      });
+    }
+    
+    if (room.truthAnswerTimer <= 0) {
+      // Time's up - player didn't answer, they must pull
+      if (room.truthAnswerTimerInterval) {
+        clearInterval(room.truthAnswerTimerInterval);
+        room.truthAnswerTimerInterval = null;
+      }
+      
+      room.awaitingTruthAnswer = false;
+      
+      // Player refused to answer - broadcast this
+      const player = room.players.get(room.currentTurnPlayerId || '');
+      broadcastToRoom(room, {
+        type: 'TRUTH_SKIPPED',
+        playerId: room.currentTurnPlayerId,
+        playerName: player?.name || 'Player',
+        room: getRoomState(room),
+      });
+      
+      // Now they must pull - start regular turn timer
+      room.turnTimer = 15; // Less time since they skipped the question
+      startTurnTimer(room);
+    }
+  }, 1000);
 }
 
 function startTurnTimer(room: LastTurnRoom) {
@@ -366,6 +533,9 @@ export function setupLastTurnMultiplayer(server: Server) {
               crashSlotIndex: crashIndex,
               gameMode: message.gameMode || 'classic',
               turnTimer: 30,
+              truthAnswerTimer: 45,
+              awaitingTruthAnswer: false,
+              lastTruthAnswer: null,
               maxPlayers: 6,
               turnOrder: [],
               currentTurnIndex: -1,
@@ -374,6 +544,7 @@ export function setupLastTurnMultiplayer(server: Server) {
               truthQuestions: shuffleArray([...TRUTH_QUESTIONS]),
               currentTruthQuestion: null,
               turnTimerInterval: null,
+              truthAnswerTimerInterval: null,
               chatMessages: [],
               createdAt: new Date(),
             };
@@ -660,15 +831,53 @@ export function setupLastTurnMultiplayer(server: Server) {
             if (!room || room.status !== 'playing' || room.gameMode !== 'truth') return;
 
             if (room.currentTurnPlayerId !== playerId) return;
+            if (!room.awaitingTruthAnswer) return;
 
+            // Stop the truth answer timer
+            if (room.truthAnswerTimerInterval) {
+              clearInterval(room.truthAnswerTimerInterval);
+              room.truthAnswerTimerInterval = null;
+            }
+
+            const player = room.players.get(playerId);
+            const answer = (message.answer || '').slice(0, 500); // Limit answer length
+
+            room.awaitingTruthAnswer = false;
             room.currentTruthQuestion = null;
+            room.lastTruthAnswer = {
+              playerId,
+              playerName: player?.name || 'Player',
+              answer,
+            };
 
+            // Broadcast the answer to all players
             broadcastToRoom(room, {
               type: 'TRUTH_ANSWERED',
               playerId,
-              answer: message.answer,
+              playerName: player?.name || 'Player',
+              answer,
               room: getRoomState(room),
             });
+
+            // After answering truth, player skips their pull (answered honestly)
+            // Move to next player
+            setTimeout(() => {
+              if (room.status === 'playing') {
+                room.forcedPlayerId = null;
+                room.currentTurnPlayerId = getNextPlayer(room);
+                room.turnTimer = 30;
+                
+                // Check if all slots revealed
+                if (room.revealedSlots.length >= 5) {
+                  startNewRound(room);
+                } else {
+                  // Send next question to next player
+                  if (room.currentTurnPlayerId) {
+                    sendTruthQuestion(room, room.currentTurnPlayerId);
+                  }
+                }
+              }
+            }, 3000); // 3 second delay to show the answer
             break;
           }
 
