@@ -164,8 +164,13 @@ export default function LastTurnGameScreen() {
 
   const chamberStyle = useAnimatedStyle(() => ({
     transform: [
-      { rotate: `${chamberRotation.value}deg` },
       { translateX: crashShake.value },
+    ],
+  }));
+
+  const slotsRotationStyle = useAnimatedStyle(() => ({
+    transform: [
+      { rotate: `${chamberRotation.value}deg` },
     ],
   }));
 
@@ -686,7 +691,9 @@ export default function LastTurnGameScreen() {
               style={styles.chamberGlow}
             />
           </View>
-          {[0, 1, 2, 3, 4, 5].map(renderSlot)}
+          <Animated.View style={[styles.slotsContainer, slotsRotationStyle]}>
+            {[0, 1, 2, 3, 4, 5].map(renderSlot)}
+          </Animated.View>
         </Animated.View>
       </View>
 
@@ -858,6 +865,11 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     justifyContent: "center",
     alignItems: "center",
+  },
+  slotsContainer: {
+    position: "absolute",
+    width: CHAMBER_SIZE,
+    height: CHAMBER_SIZE,
   },
   chamberCenter: {
     position: "absolute",
