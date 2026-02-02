@@ -36,8 +36,8 @@ import { useLastTurnSounds } from "@/hooks/useLastTurnSounds";
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CHAMBER_SIZE = Math.min(SCREEN_WIDTH - 80, 300);
-const SLOT_SIZE = CHAMBER_SIZE / 3.5;
+const CHAMBER_SIZE = Math.min(SCREEN_WIDTH - 40, 320);
+const SLOT_SIZE = 70;
 
 export default function LastTurnGameScreen() {
   const insets = useSafeAreaInsets();
@@ -254,7 +254,7 @@ export default function LastTurnGameScreen() {
     const isCrash = isRevealed && room?.chamberSlots[index];
     
     const angle = (index * 60) - 90;
-    const radius = CHAMBER_SIZE / 2 - SLOT_SIZE / 2 - 10;
+    const radius = CHAMBER_SIZE / 2 - SLOT_SIZE / 2 - 15;
     const x = Math.cos((angle * Math.PI) / 180) * radius;
     const y = Math.sin((angle * Math.PI) / 180) * radius;
 
@@ -874,7 +874,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   slotNumber: {
-    fontSize: 16,
+    fontSize: 20,
     fontFamily: "Poppins_700Bold",
   },
   actionsContainer: {
