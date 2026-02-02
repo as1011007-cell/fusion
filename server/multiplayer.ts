@@ -179,7 +179,7 @@ export function setupMultiplayer(server: Server) {
             }
 
             if (room.status !== 'waiting') {
-              ws.send(JSON.stringify({ type: 'ERROR', message: 'Game already in progress' }));
+              ws.send(JSON.stringify({ type: 'ERROR', message: 'Game is in progress. Please wait until the game finishes and players return to the lobby.' }));
               return;
             }
 
