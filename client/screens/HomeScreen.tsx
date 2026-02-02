@@ -1070,7 +1070,7 @@ const styles = StyleSheet.create({
   },
   adsFreeText: {
     fontSize: 10,
-    fontFamily: Typography.fontFamily.bold,
+    fontWeight: "bold",
     letterSpacing: 1,
   },
   footerText: {
