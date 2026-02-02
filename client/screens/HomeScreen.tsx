@@ -1074,8 +1074,9 @@ const styles = StyleSheet.create({
     height: 56,
   },
   themedButtonFull: {
-    flex: 0,
-    width: "100%",
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: "100%",
   },
   themedButtonInner: {
     flex: 1,
