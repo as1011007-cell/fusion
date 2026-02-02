@@ -1,0 +1,140 @@
+Project Codename: LAST TURN
+
+Game Type:
+Real-time multiplayer psychological risk game (2–6 players)
+
+Platforms:
+iOS & Android (mobile-first)
+
+⸻
+
+🧠 CORE CONCEPT
+
+Design a real-player, turn-based multiplayer game inspired by Russian-roulette-style tension without any weapons, violence, or self-harm themes.
+
+The game focuses on risk, bluffing, social pressure, and decision-making using an abstract “chamber” system.
+
+Players take turns activating hidden slots. One slot per round triggers a Crash Event that causes penalties but does not eliminate players instantly.
+
+⸻
+
+🔁 CORE GAMEPLAY LOOP
+	1.	Matchmaking (Private Room via Code)
+	2.	Players join lobby (2–6 players)
+	3.	Each round contains 6 hidden slots
+	4.	One slot contains a Crash
+	5.	Players take turns clockwise
+
+On a Player’s Turn:
+	•	Pull → Activate the next hidden slot
+	•	Force → Choose another player to Pull (limited use)
+	•	Pass → Skip turn using a limited token
+
+Crash Event:
+	•	Player loses 1 life or score
+	•	Visual + sound feedback (screen shake, silence beat)
+	•	Player stays in the game unless lives reach zero
+
+⸻
+
+🎯 WIN CONDITION
+	•	Last player with remaining lives wins
+OR
+	•	Highest score after fixed rounds (optional mode)
+
+⸻
+
+🔥 GAME MODES
+
+1️⃣ Classic Mode
+	•	One Crash per round
+	•	3 lives per player
+	•	Last standing wins
+
+2️⃣ Silent Mode
+	•	No chat or voice
+	•	Only timers and animations
+	•	Focus on psychological pressure
+
+3️⃣ Truth-or-Risk Mode
+	•	Before pulling, player must answer a visible question
+	•	Refusal or incorrect answer forces a Pull
+
+4️⃣ Countdown Panic
+	•	Turn timer decreases every round
+	•	Timer expiry triggers auto-Pull
+
+⸻
+
+🧩 SOCIAL & PSYCHOLOGICAL FEATURES
+	•	Real-time turn indicators (“Player X is thinking…”)
+	•	Visible hesitation (delayed decisions increase tension)
+	•	Revenge token: if forced into a Crash, player gets one guaranteed Force next round
+	•	Endgame Twist: Final 2 players pull simultaneously
+
+⸻
+
+🎨 VISUAL & AUDIO DIRECTION
+	•	Dark, minimalist, neon-accented UI
+	•	Abstract chamber device (orb / ring / core)
+	•	No weapons, no human harm visuals
+	•	Audio:
+	•	Heartbeat before pull
+	•	Click sound on slot activation
+	•	Silence before crash reveal
+
+⸻
+
+🛡️ SAFETY & COMPLIANCE REQUIREMENTS
+	•	No references to death, suicide, or real-world weapons
+	•	Use terms like:
+	•	“Crash”
+	•	“Risk”
+	•	“Pull”
+	•	“Force”
+	•	Clear in-game disclaimer: This is a strategy and chance-based game
+	•	Optional session reminders after extended play
+
+⸻
+
+🌐 MULTIPLAYER TECH REQUIREMENTS
+	•	Real-time synchronization
+	•	Low-latency turn handling
+	•	Host migration
+	•	Reconnect handling
+	•	Anti-AFK auto-pull logic
+
+⸻
+
+💰 MONETIZATION (NON PAY-TO-WIN)
+	•	Cosmetic skins (chambers, avatars, effects)
+	•	Emotes & reactions
+	•	Ad-based revive (optional)
+	•	Premium pass: no ads + exclusive cosmetics
+
+⸻
+
+📈 RETENTION SYSTEMS
+	•	Daily free Pass token
+	•	Streak bonuses
+	•	Ranked seasonal leaderboard
+	•	Unlockable chamber themes
+
+⸻
+
+🧪 QA & EDGE CASES
+	•	Handle disconnects mid-turn
+	•	Prevent griefing through force limits
+	•	Ensure fairness in randomization
+	•	Server-side validation of Crash slot
+
+⸻
+
+📦 FINAL DELIVERABLE EXPECTATION
+
+Produce:
+	•	Complete game logic
+	•	Multiplayer architecture
+	•	UI/UX flow
+	•	App Store-compliant descriptions
+	•	Scalable content system
