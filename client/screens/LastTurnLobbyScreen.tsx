@@ -304,8 +304,18 @@ export default function LastTurnLobbyScreen() {
         })}
       </ScrollView>
 
+      <Animated.View style={pulseAnimatedStyle}>
+        <GradientButton
+          onPress={handleCreateRoom}
+          disabled={isConnecting}
+          style={styles.actionButton}
+        >
+          {isConnecting ? "Creating..." : "Create Room"}
+        </GradientButton>
+      </Animated.View>
+
       <Pressable 
-        style={[styles.howToPlayHeader, { backgroundColor: colors.surface }]}
+        style={[styles.howToPlayHeader, { backgroundColor: colors.surface, marginTop: Spacing.lg }]}
         onPress={() => setShowHowToPlay(!showHowToPlay)}
       >
         <View style={styles.howToPlayTitleRow}>
@@ -333,16 +343,6 @@ export default function LastTurnLobbyScreen() {
           ))}
         </Animated.View>
       )}
-
-      <Animated.View style={pulseAnimatedStyle}>
-        <GradientButton
-          onPress={handleCreateRoom}
-          disabled={isConnecting}
-          style={styles.actionButton}
-        >
-          {isConnecting ? "Creating..." : "Create Room"}
-        </GradientButton>
-      </Animated.View>
     </Animated.View>
   );
 
