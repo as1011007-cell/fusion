@@ -191,7 +191,7 @@ export default function IQResultsScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
   const { resetGame } = useIQ();
-  const { currentTheme } = useTheme();
+  const { currentTheme, isAdFree } = useTheme();
   const { settings, addExperience } = useProfile();
   const colors = currentTheme.colors;
   const xpAwardedRef = useRef(false);
@@ -212,14 +212,15 @@ export default function IQResultsScreen() {
       xpAwardedRef.current = true;
     }
 
-    // Initialize and show interstitial ad when game ends
-    initInterstitialAd();
-    const adTimer = setTimeout(() => {
-      showInterstitialAd();
-    }, 2000);
-    
-    return () => clearTimeout(adTimer);
-  }, []);
+    // Initialize and show interstitial ad when game ends (skip if ad-free)
+    if (!isAdFree) {
+      initInterstitialAd();
+      const adTimer = setTimeout(() => {
+        showInterstitialAd();
+      }, 2000);
+      return () => clearTimeout(adTimer);
+    }
+  }, [isAdFree]);
 
   const handlePlayAgain = () => {
     if (settings.hapticsEnabled) {

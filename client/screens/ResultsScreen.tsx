@@ -31,7 +31,7 @@ export default function ResultsScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { gameState, resetGame, totalCoins } = useGame();
-  const { currentTheme } = useTheme();
+  const { currentTheme, isAdFree } = useTheme();
   const { settings, addExperience } = useProfile();
   const colors = currentTheme.colors;
   const xpAwardedRef = useRef(false);
@@ -56,14 +56,15 @@ export default function ResultsScreen() {
       xpAwardedRef.current = true;
     }
 
-    // Initialize and show interstitial ad when game ends
-    initInterstitialAd();
-    const adTimer = setTimeout(() => {
-      showInterstitialAd();
-    }, 2000);
-    
-    return () => clearTimeout(adTimer);
-  }, []);
+    // Initialize and show interstitial ad when game ends (skip if ad-free)
+    if (!isAdFree) {
+      initInterstitialAd();
+      const adTimer = setTimeout(() => {
+        showInterstitialAd();
+      }, 2000);
+      return () => clearTimeout(adTimer);
+    }
+  }, [isAdFree]);
 
   const scoreStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scoreScale.value }],

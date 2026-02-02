@@ -78,7 +78,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { totalCoins, gameState, setStarPointsCallback, setXPCallback, resetGame } = useGame();
-  const { currentTheme, starPoints, addStarPoints } = useTheme();
+  const { currentTheme, starPoints, addStarPoints, isAdFree } = useTheme();
   const { settings, addExperience } = useProfile();
   const { isGameActive, resetGame: resetIQGame } = useIQ();
   const colors = currentTheme.colors;
@@ -98,19 +98,21 @@ export default function HomeScreen() {
     setXPCallback(addExperience);
   }, [addExperience, setXPCallback]);
 
-  // Show interstitial ad if user left a game without finishing
+  // Show interstitial ad if user left a game without finishing (skip if ad-free)
   useEffect(() => {
     if (gameState.isPlaying || isGameActive) {
-      initInterstitialAd();
-      const adTimer = setTimeout(() => {
-        showInterstitialAd();
-      }, 500);
-      
       // Reset game states
       if (gameState.isPlaying) resetGame();
       if (isGameActive) resetIQGame();
       
-      return () => clearTimeout(adTimer);
+      // Only show ad if user hasn't purchased ad-free
+      if (!isAdFree) {
+        initInterstitialAd();
+        const adTimer = setTimeout(() => {
+          showInterstitialAd();
+        }, 500);
+        return () => clearTimeout(adTimer);
+      }
     }
   }, []);
 
