@@ -374,6 +374,14 @@ function handlePull(room: LastTurnRoom, playerId: string) {
   const player = room.players.get(playerId);
   if (!player) return;
   
+  // Clear truth mode state when pulling (regardless of how we got here)
+  if (room.truthAnswerTimerInterval) {
+    clearInterval(room.truthAnswerTimerInterval);
+    room.truthAnswerTimerInterval = null;
+  }
+  room.awaitingTruthAnswer = false;
+  room.currentTruthQuestion = null;
+  
   // Find first unrevealed slot
   let slotIndex = -1;
   for (let i = 0; i < 6; i++) {
@@ -403,9 +411,15 @@ function handlePull(room: LastTurnRoom, playerId: string) {
     const alivePlayers = Array.from(room.players.values()).filter(p => p.lives > 0);
     if (alivePlayers.length <= 1) {
       room.status = 'finished';
+      
+      // Clear all timers
       if (room.turnTimerInterval) {
         clearInterval(room.turnTimerInterval);
         room.turnTimerInterval = null;
+      }
+      if (room.truthAnswerTimerInterval) {
+        clearInterval(room.truthAnswerTimerInterval);
+        room.truthAnswerTimerInterval = null;
       }
       
       broadcastToRoom(room, {
@@ -467,13 +481,16 @@ function handlePull(room: LastTurnRoom, playerId: string) {
       room: getRoomState(room),
     });
     
-    // If truth mode and all slots except crash revealed, start new round
+    // If all slots except crash revealed, start new round
     if (room.revealedSlots.length >= 5) {
       setTimeout(() => {
         if (room.status === 'playing') {
           startNewRound(room);
         }
       }, 1000);
+    } else if (room.gameMode === 'truth' && room.currentTurnPlayerId) {
+      // In truth mode, send a question to the next player
+      sendTruthQuestion(room, room.currentTurnPlayerId);
     } else {
       startTurnTimer(room);
     }
@@ -743,9 +760,19 @@ export function setupLastTurnMultiplayer(server: Server) {
             player.hasPassToken = false;
             room.currentTurnPlayerId = getNextPlayer(room);
 
+            // Clear any existing timers
             if (room.turnTimerInterval) {
               clearInterval(room.turnTimerInterval);
+              room.turnTimerInterval = null;
             }
+            if (room.truthAnswerTimerInterval) {
+              clearInterval(room.truthAnswerTimerInterval);
+              room.truthAnswerTimerInterval = null;
+            }
+            
+            // Clear truth mode state
+            room.awaitingTruthAnswer = false;
+            room.currentTruthQuestion = null;
 
             if (room.gameMode === 'countdown') {
               room.turnTimer = Math.max(15 - room.currentRound, 5);
@@ -762,7 +789,12 @@ export function setupLastTurnMultiplayer(server: Server) {
               room: getRoomState(room),
             });
 
-            startTurnTimer(room);
+            // Start appropriate timer for next player
+            if (room.gameMode === 'truth' && room.currentTurnPlayerId) {
+              sendTruthQuestion(room, room.currentTurnPlayerId);
+            } else {
+              startTurnTimer(room);
+            }
             break;
           }
 
@@ -805,9 +837,19 @@ export function setupLastTurnMultiplayer(server: Server) {
             room.forcedPlayerId = message.targetPlayerId;
             room.currentTurnPlayerId = message.targetPlayerId;
 
+            // Clear any existing timers
             if (room.turnTimerInterval) {
               clearInterval(room.turnTimerInterval);
+              room.turnTimerInterval = null;
             }
+            if (room.truthAnswerTimerInterval) {
+              clearInterval(room.truthAnswerTimerInterval);
+              room.truthAnswerTimerInterval = null;
+            }
+            
+            // Clear truth mode state - forced player must pull, no question
+            room.awaitingTruthAnswer = false;
+            room.currentTruthQuestion = null;
 
             room.turnTimer = 15; // Forced players get less time
 
@@ -934,11 +976,22 @@ export function setupLastTurnMultiplayer(server: Server) {
             room.currentTurnPlayerId = null;
             room.forcedPlayerId = null;
             room.lastCrashPlayerId = null;
-            room.currentTruthQuestion = null;
             
+            // Clear truth mode state
+            room.currentTruthQuestion = null;
+            room.awaitingTruthAnswer = false;
+            room.lastTruthAnswer = null;
+            room.truthAnswerTimer = 45;
+            room.truthQuestions = shuffleArray([...TRUTH_QUESTIONS]);
+            
+            // Clear all timers
             if (room.turnTimerInterval) {
               clearInterval(room.turnTimerInterval);
               room.turnTimerInterval = null;
+            }
+            if (room.truthAnswerTimerInterval) {
+              clearInterval(room.truthAnswerTimerInterval);
+              room.truthAnswerTimerInterval = null;
             }
 
             const { slots, crashIndex } = generateChamber();
@@ -989,8 +1042,14 @@ export function setupLastTurnMultiplayer(server: Server) {
     playerRooms.delete(playerId);
 
     if (room.players.size === 0) {
+      // Clear all timers when room is empty
       if (room.turnTimerInterval) {
         clearInterval(room.turnTimerInterval);
+        room.turnTimerInterval = null;
+      }
+      if (room.truthAnswerTimerInterval) {
+        clearInterval(room.truthAnswerTimerInterval);
+        room.truthAnswerTimerInterval = null;
       }
       rooms.delete(roomCode);
       return;
@@ -1010,8 +1069,22 @@ export function setupLastTurnMultiplayer(server: Server) {
 
     // If current turn player left
     if (room.currentTurnPlayerId === playerId && room.status === 'playing') {
+      // Clear truth mode state
+      if (room.truthAnswerTimerInterval) {
+        clearInterval(room.truthAnswerTimerInterval);
+        room.truthAnswerTimerInterval = null;
+      }
+      room.awaitingTruthAnswer = false;
+      room.currentTruthQuestion = null;
+      
       room.currentTurnPlayerId = getNextPlayer(room);
-      startTurnTimer(room);
+      
+      // Start appropriate timer for next player
+      if (room.gameMode === 'truth' && room.currentTurnPlayerId) {
+        sendTruthQuestion(room, room.currentTurnPlayerId);
+      } else {
+        startTurnTimer(room);
+      }
     }
 
     // Check if game should end
@@ -1019,9 +1092,14 @@ export function setupLastTurnMultiplayer(server: Server) {
       const alivePlayers = Array.from(room.players.values()).filter(p => p.lives > 0);
       if (alivePlayers.length <= 1) {
         room.status = 'finished';
+        // Clear all timers
         if (room.turnTimerInterval) {
           clearInterval(room.turnTimerInterval);
           room.turnTimerInterval = null;
+        }
+        if (room.truthAnswerTimerInterval) {
+          clearInterval(room.truthAnswerTimerInterval);
+          room.truthAnswerTimerInterval = null;
         }
         broadcastToRoom(room, {
           type: 'GAME_FINISHED',
