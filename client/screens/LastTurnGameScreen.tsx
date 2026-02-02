@@ -342,7 +342,7 @@ export default function LastTurnGameScreen() {
     // Show voting result
     if (room?.votingResult) {
       return (
-        <Animated.View entering={FadeIn} style={[styles.truthPopup, { backgroundColor: colors.backgroundDark }]}>
+        <Animated.View entering={FadeIn} style={[styles.truthPopup, { backgroundColor: 'rgba(0, 0, 0, 0.75)' }]}>
           <View style={[styles.truthPopupCard, { backgroundColor: colors.surface }]}>
             <View style={styles.truthPopupHeader}>
               <Feather 
@@ -404,7 +404,7 @@ export default function LastTurnGameScreen() {
       const myVote = room.votingState.votes.find(v => v.voterId === playerId);
       
       return (
-        <Animated.View entering={FadeIn} style={[styles.truthPopup, { backgroundColor: colors.backgroundDark }]}>
+        <Animated.View entering={FadeIn} style={[styles.truthPopup, { backgroundColor: 'rgba(0, 0, 0, 0.75)' }]}>
           <View style={[styles.truthPopupCard, { backgroundColor: colors.surface }]}>
             <View style={styles.truthPopupHeader}>
               <Feather name="users" size={24} color={colors.secondary} />
@@ -473,7 +473,7 @@ export default function LastTurnGameScreen() {
     // Show question with multiple choice options
     if (room?.awaitingTruthAnswer && room?.truthQuestion && room?.truthChoices) {
       return (
-        <Animated.View entering={FadeIn} style={[styles.truthPopup, { backgroundColor: colors.backgroundDark }]}>
+        <Animated.View entering={FadeIn} style={[styles.truthPopup, { backgroundColor: 'rgba(0, 0, 0, 0.75)' }]}>
           <View style={[styles.truthPopupCard, { backgroundColor: colors.surface }]}>
             <View style={styles.truthPopupHeader}>
               <Feather name="help-circle" size={24} color={colors.secondary} />
