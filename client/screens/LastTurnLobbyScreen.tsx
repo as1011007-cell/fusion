@@ -26,6 +26,15 @@ const GAME_MODES = [
   { id: "truth", name: "Truth-or-Risk", description: "Answer or pull" },
 ];
 
+const HOW_TO_PLAY = [
+  { icon: "target", text: "Each round has 6 chamber slots - one is the CRASH slot" },
+  { icon: "heart", text: "Everyone starts with 3 lives. Hit the crash slot and lose a life" },
+  { icon: "zap", text: "Use FORCE token to make another player pull instead of you" },
+  { icon: "skip-forward", text: "Use PASS token to skip your turn safely" },
+  { icon: "repeat", text: "Use REVENGE token after being crashed to strike back" },
+  { icon: "award", text: "Last player standing wins the game!" },
+];
+
 export default function LastTurnLobbyScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
@@ -53,6 +62,7 @@ export default function LastTurnLobbyScreen() {
   const [joinCode, setJoinCode] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
   const [selectedMode, setSelectedMode] = useState("classic");
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
   const codeInputRef = useRef<TextInput>(null);
   const pulseScale = useSharedValue(1);
 
@@ -348,6 +358,36 @@ export default function LastTurnLobbyScreen() {
         </View>
       )}
 
+      <Pressable 
+        style={[styles.howToPlayHeader, { backgroundColor: colors.surface }]}
+        onPress={() => setShowHowToPlay(!showHowToPlay)}
+      >
+        <View style={styles.howToPlayTitleRow}>
+          <Feather name="help-circle" size={18} color={colors.accent} />
+          <ThemedText style={[styles.howToPlayTitle, { color: GameColors.textPrimary }]}>How to Play</ThemedText>
+        </View>
+        <Feather 
+          name={showHowToPlay ? "chevron-up" : "chevron-down"} 
+          size={20} 
+          color={GameColors.textSecondary} 
+        />
+      </Pressable>
+      
+      {showHowToPlay && (
+        <Animated.View entering={FadeIn.duration(200)} style={[styles.howToPlayContent, { backgroundColor: colors.surface }]}>
+          {HOW_TO_PLAY.map((item, index) => (
+            <View key={index} style={styles.howToPlayItem}>
+              <View style={[styles.howToPlayIcon, { backgroundColor: colors.primary + '20' }]}>
+                <Feather name={item.icon as any} size={16} color={colors.primary} />
+              </View>
+              <ThemedText style={[styles.howToPlayText, { color: GameColors.textSecondary }]}>
+                {item.text}
+              </ThemedText>
+            </View>
+          ))}
+        </Animated.View>
+      )}
+
       <ThemedText style={[styles.playersTitle, { color: GameColors.textPrimary }]}>
         Players ({room?.players.length}/6)
       </ThemedText>
@@ -616,6 +656,46 @@ const styles = StyleSheet.create({
   },
   miniModeText: {
     fontSize: 14,
+  },
+  howToPlayHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: Spacing.md,
+    borderRadius: BorderRadius.sm,
+    marginBottom: Spacing.xs,
+  },
+  howToPlayTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  howToPlayTitle: {
+    fontSize: 14,
+    fontFamily: "Poppins_600SemiBold",
+  },
+  howToPlayContent: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.sm,
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
+  },
+  howToPlayItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.sm,
+  },
+  howToPlayIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  howToPlayText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
   },
   playersTitle: {
     fontSize: 16,
