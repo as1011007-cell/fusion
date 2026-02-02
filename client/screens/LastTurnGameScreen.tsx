@@ -352,6 +352,7 @@ export default function LastTurnGameScreen() {
     if (room?.votingResult) {
       return (
         <Animated.View entering={FadeIn} style={styles.truthPopup}>
+          <View style={styles.truthBackdrop} pointerEvents="box-only" />
           <View style={[styles.truthPopupCard, { backgroundColor: colors.surface }]}>
             <View style={styles.truthPopupHeader}>
               <Feather 
@@ -414,6 +415,7 @@ export default function LastTurnGameScreen() {
       
       return (
         <Animated.View entering={FadeIn} style={styles.truthPopup}>
+          <View style={styles.truthBackdrop} pointerEvents="box-only" />
           <View style={[styles.truthPopupCard, { backgroundColor: colors.surface }]}>
             <View style={styles.truthPopupHeader}>
               <Feather name="users" size={24} color={colors.secondary} />
@@ -483,6 +485,7 @@ export default function LastTurnGameScreen() {
     if (room?.awaitingTruthAnswer && room?.truthQuestion && room?.truthChoices) {
       return (
         <Animated.View entering={FadeIn} style={styles.truthPopup}>
+          <View style={styles.truthBackdrop} pointerEvents="box-only" />
           <View style={[styles.truthPopupCard, { backgroundColor: colors.surface }]}>
             <View style={styles.truthPopupHeader}>
               <Feather name="help-circle" size={24} color={colors.secondary} />
@@ -1154,13 +1157,22 @@ const styles = StyleSheet.create({
   },
   truthPopup: {
     position: "absolute",
-    top: 100,
+    top: 0,
     left: 0,
     right: 0,
+    bottom: 0,
     justifyContent: "flex-start",
     alignItems: "center",
     zIndex: 50,
-    padding: Spacing.lg,
+    paddingTop: 100,
+    paddingHorizontal: Spacing.lg,
+  },
+  truthBackdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   truthPopupCard: {
     width: "100%",
