@@ -31,6 +31,7 @@ import { useLastTurn, LastTurnPlayer } from "@/context/LastTurnContext";
 import { useProfile, avatarImages } from "@/context/ProfileContext";
 import { useTheme } from "@/context/ThemeContext";
 import { initInterstitialAd, showInterstitialAd } from "@/services/InterstitialAdService";
+import { useLastTurnSounds } from "@/hooks/useLastTurnSounds";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -44,6 +45,7 @@ export default function LastTurnGameScreen() {
   const { currentProfile, settings } = useProfile();
   const { currentTheme, isAdFree } = useTheme();
   const colors = currentTheme.colors;
+  const { playSound } = useLastTurnSounds();
   
   const {
     playerId,
@@ -103,23 +105,46 @@ export default function LastTurnGameScreen() {
     if (lastAction) {
       setShowingAction(true);
       
-      if (lastAction.wasCrash && settings.hapticsEnabled) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        crashShake.value = withSequence(
-          withTiming(-10, { duration: 50 }),
-          withTiming(10, { duration: 50 }),
-          withTiming(-10, { duration: 50 }),
-          withTiming(10, { duration: 50 }),
-          withTiming(0, { duration: 50 })
-        );
-      } else if (settings.hapticsEnabled) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      if (lastAction.type === "pull") {
+        if (lastAction.wasCrash) {
+          playSound("pull-crash");
+          if (settings.hapticsEnabled) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          }
+          crashShake.value = withSequence(
+            withTiming(-10, { duration: 50 }),
+            withTiming(10, { duration: 50 }),
+            withTiming(-10, { duration: 50 }),
+            withTiming(10, { duration: 50 }),
+            withTiming(0, { duration: 50 })
+          );
+        } else {
+          playSound("pull-safe");
+          if (settings.hapticsEnabled) {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }
+        }
+      } else if (lastAction.type === "pass") {
+        playSound("skip");
+        if (settings.hapticsEnabled) {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+      } else if (lastAction.type === "force") {
+        playSound("force");
+        if (settings.hapticsEnabled) {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }
+      } else if (lastAction.type === "revenge") {
+        playSound("revenge");
+        if (settings.hapticsEnabled) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        }
       }
       
       const timer = setTimeout(() => setShowingAction(false), 1500);
       return () => clearTimeout(timer);
     }
-  }, [lastAction]);
+  }, [lastAction, playSound]);
 
   useEffect(() => {
     if (gameFinished && !isAdFree) {
