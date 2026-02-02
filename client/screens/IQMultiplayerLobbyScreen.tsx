@@ -78,6 +78,14 @@ export default function IQMultiplayerLobbyScreen() {
     roomRef.current = room;
   }, [room]);
 
+  // Clear any stale room state when entering this screen
+  useEffect(() => {
+    // If there's an existing room that's NOT for IQ mode, leave it
+    if (room && !room.iqSettings) {
+      leaveRoom();
+    }
+  }, []);
+
   const difficultyOptions = ["all", "easy", "medium", "hard"];
   const categoryOptions = ["all", "logical", "pattern", "verbal", "math", "spatial"];
   const questionCountOptions = [5, 10, 15, 20, 25, 30];
@@ -87,7 +95,7 @@ export default function IQMultiplayerLobbyScreen() {
   const currentPlayer = room?.players.find(p => p.id === playerId);
 
   useEffect(() => {
-    if (room) {
+    if (room?.iqSettings) {
       setMode("lobby");
       setIsConnecting(false);
     }

@@ -65,8 +65,16 @@ export default function MultiplayerLobbyScreen() {
     roomRef.current = room;
   }, [room]);
 
+  // Clear any stale room state when entering this screen
   useEffect(() => {
-    if (room) {
+    // If there's an existing room that's for IQ mode, leave it
+    if (room?.iqSettings) {
+      leaveRoom();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (room && !room.iqSettings) {
       setMode("lobby");
       setIsConnecting(false);
     }
