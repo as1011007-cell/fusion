@@ -762,6 +762,7 @@ export default function HomeScreen() {
             <View style={styles.multiplayerRow}>
               <Animated.View entering={FadeInUp.delay(750).springify()} style={[
                 styles.themedButton,
+                styles.themedButtonFull,
                 { 
                   borderRadius: themeId === "ocean" ? 16 : themeId === "forest" ? 12 : themeId === "galaxy" ? 12 : 10,
                   shadowColor: colors.primary,
@@ -788,6 +789,8 @@ export default function HomeScreen() {
                   </LinearGradient>
                 </Pressable>
               </Animated.View>
+            </View>
+            <View style={styles.multiplayerRow}>
               <Animated.View entering={FadeInUp.delay(800).springify()} style={[
                 styles.themedButton,
                 { 
@@ -1069,6 +1072,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowColor: "#000",
     height: 56,
+  },
+  themedButtonFull: {
+    flex: 0,
+    width: "100%",
   },
   themedButtonInner: {
     flex: 1,
