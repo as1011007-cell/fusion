@@ -13,7 +13,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { GradientButton } from "@/components/GradientButton";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
-import { useLastTurn, LastTurnPlayer } from "@/context/LastTurnContext";
+import { useLastTurn, LastTurnPlayer, ChatMessage } from "@/context/LastTurnContext";
 import { useProfile, avatarImages } from "@/context/ProfileContext";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -48,11 +48,13 @@ export default function LastTurnLobbyScreen() {
     room,
     error,
     gameStarted,
+    chatMessages,
     createRoom,
     joinRoom,
     setReady,
     setGameMode,
     startGame,
+    sendChatMessage,
     leaveRoom,
     clearError,
     resetGameState,
@@ -63,7 +65,10 @@ export default function LastTurnLobbyScreen() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [selectedMode, setSelectedMode] = useState("classic");
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [chatInput, setChatInput] = useState("");
   const codeInputRef = useRef<TextInput>(null);
+  const chatInputRef = useRef<TextInput>(null);
+  const chatScrollRef = useRef<ScrollView>(null);
   const pulseScale = useSharedValue(1);
 
   useEffect(() => {
@@ -204,6 +209,24 @@ export default function LastTurnLobbyScreen() {
     }
     startGame();
   };
+
+  const handleSendChat = () => {
+    if (chatInput.trim()) {
+      sendChatMessage(chatInput.trim());
+      setChatInput("");
+      if (settings.hapticsEnabled) {
+        Haptics.selectionAsync();
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (chatMessages.length > 0) {
+      setTimeout(() => {
+        chatScrollRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [chatMessages.length]);
 
   const isHost = room?.hostId === playerId;
   const allReady = room?.players.every(p => p.ready) ?? false;
@@ -451,6 +474,65 @@ export default function LastTurnLobbyScreen() {
           </View>
         ))}
       </ScrollView>
+
+      {room?.gameMode !== 'silent' && (
+        <View style={[styles.chatSection, { backgroundColor: colors.surface }]}>
+          <View style={styles.chatHeader}>
+            <Feather name="message-circle" size={16} color={colors.accent} />
+            <ThemedText style={[styles.chatTitle, { color: GameColors.textPrimary }]}>Lobby Chat</ThemedText>
+          </View>
+          <ScrollView 
+            ref={chatScrollRef}
+            style={styles.chatMessages} 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.chatMessagesContent}
+          >
+            {chatMessages.length === 0 ? (
+              <ThemedText style={[styles.chatEmptyText, { color: GameColors.textSecondary }]}>
+                No messages yet. Say hello!
+              </ThemedText>
+            ) : (
+              chatMessages.map((msg) => (
+                <Animated.View
+                  key={msg.id}
+                  entering={FadeInDown.duration(200)}
+                  style={[
+                    styles.chatBubble,
+                    msg.playerId === playerId 
+                      ? { backgroundColor: colors.primary + '30', alignSelf: 'flex-end' }
+                      : { backgroundColor: colors.backgroundDark, alignSelf: 'flex-start' }
+                  ]}
+                >
+                  {msg.playerId !== playerId && (
+                    <ThemedText style={[styles.chatSender, { color: colors.accent }]}>{msg.playerName}</ThemedText>
+                  )}
+                  <ThemedText style={[styles.chatMessageText, { color: GameColors.textPrimary }]}>{msg.message}</ThemedText>
+                </Animated.View>
+              ))
+            )}
+          </ScrollView>
+          <View style={styles.chatInputRow}>
+            <TextInput
+              ref={chatInputRef}
+              style={[styles.chatInput, { backgroundColor: colors.backgroundDark, color: GameColors.textPrimary }]}
+              placeholder="Type a message..."
+              placeholderTextColor={GameColors.textSecondary}
+              value={chatInput}
+              onChangeText={setChatInput}
+              maxLength={200}
+              onSubmitEditing={handleSendChat}
+              returnKeyType="send"
+            />
+            <Pressable 
+              style={[styles.chatSendBtn, { backgroundColor: chatInput.trim() ? colors.accent : colors.surface }]}
+              onPress={handleSendChat}
+              disabled={!chatInput.trim()}
+            >
+              <Feather name="send" size={18} color={chatInput.trim() ? colors.backgroundDark : GameColors.textSecondary} />
+            </Pressable>
+          </View>
+        </View>
+      )}
 
       <View style={styles.lobbyActions}>
         {!isHost && (
@@ -807,5 +889,65 @@ const styles = StyleSheet.create({
   },
   startButton: {
     marginTop: Spacing.sm,
+  },
+  chatSection: {
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  chatHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  chatTitle: {
+    fontSize: 14,
+    fontFamily: "Poppins_600SemiBold",
+  },
+  chatMessages: {
+    maxHeight: 120,
+    marginBottom: Spacing.sm,
+  },
+  chatMessagesContent: {
+    paddingVertical: Spacing.xs,
+  },
+  chatEmptyText: {
+    ...Typography.caption,
+    textAlign: "center",
+    paddingVertical: Spacing.sm,
+  },
+  chatBubble: {
+    padding: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.xs,
+    maxWidth: "85%",
+  },
+  chatSender: {
+    fontSize: 11,
+    fontFamily: "Poppins_600SemiBold",
+    marginBottom: 2,
+  },
+  chatMessageText: {
+    fontSize: 14,
+  },
+  chatInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  chatInput: {
+    flex: 1,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    ...Typography.body,
+  },
+  chatSendBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

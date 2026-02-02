@@ -20,6 +20,14 @@ interface LastTurnPlayer {
   hasRevengeToken: boolean;
 }
 
+interface ChatMessage {
+  id: string;
+  playerId: string;
+  playerName: string;
+  message: string;
+  timestamp: number;
+}
+
 interface LastTurnRoom {
   id: string;
   code: string;
@@ -41,6 +49,7 @@ interface LastTurnRoom {
   truthQuestions: string[];
   currentTruthQuestion: string | null;
   turnTimerInterval: NodeJS.Timeout | null;
+  chatMessages: ChatMessage[];
   createdAt: Date;
 }
 
@@ -365,6 +374,7 @@ export function setupLastTurnMultiplayer(server: Server) {
               truthQuestions: shuffleArray([...TRUTH_QUESTIONS]),
               currentTruthQuestion: null,
               turnTimerInterval: null,
+              chatMessages: [],
               createdAt: new Date(),
             };
 
@@ -667,6 +677,37 @@ export function setupLastTurnMultiplayer(server: Server) {
             handlePlayerLeave(playerId, currentRoomCode);
             currentRoomCode = null;
             playerId = null;
+            break;
+          }
+
+          case 'CHAT_MESSAGE': {
+            if (!currentRoomCode || !playerId) return;
+            const room = rooms.get(currentRoomCode);
+            if (!room || room.status !== 'waiting') return;
+            
+            // Silent mode - no chat allowed
+            if (room.gameMode === 'silent') return;
+
+            const player = room.players.get(playerId);
+            if (!player) return;
+
+            const chatMsg: ChatMessage = {
+              id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+              playerId,
+              playerName: player.name,
+              message: message.message?.slice(0, 200) || '',
+              timestamp: Date.now(),
+            };
+
+            room.chatMessages.push(chatMsg);
+            if (room.chatMessages.length > 50) {
+              room.chatMessages = room.chatMessages.slice(-50);
+            }
+
+            broadcastToRoom(room, {
+              type: 'CHAT_MESSAGE',
+              message: chatMsg,
+            });
             break;
           }
 

@@ -40,6 +40,14 @@ export interface TurnAction {
   truthAnswer?: string;
 }
 
+export interface ChatMessage {
+  id: string;
+  playerId: string;
+  playerName: string;
+  message: string;
+  timestamp: number;
+}
+
 interface LastTurnContextType {
   connected: boolean;
   playerId: string | null;
@@ -49,6 +57,7 @@ interface LastTurnContextType {
   gameFinished: boolean;
   lastAction: TurnAction | null;
   winner: LastTurnPlayer | null;
+  chatMessages: ChatMessage[];
   createRoom: (playerName: string, avatarId: string, gameMode: string) => void;
   joinRoom: (roomCode: string, playerName: string, avatarId: string) => void;
   setReady: (ready: boolean) => void;
@@ -58,6 +67,7 @@ interface LastTurnContextType {
   passAction: () => void;
   forcePlayer: (targetPlayerId: string) => void;
   answerTruth: (answer: string) => void;
+  sendChatMessage: (message: string) => void;
   leaveRoom: () => void;
   playAgain: () => void;
   clearError: () => void;
@@ -75,6 +85,7 @@ export function LastTurnProvider({ children }: { children: ReactNode }) {
   const [gameFinished, setGameFinished] = useState(false);
   const [lastAction, setLastAction] = useState<TurnAction | null>(null);
   const [winner, setWinner] = useState<LastTurnPlayer | null>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -196,6 +207,10 @@ export function LastTurnProvider({ children }: { children: ReactNode }) {
         setError("Room has expired");
         break;
 
+      case "CHAT_MESSAGE":
+        setChatMessages(prev => [...prev.slice(-49), message.message]);
+        break;
+
       case "ERROR":
         setError(message.message);
         break;
@@ -310,6 +325,12 @@ export function LastTurnProvider({ children }: { children: ReactNode }) {
     send({ type: "ANSWER_TRUTH", answer });
   }, [send]);
 
+  const sendChatMessage = useCallback((message: string) => {
+    if (message.trim()) {
+      send({ type: "CHAT_MESSAGE", message: message.trim() });
+    }
+  }, [send]);
+
   const leaveRoom = useCallback(() => {
     send({ type: "LEAVE_ROOM" });
     setRoom(null);
@@ -318,6 +339,7 @@ export function LastTurnProvider({ children }: { children: ReactNode }) {
     setGameStarted(false);
     setLastAction(null);
     setWinner(null);
+    setChatMessages([]);
     setError(null);
     wsRef.current?.close();
     wsRef.current = null;
@@ -355,6 +377,7 @@ export function LastTurnProvider({ children }: { children: ReactNode }) {
         gameFinished,
         lastAction,
         winner,
+        chatMessages,
         createRoom,
         joinRoom,
         setReady,
@@ -364,6 +387,7 @@ export function LastTurnProvider({ children }: { children: ReactNode }) {
         passAction,
         forcePlayer,
         answerTruth,
+        sendChatMessage,
         leaveRoom,
         playAgain,
         clearError,
