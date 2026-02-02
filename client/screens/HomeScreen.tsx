@@ -770,7 +770,7 @@ export default function HomeScreen() {
               ]}>
                 <Pressable 
                   onPress={handleMultiplayer}
-                  accessibilityLabel="FEUD Online"
+                  accessibilityLabel="FEUD Multiplayer"
                   accessibilityHint="Play FEUD with friends online"
                   accessibilityRole="button"
                   style={{ flex: 1 }}
@@ -785,7 +785,7 @@ export default function HomeScreen() {
                   >
                     <View style={styles.themedButtonShine} />
                     <View style={styles.themedButtonShineSmall} />
-                    <ThemedText style={styles.themedButtonText} numberOfLines={1}>FEUD Online</ThemedText>
+                    <ThemedText style={styles.themedButtonText} numberOfLines={1}>FEUD Multiplayer</ThemedText>
                   </LinearGradient>
                 </Pressable>
               </Animated.View>
