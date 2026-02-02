@@ -20,10 +20,10 @@ import { useTheme } from "@/context/ThemeContext";
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const GAME_MODES = [
-  { id: "classic", name: "Classic", description: "3 lives, last standing wins" },
-  { id: "silent", name: "Silent", description: "No chat, pure tension" },
-  { id: "countdown", name: "Countdown", description: "Timer shrinks each round" },
-  { id: "truth", name: "Truth-or-Risk", description: "Answer or pull" },
+  { id: "classic", name: "Classic", icon: "heart", color: "#FF6B6B", description: "Start with 3 lives. Pull the trigger and hope you survive. Last player standing wins!" },
+  { id: "silent", name: "Silent", icon: "volume-x", color: "#9B59B6", description: "No chat allowed. Read your opponents through actions alone. Pure psychological tension." },
+  { id: "countdown", name: "Countdown", icon: "clock", color: "#F39C12", description: "Timer gets shorter each round. Make quick decisions or face the consequences!" },
+  { id: "truth", name: "Truth-or-Risk", icon: "message-circle", color: "#3498DB", description: "Answer a personal question truthfully or take your chances with the chamber." },
 ];
 
 const HOW_TO_PLAY = [
@@ -246,24 +246,39 @@ export default function LastTurnLobbyScreen() {
     <Animated.View entering={FadeInDown} style={styles.createContainer}>
       <ThemedText style={[styles.sectionTitle, { color: GameColors.textPrimary }]}>Select Game Mode</ThemedText>
       
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.modesScroll}>
-        {GAME_MODES.map((gameMode) => (
-          <Pressable
-            key={gameMode.id}
-            style={[
-              styles.gameModeCard,
-              { 
-                backgroundColor: colors.surface,
-                borderColor: selectedMode === gameMode.id ? colors.primary : "#2E3350",
-                borderWidth: selectedMode === gameMode.id ? 2 : 1,
-              }
-            ]}
-            onPress={() => handleModeChange(gameMode.id)}
-          >
-            <ThemedText style={[styles.gameModeName, { color: GameColors.textPrimary }]}>{gameMode.name}</ThemedText>
-            <ThemedText style={[styles.gameModeDesc, { color: GameColors.textSecondary }]}>{gameMode.description}</ThemedText>
-          </Pressable>
-        ))}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.modesScroll} contentContainerStyle={styles.modesScrollContent}>
+        {GAME_MODES.map((gameMode) => {
+          const isSelected = selectedMode === gameMode.id;
+          return (
+            <Pressable
+              key={gameMode.id}
+              style={[
+                styles.gameModeCard,
+                { 
+                  backgroundColor: isSelected ? gameMode.color + '15' : colors.surface,
+                  borderColor: isSelected ? gameMode.color : "#2E3350",
+                  borderWidth: isSelected ? 2 : 1,
+                }
+              ]}
+              onPress={() => handleModeChange(gameMode.id)}
+            >
+              <View style={[styles.gameModeIconContainer, { backgroundColor: gameMode.color + '20' }]}>
+                <Feather name={gameMode.icon as any} size={24} color={gameMode.color} />
+              </View>
+              <ThemedText style={[styles.gameModeName, { color: isSelected ? gameMode.color : GameColors.textPrimary }]}>
+                {gameMode.name}
+              </ThemedText>
+              <ThemedText style={[styles.gameModeDesc, { color: GameColors.textSecondary }]}>
+                {gameMode.description}
+              </ThemedText>
+              {isSelected && (
+                <View style={[styles.selectedBadge, { backgroundColor: gameMode.color }]}>
+                  <Feather name="check" size={12} color="#fff" />
+                </View>
+              )}
+            </Pressable>
+          );
+        })}
       </ScrollView>
 
       <Animated.View style={pulseAnimatedStyle}>
@@ -567,11 +582,24 @@ const styles = StyleSheet.create({
   modesScroll: {
     marginBottom: Spacing.xl,
   },
+  modesScrollContent: {
+    paddingRight: Spacing.lg,
+  },
   gameModeCard: {
-    width: 140,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.md,
+    width: 160,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
     marginRight: Spacing.md,
+    position: "relative",
+    overflow: "hidden",
+  },
+  gameModeIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.md,
   },
   gameModeName: {
     fontSize: 16,
@@ -580,6 +608,17 @@ const styles = StyleSheet.create({
   },
   gameModeDesc: {
     fontSize: 12,
+    lineHeight: 16,
+  },
+  selectedBadge: {
+    position: "absolute",
+    top: Spacing.sm,
+    right: Spacing.sm,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
   },
   actionButton: {
     marginTop: Spacing.lg,
