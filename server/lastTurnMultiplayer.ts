@@ -282,6 +282,12 @@ function startNewRound(room: LastTurnRoom) {
 }
 
 function sendTruthQuestion(room: LastTurnRoom, playerId: string) {
+  // Clear turn timer if running (we're switching to truth mode timer)
+  if (room.turnTimerInterval) {
+    clearInterval(room.turnTimerInterval);
+    room.turnTimerInterval = null;
+  }
+  
   // Pick a random question and remove it from the list (no repeats)
   if (room.truthQuestions.length === 0) {
     room.truthQuestions = shuffleArray([...TRUTH_QUESTIONS]);
@@ -308,8 +314,14 @@ function sendTruthQuestion(room: LastTurnRoom, playerId: string) {
 }
 
 function startTruthAnswerTimer(room: LastTurnRoom) {
+  // Clear any existing timers to prevent conflicts
   if (room.truthAnswerTimerInterval) {
     clearInterval(room.truthAnswerTimerInterval);
+    room.truthAnswerTimerInterval = null;
+  }
+  if (room.turnTimerInterval) {
+    clearInterval(room.turnTimerInterval);
+    room.turnTimerInterval = null;
   }
   
   room.truthAnswerTimerInterval = setInterval(() => {
@@ -350,9 +362,19 @@ function startTruthAnswerTimer(room: LastTurnRoom) {
 }
 
 function startTurnTimer(room: LastTurnRoom) {
+  // Clear any existing timers to prevent conflicts
   if (room.turnTimerInterval) {
     clearInterval(room.turnTimerInterval);
+    room.turnTimerInterval = null;
   }
+  if (room.truthAnswerTimerInterval) {
+    clearInterval(room.truthAnswerTimerInterval);
+    room.truthAnswerTimerInterval = null;
+  }
+  
+  // Clear truth mode state since we're starting a regular turn timer
+  room.awaitingTruthAnswer = false;
+  room.currentTruthQuestion = null;
   
   room.turnTimerInterval = setInterval(() => {
     room.turnTimer--;
@@ -732,6 +754,7 @@ export function setupLastTurnMultiplayer(server: Server) {
               return;
             }
 
+            // Clear turn timer before pull
             if (room.turnTimerInterval) {
               clearInterval(room.turnTimerInterval);
               room.turnTimerInterval = null;
