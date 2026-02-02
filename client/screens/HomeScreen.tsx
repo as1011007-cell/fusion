@@ -20,13 +20,17 @@ import Animated, {
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import * as WebBrowser from "expo-web-browser";
+import Constants from "expo-constants";
+import { Alert } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
+import { getApiUrl } from "@/lib/query-client";
 import { FloatingBubbles } from "@/components/FloatingBubbles";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGame } from "@/context/GameContext";
 import { useTheme, ThemeId } from "@/context/ThemeContext";
+import { inAppPurchaseService, PRODUCT_IDS } from "@/services/InAppPurchaseService";
 import { useProfile } from "@/context/ProfileContext";
 import { useIQ } from "@/context/IQContext";
 import { initInterstitialAd, showInterstitialAd } from "@/services/InterstitialAdService";
@@ -78,7 +82,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { totalCoins, gameState, setStarPointsCallback, setXPCallback, resetGame } = useGame();
-  const { currentTheme, starPoints, addStarPoints, isAdFree } = useTheme();
+  const { currentTheme, starPoints, addStarPoints, isAdFree, setAdFree } = useTheme();
   const { settings, addExperience } = useProfile();
   const { isGameActive, resetGame: resetIQGame } = useIQ();
   const colors = currentTheme.colors;
@@ -196,17 +200,111 @@ export default function HomeScreen() {
     navigation.navigate("IQSetup");
   };
 
-  const handlePurchaseAdFree = () => {
+  const verifyPayment = async (sessionId: string): Promise<boolean> => {
+    try {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/stripe/verify-payment/${sessionId}`);
+      const data = await response.json();
+      return data.success === true;
+    } catch (error) {
+      console.error('Payment verification error:', error);
+      return false;
+    }
+  };
+
+  const handlePurchaseAdFree = async () => {
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     
-    if (Platform.OS === 'ios') {
+    const isExpoGo = Constants.appOwnership === 'expo';
+    const isNative = Platform.OS === 'ios' || Platform.OS === 'android';
+    
+    if (Platform.OS === 'ios' && !isExpoGo) {
       // iOS uses Apple in-app purchases
-      navigation.navigate("Shop");
+      try {
+        const connected = await inAppPurchaseService.connect();
+        if (connected) {
+          const result = await inAppPurchaseService.purchaseProduct(PRODUCT_IDS.AD_FREE);
+          if (result.success) {
+            if (settings.hapticsEnabled) {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+            setAdFree(true);
+            Alert.alert(
+              "Thank You!",
+              "Your purchase was successful! Enjoy your ad-free experience.",
+              [{ text: "Awesome!" }]
+            );
+          } else if (result.error !== "Purchase was cancelled") {
+            Alert.alert("Purchase Failed", result.error || "Something went wrong. Please try again.");
+          }
+        } else {
+          Alert.alert(
+            "App Store Purchase",
+            "In-app purchases are available through the App Store. Please download from the App Store to make purchases.",
+            [{ text: "OK" }]
+          );
+        }
+      } catch (error) {
+        console.error('StoreKit purchase error:', error);
+      }
     } else {
-      // Android and Web use Stripe
-      navigation.navigate("Shop");
+      // Android, Web, and Expo Go use Stripe
+      try {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/api/stripe/products`);
+        const data = await response.json();
+
+        const adFreeProduct = data.products?.find((p: any) => 
+          p.name?.toLowerCase().includes('ad-free') || p.metadata?.category === 'upgrade'
+        );
+
+        if (adFreeProduct?.prices?.[0]?.id) {
+          const successUrl = `${apiUrl}/payment-success?type=adfree`;
+          const cancelUrl = `${apiUrl}/payment-cancel`;
+
+          const checkoutResponse = await fetch(`${apiUrl}/api/stripe/create-checkout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              priceId: adFreeProduct.prices[0].id,
+              successUrl,
+              cancelUrl,
+            }),
+          });
+          const checkoutData = await checkoutResponse.json();
+
+          if (checkoutData.url && checkoutData.sessionId) {
+            await WebBrowser.openBrowserAsync(checkoutData.url);
+            const paymentSuccess = await verifyPayment(checkoutData.sessionId);
+            if (paymentSuccess) {
+              if (settings.hapticsEnabled) {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              }
+              Alert.alert(
+                "Thank You!",
+                "Your purchase was successful! Enjoy your ad-free experience.",
+                [{ text: "Awesome!", onPress: () => setAdFree(true) }]
+              );
+            } else {
+              if (settings.hapticsEnabled) {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+              }
+              Alert.alert(
+                "Payment Incomplete",
+                "Your payment was not completed. Please try again.",
+                [{ text: "OK" }]
+              );
+            }
+          }
+        } else {
+          Alert.alert("Not Available", "Ad-free purchase is not available at this time.");
+        }
+      } catch (error) {
+        console.error('Purchase error:', error);
+        Alert.alert("Error", "Something went wrong. Please try again.");
+      }
     }
   };
 
