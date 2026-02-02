@@ -654,14 +654,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    fontSize: 36,
+    fontSize: 28,
     fontFamily: "Poppins_700Bold",
     letterSpacing: 4,
     marginBottom: Spacing.xs,
+    textAlign: "center",
+    paddingTop: 20,
   },
   subtitle: {
-    fontSize: 16,
-    marginBottom: Spacing["3xl"],
+    fontSize: 14,
+    marginBottom: Spacing["xl"],
+    textAlign: "center",
   },
   buttonGroup: {
     width: "100%",
