@@ -667,10 +667,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 100,
+    paddingTop: 60,
   },
   finishedContent: {
     alignItems: "center",
     padding: Spacing.xl,
+    paddingTop: Spacing.lg,
   },
   finishedTitle: {
     fontSize: 32,

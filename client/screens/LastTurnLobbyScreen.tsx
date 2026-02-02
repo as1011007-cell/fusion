@@ -757,6 +757,7 @@ const styles = StyleSheet.create({
   },
   lobbyContainer: {
     flex: 1,
+    paddingTop: Spacing.sm,
   },
   roomHeader: {
     flexDirection: "row",
