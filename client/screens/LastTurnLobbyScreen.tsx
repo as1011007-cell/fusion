@@ -347,7 +347,7 @@ export default function LastTurnLobbyScreen() {
   );
 
   const renderLobby = () => (
-    <Animated.View entering={SlideInUp} style={[styles.lobbyContainer, { paddingBottom: insets.bottom, paddingTop: insets.top + Spacing.xl + 40 }]}>
+    <Animated.View entering={SlideInUp} style={[styles.lobbyContainer, { paddingBottom: insets.bottom }]}>
       <View style={styles.roomHeader}>
         <View style={styles.roomCodeContainer}>
           <ThemedText style={[styles.roomCodeLabel, { color: GameColors.textSecondary }]}>Room Code</ThemedText>
