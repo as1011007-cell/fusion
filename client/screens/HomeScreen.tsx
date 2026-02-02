@@ -200,6 +200,11 @@ export default function HomeScreen() {
     navigation.navigate("IQSetup");
   };
 
+  const handleLastTurn = () => {
+    if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    navigation.navigate("LastTurnLobby");
+  };
+
   const verifyPayment = async (sessionId: string): Promise<boolean> => {
     try {
       const apiUrl = getApiUrl();
@@ -808,6 +813,34 @@ export default function HomeScreen() {
                     <View style={styles.themedButtonShine} />
                     <View style={styles.themedButtonShineSmall} />
                     <ThemedText style={styles.themedButtonText} numberOfLines={1}>IQ Online</ThemedText>
+                  </LinearGradient>
+                </Pressable>
+              </Animated.View>
+              <Animated.View entering={FadeInUp.delay(850).springify()} style={[
+                styles.themedButton,
+                { 
+                  borderRadius: themeId === "ocean" ? 16 : themeId === "forest" ? 12 : themeId === "galaxy" ? 12 : 10,
+                  shadowColor: "#FF4444",
+                }
+              ]}>
+                <Pressable 
+                  onPress={handleLastTurn}
+                  accessibilityLabel="Last Turn"
+                  accessibilityHint="Play Last Turn game mode online"
+                  accessibilityRole="button"
+                  style={{ flex: 1 }}
+                >
+                  <LinearGradient
+                    colors={["#FF4444", "#CC3333", "#AA2222"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0.5, y: 1 }}
+                    style={[styles.themedButtonInner, { 
+                      borderRadius: themeId === "ocean" ? 14 : themeId === "forest" ? 10 : themeId === "galaxy" ? 10 : 8,
+                    }]}
+                  >
+                    <View style={styles.themedButtonShine} />
+                    <View style={styles.themedButtonShineSmall} />
+                    <ThemedText style={styles.themedButtonText} numberOfLines={1}>Last Turn</ThemedText>
                   </LinearGradient>
                 </Pressable>
               </Animated.View>
