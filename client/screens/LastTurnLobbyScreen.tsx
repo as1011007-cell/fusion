@@ -684,13 +684,14 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   gameModeName: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: "Poppins_700Bold",
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
+    letterSpacing: 0.5,
   },
   gameModeDesc: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 20,
   },
   selectedBadge: {
     position: "absolute",
