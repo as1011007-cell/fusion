@@ -318,6 +318,7 @@ export function LastTurnProvider({ children }: { children: ReactNode }) {
           ...prev,
           mustPullAfterReject: true,
           votingState: null,
+          votingResult: null,
           truthQuestion: null,
           truthChoices: null,
         } : null);

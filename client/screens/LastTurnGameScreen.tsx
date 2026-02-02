@@ -531,27 +531,8 @@ export default function LastTurnGameScreen() {
       );
     }
 
-    // Show must pull after reject
-    if (room?.mustPullAfterReject && isMyTurn) {
-      return (
-        <Animated.View entering={FadeIn} style={[styles.truthPopup, { backgroundColor: colors.backgroundDark }]}>
-          <View style={[styles.truthPopupCard, { backgroundColor: colors.surface }]}>
-            <View style={styles.truthPopupHeader}>
-              <Feather name="alert-triangle" size={24} color="#FF4444" />
-              <ThemedText style={[styles.truthPopupTitle, { color: "#FF4444" }]}>
-                ANSWER REJECTED
-              </ThemedText>
-            </View>
-            <ThemedText style={[styles.mustPullMessage, { color: GameColors.textPrimary }]}>
-              The group rejected your answer!
-            </ThemedText>
-            <ThemedText style={[styles.mustPullSubtext, { color: GameColors.textSecondary }]}>
-              You must pull the chamber now.
-            </ThemedText>
-          </View>
-        </Animated.View>
-      );
-    }
+    // When mustPullAfterReject is true, don't show a popup - let the player use the main pull button
+    // The turn indicator will show they must pull
 
     return null;
   };
@@ -690,8 +671,8 @@ export default function LastTurnGameScreen() {
       {renderTruthMode()}
 
       <View style={styles.chamberContainer}>
-        <ThemedText style={[styles.turnIndicator, { color: isMyTurn ? colors.primary : GameColors.textSecondary }]}>
-          {isMyTurn ? "YOUR TURN" : `${currentTurnPlayer?.name}'s turn`}
+        <ThemedText style={[styles.turnIndicator, { color: room?.mustPullAfterReject && isMyTurn ? "#FF4444" : (isMyTurn ? colors.primary : GameColors.textSecondary) }]}>
+          {room?.mustPullAfterReject && isMyTurn ? "PULL THE CHAMBER!" : (isMyTurn ? "YOUR TURN" : `${currentTurnPlayer?.name}'s turn`)}
         </ThemedText>
         
         <Animated.View style={[styles.chamber, chamberStyle, { borderColor: "#2E3350" }]}>
@@ -729,7 +710,7 @@ export default function LastTurnGameScreen() {
             style={[
               styles.pullButton,
               { 
-                backgroundColor: isMyTurn ? colors.primary : colors.surface,
+                backgroundColor: room?.mustPullAfterReject && isMyTurn ? "#FF4444" : (isMyTurn ? colors.primary : colors.surface),
                 opacity: isMyTurn ? 1 : 0.5,
               }
             ]}
@@ -738,7 +719,7 @@ export default function LastTurnGameScreen() {
           >
             <Feather name="zap" size={28} color={isMyTurn ? colors.backgroundDark : GameColors.textSecondary} />
             <ThemedText style={[styles.pullButtonText, { color: isMyTurn ? colors.backgroundDark : GameColors.textSecondary }]}>
-              PULL
+              {room?.mustPullAfterReject && isMyTurn ? "MUST PULL!" : "PULL"}
             </ThemedText>
           </Pressable>
 
