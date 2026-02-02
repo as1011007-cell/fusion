@@ -870,6 +870,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: CHAMBER_SIZE,
     height: CHAMBER_SIZE,
+    left: 0,
+    top: 0,
   },
   chamberCenter: {
     position: "absolute",
