@@ -20,10 +20,10 @@ import { useTheme } from "@/context/ThemeContext";
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const GAME_MODES = [
-  { id: "classic", name: "Classic", icon: "heart", color: "#FF6B6B", description: "Start with 3 lives. Pull the trigger and hope you survive. Last player standing wins!" },
-  { id: "silent", name: "Silent", icon: "volume-x", color: "#9B59B6", description: "No chat allowed. Read your opponents through actions alone. Pure psychological tension." },
-  { id: "countdown", name: "Countdown", icon: "clock", color: "#F39C12", description: "Timer gets shorter each round. Make quick decisions or face the consequences!" },
-  { id: "truth", name: "Truth-or-Risk", icon: "message-circle", color: "#3498DB", description: "Answer a personal question truthfully or take your chances with the chamber." },
+  { id: "classic", name: "Classic", icon: "heart", color: "#FF6B6B", description: "3 lives each. Last one standing wins!" },
+  { id: "silent", name: "Silent", icon: "volume-x", color: "#9B59B6", description: "No chat. Pure psychological tension." },
+  { id: "countdown", name: "Countdown", icon: "clock", color: "#F39C12", description: "Timer shrinks each round. Decide fast!" },
+  { id: "truth", name: "Truth-or-Risk", icon: "message-circle", color: "#3498DB", description: "Answer truthfully or risk the chamber." },
 ];
 
 const HOW_TO_PLAY = [
@@ -668,8 +668,8 @@ const styles = StyleSheet.create({
     paddingRight: Spacing.lg,
   },
   gameModeCard: {
-    width: 160,
-    height: 140,
+    width: 150,
+    height: 130,
     padding: Spacing.md,
     borderRadius: BorderRadius.lg,
     marginRight: Spacing.md,
