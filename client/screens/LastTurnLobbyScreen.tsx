@@ -266,7 +266,7 @@ export default function LastTurnLobbyScreen() {
   );
 
   const renderCreateMode = () => (
-    <Animated.View entering={FadeInDown} style={[styles.createContainer, { paddingTop: insets.top + Spacing.xl }]}>
+    <Animated.View entering={FadeInDown} style={[styles.createContainer, { paddingTop: insets.top + Spacing.xl + 40 }]}>
       <ThemedText style={[styles.sectionTitle, { color: GameColors.textPrimary }]}>Select Game Mode</ThemedText>
       
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.modesScroll} contentContainerStyle={styles.modesScrollContent}>
@@ -347,7 +347,7 @@ export default function LastTurnLobbyScreen() {
   );
 
   const renderJoinMode = () => (
-    <Animated.View entering={FadeInDown} style={[styles.joinContainer, { paddingTop: insets.top + Spacing.xl }]}>
+    <Animated.View entering={FadeInDown} style={[styles.joinContainer, { paddingTop: insets.top + Spacing.xl + 40 }]}>
       <ThemedText style={[styles.sectionTitle, { color: GameColors.textPrimary }]}>Enter Room Code</ThemedText>
       
       <TextInput
@@ -376,7 +376,7 @@ export default function LastTurnLobbyScreen() {
   );
 
   const renderLobby = () => (
-    <Animated.View entering={SlideInUp} style={[styles.lobbyContainer, { paddingBottom: insets.bottom, paddingTop: insets.top + Spacing.xl }]}>
+    <Animated.View entering={SlideInUp} style={[styles.lobbyContainer, { paddingBottom: insets.bottom, paddingTop: insets.top + Spacing.xl + 40 }]}>
       <View style={styles.roomHeader}>
         <View style={styles.roomCodeContainer}>
           <ThemedText style={[styles.roomCodeLabel, { color: GameColors.textSecondary }]}>Room Code</ThemedText>
