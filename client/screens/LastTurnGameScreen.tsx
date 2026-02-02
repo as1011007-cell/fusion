@@ -155,6 +155,13 @@ export default function LastTurnGameScreen() {
     }
   }, [gameFinished, isAdFree]);
 
+  // Navigate back to lobby when game is reset (play again)
+  useEffect(() => {
+    if (room?.status === "waiting" && !gameFinished) {
+      navigation.replace("LastTurnLobby");
+    }
+  }, [room?.status, gameFinished]);
+
   // Reset voting state when voting phase changes
   useEffect(() => {
     if (!room?.votingState) {
@@ -684,7 +691,7 @@ export default function LastTurnGameScreen() {
 
       <View style={styles.chamberContainer}>
         <ThemedText style={[styles.turnIndicator, { color: room?.mustPullAfterReject && isMyTurn ? "#FF4444" : (isMyTurn ? colors.primary : GameColors.textSecondary) }]}>
-          {room?.mustPullAfterReject && isMyTurn ? "PULL THE CHAMBER!" : (isMyTurn ? "YOUR TURN" : `${currentTurnPlayer?.name}'s turn`)}
+          {room?.mustPullAfterReject && isMyTurn ? "PULL THE CHAMBER!" : (isMyTurn ? "YOUR TURN" : (currentTurnPlayer?.name ? `${currentTurnPlayer.name}'s turn` : "Waiting..."))}
         </ThemedText>
         
         <Animated.View style={[styles.chamber, chamberStyle, { borderColor: "#2E3350" }]}>
