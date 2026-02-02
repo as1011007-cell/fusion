@@ -8,6 +8,7 @@ import { initStripe } from "./stripeInit";
 import { WebhookHandlers } from "./webhookHandlers";
 import { getStripePublishableKey, getUncachableStripeClient } from "./stripeClient";
 import { setupMultiplayer } from "./multiplayer";
+import { setupLastTurnMultiplayer } from "./lastTurnMultiplayer";
 
 const app = express();
 const log = console.log;
@@ -454,6 +455,7 @@ function setupErrorHandler(app: express.Application) {
   const server = await registerRoutes(app);
 
   setupMultiplayer(server);
+  setupLastTurnMultiplayer(server);
 
   setupErrorHandler(app);
 

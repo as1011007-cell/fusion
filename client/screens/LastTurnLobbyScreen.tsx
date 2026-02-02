@@ -1,0 +1,692 @@
+import React, { useState, useEffect, useRef } from "react";
+import { StyleSheet, View, Pressable, TextInput, ScrollView, Share, Alert, ActivityIndicator, Keyboard } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import Animated, { FadeIn, FadeInDown, SlideInUp, useAnimatedStyle, useSharedValue, withSpring, withRepeat, withSequence, withTiming } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
+import * as Clipboard from "expo-clipboard";
+import { Image } from "expo-image";
+
+import { ThemedText } from "@/components/ThemedText";
+import { GradientButton } from "@/components/GradientButton";
+import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
+import { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { useLastTurn, LastTurnPlayer } from "@/context/LastTurnContext";
+import { useProfile, avatarImages } from "@/context/ProfileContext";
+import { useTheme } from "@/context/ThemeContext";
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+const GAME_MODES = [
+  { id: "classic", name: "Classic", description: "3 lives, last standing wins" },
+  { id: "silent", name: "Silent", description: "No chat, pure tension" },
+  { id: "countdown", name: "Countdown", description: "Timer shrinks each round" },
+  { id: "truth", name: "Truth-or-Risk", description: "Answer or pull" },
+];
+
+export default function LastTurnLobbyScreen() {
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation<NavigationProp>();
+  const { currentProfile, settings } = useProfile();
+  const { currentTheme } = useTheme();
+  const colors = currentTheme.colors;
+  
+  const {
+    connected,
+    playerId,
+    room,
+    error,
+    gameStarted,
+    createRoom,
+    joinRoom,
+    setReady,
+    setGameMode,
+    startGame,
+    leaveRoom,
+    clearError,
+    resetGameState,
+  } = useLastTurn();
+
+  const [mode, setMode] = useState<"select" | "create" | "join" | "lobby">("select");
+  const [joinCode, setJoinCode] = useState("");
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [selectedMode, setSelectedMode] = useState("classic");
+  const codeInputRef = useRef<TextInput>(null);
+  const pulseScale = useSharedValue(1);
+
+  useEffect(() => {
+    if (room) {
+      setMode("lobby");
+      setIsConnecting(false);
+    }
+  }, [room]);
+
+  useEffect(() => {
+    if (error) {
+      Alert.alert("Error", error, [{ text: "OK", onPress: clearError }]);
+      setIsConnecting(false);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (gameStarted && room?.status === "playing") {
+      resetGameState();
+      navigation.navigate("LastTurnGame");
+    }
+  }, [gameStarted, room?.status]);
+
+  useEffect(() => {
+    if (mode === "join") {
+      setTimeout(() => codeInputRef.current?.focus(), 100);
+    }
+  }, [mode]);
+
+  useEffect(() => {
+    if (isConnecting) {
+      pulseScale.value = withRepeat(
+        withSequence(
+          withTiming(1.05, { duration: 600 }),
+          withTiming(1, { duration: 600 })
+        ),
+        -1,
+        true
+      );
+    } else {
+      pulseScale.value = withSpring(1);
+    }
+  }, [isConnecting]);
+
+  const pulseAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+  }));
+
+  const handleBack = () => {
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    if (mode === "lobby") {
+      leaveRoom();
+      setMode("select");
+    } else if (mode !== "select") {
+      setMode("select");
+    } else {
+      navigation.goBack();
+    }
+  };
+
+  const handleCreateRoom = () => {
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    setIsConnecting(true);
+    createRoom(currentProfile?.name || "Player", currentProfile?.avatarId || "avatar-1", selectedMode);
+  };
+
+  const handleJoinRoom = () => {
+    if (joinCode.length !== 6) {
+      Alert.alert("Invalid Code", "Please enter a 6-character room code");
+      return;
+    }
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    setIsConnecting(true);
+    joinRoom(joinCode.toUpperCase(), currentProfile?.name || "Player", currentProfile?.avatarId || "avatar-1");
+  };
+
+  const handleCodeChange = (text: string) => {
+    const cleanText = text.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    setJoinCode(cleanText);
+    if (cleanText.length > 0 && settings.hapticsEnabled) {
+      Haptics.selectionAsync();
+    }
+  };
+
+  const handleCopyCode = async () => {
+    if (room?.code) {
+      await Clipboard.setStringAsync(room.code);
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      Alert.alert("Copied!", "Room code copied to clipboard");
+    }
+  };
+
+  const handleShareCode = async () => {
+    if (room?.code) {
+      try {
+        await Share.share({
+          message: `Join my Last Turn game! Room code: ${room.code}`,
+        });
+      } catch (e) {
+        console.error("Share failed:", e);
+      }
+    }
+  };
+
+  const handleToggleReady = () => {
+    Keyboard.dismiss();
+    if (!room || !playerId) return;
+    const currentPlayer = room.players.find(p => p.id === playerId);
+    if (currentPlayer) {
+      setReady(!currentPlayer.ready);
+      if (settings.hapticsEnabled) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+    }
+  };
+
+  const handleModeChange = (modeId: string) => {
+    if (settings.hapticsEnabled) {
+      Haptics.selectionAsync();
+    }
+    setSelectedMode(modeId);
+    if (room && playerId === room.hostId) {
+      setGameMode(modeId);
+    }
+  };
+
+  const handleStartGame = () => {
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    }
+    startGame();
+  };
+
+  const isHost = room?.hostId === playerId;
+  const allReady = room?.players.every(p => p.ready) ?? false;
+  const canStart = isHost && allReady && (room?.players.length ?? 0) >= 2;
+
+  const renderSelectMode = () => (
+    <Animated.View entering={FadeIn} style={styles.selectContainer}>
+      <ThemedText style={[styles.title, { color: GameColors.textPrimary }]}>LAST TURN</ThemedText>
+      <ThemedText style={[styles.subtitle, { color: GameColors.textSecondary }]}>
+        A game of risk and nerve
+      </ThemedText>
+
+      <View style={styles.buttonGroup}>
+        <Pressable
+          style={[styles.modeButton, { backgroundColor: colors.surface, borderColor: colors.primary }]}
+          onPress={() => setMode("create")}
+        >
+          <Feather name="plus-circle" size={28} color={colors.primary} />
+          <ThemedText style={[styles.modeButtonText, { color: GameColors.textPrimary }]}>Create Room</ThemedText>
+          <ThemedText style={[styles.modeButtonDesc, { color: GameColors.textSecondary }]}>
+            Host a new game
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          style={[styles.modeButton, { backgroundColor: colors.surface, borderColor: colors.secondary }]}
+          onPress={() => setMode("join")}
+        >
+          <Feather name="log-in" size={28} color={colors.secondary} />
+          <ThemedText style={[styles.modeButtonText, { color: GameColors.textPrimary }]}>Join Room</ThemedText>
+          <ThemedText style={[styles.modeButtonDesc, { color: GameColors.textSecondary }]}>
+            Enter a room code
+          </ThemedText>
+        </Pressable>
+      </View>
+    </Animated.View>
+  );
+
+  const renderCreateMode = () => (
+    <Animated.View entering={FadeInDown} style={styles.createContainer}>
+      <ThemedText style={[styles.sectionTitle, { color: GameColors.textPrimary }]}>Select Game Mode</ThemedText>
+      
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.modesScroll}>
+        {GAME_MODES.map((gameMode) => (
+          <Pressable
+            key={gameMode.id}
+            style={[
+              styles.gameModeCard,
+              { 
+                backgroundColor: colors.surface,
+                borderColor: selectedMode === gameMode.id ? colors.primary : "#2E3350",
+                borderWidth: selectedMode === gameMode.id ? 2 : 1,
+              }
+            ]}
+            onPress={() => handleModeChange(gameMode.id)}
+          >
+            <ThemedText style={[styles.gameModeName, { color: GameColors.textPrimary }]}>{gameMode.name}</ThemedText>
+            <ThemedText style={[styles.gameModeDesc, { color: GameColors.textSecondary }]}>{gameMode.description}</ThemedText>
+          </Pressable>
+        ))}
+      </ScrollView>
+
+      <Animated.View style={pulseAnimatedStyle}>
+        <GradientButton
+          onPress={handleCreateRoom}
+          disabled={isConnecting}
+          style={styles.actionButton}
+        >
+          {isConnecting ? "Creating..." : "Create Room"}
+        </GradientButton>
+      </Animated.View>
+    </Animated.View>
+  );
+
+  const renderJoinMode = () => (
+    <Animated.View entering={FadeInDown} style={styles.joinContainer}>
+      <ThemedText style={[styles.sectionTitle, { color: GameColors.textPrimary }]}>Enter Room Code</ThemedText>
+      
+      <TextInput
+        ref={codeInputRef}
+        style={[styles.codeInput, { backgroundColor: colors.surface, color: GameColors.textPrimary, borderColor: "#2E3350" }]}
+        value={joinCode}
+        onChangeText={handleCodeChange}
+        placeholder="XXXXXX"
+        placeholderTextColor={GameColors.textSecondary}
+        maxLength={6}
+        autoCapitalize="characters"
+        autoCorrect={false}
+      />
+
+      <Animated.View style={pulseAnimatedStyle}>
+        <GradientButton
+          onPress={handleJoinRoom}
+          disabled={isConnecting || joinCode.length !== 6}
+          variant="secondary"
+          style={styles.actionButton}
+        >
+          {isConnecting ? "Joining..." : "Join Room"}
+        </GradientButton>
+      </Animated.View>
+    </Animated.View>
+  );
+
+  const renderLobby = () => (
+    <Animated.View entering={SlideInUp} style={styles.lobbyContainer}>
+      <View style={styles.roomHeader}>
+        <View style={styles.roomCodeContainer}>
+          <ThemedText style={[styles.roomCodeLabel, { color: GameColors.textSecondary }]}>Room Code</ThemedText>
+          <View style={styles.roomCodeRow}>
+            <ThemedText style={[styles.roomCode, { color: colors.primary }]}>{room?.code}</ThemedText>
+            <Pressable onPress={handleCopyCode} style={styles.copyButton}>
+              <Feather name="copy" size={20} color={GameColors.textSecondary} />
+            </Pressable>
+            <Pressable onPress={handleShareCode} style={styles.shareButton}>
+              <Feather name="share" size={20} color={GameColors.textSecondary} />
+            </Pressable>
+          </View>
+        </View>
+        
+        <View style={[styles.modeTag, { backgroundColor: colors.primary + '30' }]}>
+          <ThemedText style={[styles.modeTagText, { color: colors.primary }]}>
+            {GAME_MODES.find(m => m.id === room?.gameMode)?.name || "Classic"}
+          </ThemedText>
+        </View>
+      </View>
+
+      {isHost && room?.status === "waiting" && (
+        <View style={styles.hostModeSelector}>
+          <ThemedText style={[styles.hostModeLabel, { color: GameColors.textSecondary }]}>Game Mode:</ThemedText>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {GAME_MODES.map((gameMode) => (
+              <Pressable
+                key={gameMode.id}
+                style={[
+                  styles.miniModeButton,
+                  { 
+                    backgroundColor: room?.gameMode === gameMode.id ? colors.primary : colors.surface,
+                    borderColor: "#2E3350",
+                  }
+                ]}
+                onPress={() => handleModeChange(gameMode.id)}
+              >
+                <ThemedText style={[
+                  styles.miniModeText,
+                  { color: room?.gameMode === gameMode.id ? colors.backgroundDark : GameColors.textPrimary }
+                ]}>
+                  {gameMode.name}
+                </ThemedText>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
+      <ThemedText style={[styles.playersTitle, { color: GameColors.textPrimary }]}>
+        Players ({room?.players.length}/6)
+      </ThemedText>
+
+      <ScrollView style={styles.playersList}>
+        {room?.players.map((player) => (
+          <View key={player.id} style={[styles.playerCard, { backgroundColor: colors.surface }]}>
+            <Image
+              source={avatarImages[player.avatarId] || avatarImages["avatar-1"]}
+              style={styles.playerAvatar}
+              contentFit="contain"
+            />
+            <View style={styles.playerInfo}>
+              <View style={styles.playerNameRow}>
+                <ThemedText style={[styles.playerName, { color: GameColors.textPrimary }]}>{player.name}</ThemedText>
+                {player.id === room?.hostId && (
+                  <View style={[styles.hostBadge, { backgroundColor: colors.accent }]}>
+                    <ThemedText style={styles.hostBadgeText}>HOST</ThemedText>
+                  </View>
+                )}
+              </View>
+              <View style={styles.playerStats}>
+                <View style={styles.livesContainer}>
+                  {[1, 2, 3].map((life) => (
+                    <Feather
+                      key={life}
+                      name="heart"
+                      size={14}
+                      color={life <= player.lives ? "#FF6B6B" : "#2E3350"}
+                      style={{ marginRight: 2 }}
+                    />
+                  ))}
+                </View>
+              </View>
+            </View>
+            <View style={[
+              styles.readyBadge,
+              { backgroundColor: player.ready ? colors.primary + '30' : colors.surface }
+            ]}>
+              <Feather
+                name={player.ready ? "check-circle" : "circle"}
+                size={18}
+                color={player.ready ? colors.primary : GameColors.textSecondary}
+              />
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+
+      <View style={styles.lobbyActions}>
+        {!isHost && (
+          <Pressable
+            style={[
+              styles.readyButton,
+              { 
+                backgroundColor: room?.players.find(p => p.id === playerId)?.ready 
+                  ? colors.primary 
+                  : colors.surface,
+                borderColor: colors.primary,
+              }
+            ]}
+            onPress={handleToggleReady}
+          >
+            <ThemedText style={[
+              styles.readyButtonText,
+              { color: room?.players.find(p => p.id === playerId)?.ready ? colors.backgroundDark : colors.primary }
+            ]}>
+              {room?.players.find(p => p.id === playerId)?.ready ? "READY" : "TAP TO READY"}
+            </ThemedText>
+          </Pressable>
+        )}
+
+        {isHost && (
+          <GradientButton
+            onPress={handleStartGame}
+            disabled={!canStart}
+            variant={canStart ? "accent" : "primary"}
+            style={styles.startButton}
+          >
+            {canStart ? "START GAME" : `Waiting for players... (${room?.players.filter(p => p.ready).length}/${room?.players.length})`}
+          </GradientButton>
+        )}
+      </View>
+    </Animated.View>
+  );
+
+  return (
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.backgroundDark }]}>
+      <View style={styles.header}>
+        <Pressable style={styles.backButton} onPress={handleBack}>
+          <Feather name="arrow-left" size={24} color={GameColors.textPrimary} />
+        </Pressable>
+        <ThemedText style={[styles.headerTitle, { color: GameColors.textPrimary }]}>
+          {mode === "select" ? "LAST TURN" : mode === "lobby" ? "LOBBY" : mode.toUpperCase()}
+        </ThemedText>
+        <View style={{ width: 40 }} />
+      </View>
+
+      <View style={styles.content}>
+        {mode === "select" && renderSelectMode()}
+        {mode === "create" && renderCreateMode()}
+        {mode === "join" && renderJoinMode()}
+        {mode === "lobby" && renderLobby()}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontFamily: "Poppins_700Bold",
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: Spacing.lg,
+  },
+  selectContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 36,
+    fontFamily: "Poppins_700Bold",
+    letterSpacing: 4,
+    marginBottom: Spacing.xs,
+  },
+  subtitle: {
+    fontSize: 16,
+    marginBottom: Spacing["3xl"],
+  },
+  buttonGroup: {
+    width: "100%",
+    gap: Spacing.md,
+  },
+  modeButton: {
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    borderWidth: 2,
+    alignItems: "center",
+  },
+  modeButtonText: {
+    fontSize: 18,
+    fontFamily: "Poppins_700Bold",
+    marginTop: Spacing.sm,
+  },
+  modeButtonDesc: {
+    fontSize: 14,
+    marginTop: Spacing.xs,
+  },
+  createContainer: {
+    flex: 1,
+    paddingTop: Spacing.xl,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontFamily: "Poppins_700Bold",
+    marginBottom: Spacing.md,
+  },
+  modesScroll: {
+    marginBottom: Spacing.xl,
+  },
+  gameModeCard: {
+    width: 140,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginRight: Spacing.md,
+  },
+  gameModeName: {
+    fontSize: 16,
+    fontFamily: "Poppins_700Bold",
+    marginBottom: Spacing.xs,
+  },
+  gameModeDesc: {
+    fontSize: 12,
+  },
+  actionButton: {
+    marginTop: Spacing.lg,
+  },
+  joinContainer: {
+    flex: 1,
+    paddingTop: Spacing.xl,
+    alignItems: "center",
+  },
+  codeInput: {
+    width: "100%",
+    fontSize: 32,
+    fontFamily: "Poppins_700Bold",
+    textAlign: "center",
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 2,
+    letterSpacing: 8,
+    marginBottom: Spacing.xl,
+  },
+  lobbyContainer: {
+    flex: 1,
+  },
+  roomHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  roomCodeContainer: {},
+  roomCodeLabel: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  roomCodeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  roomCode: {
+    fontSize: 28,
+    fontFamily: "Poppins_700Bold",
+    letterSpacing: 4,
+  },
+  copyButton: {
+    marginLeft: Spacing.md,
+    padding: Spacing.xs,
+  },
+  shareButton: {
+    marginLeft: Spacing.sm,
+    padding: Spacing.xs,
+  },
+  modeTag: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+  },
+  modeTagText: {
+    fontSize: 14,
+    fontFamily: "Poppins_700Bold",
+  },
+  hostModeSelector: {
+    marginBottom: Spacing.md,
+  },
+  hostModeLabel: {
+    fontSize: 12,
+    marginBottom: Spacing.xs,
+  },
+  miniModeButton: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+    marginRight: Spacing.sm,
+    borderWidth: 1,
+  },
+  miniModeText: {
+    fontSize: 14,
+  },
+  playersTitle: {
+    fontSize: 16,
+    fontFamily: "Poppins_700Bold",
+    marginBottom: Spacing.md,
+  },
+  playersList: {
+    flex: 1,
+  },
+  playerCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.sm,
+  },
+  playerAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  playerInfo: {
+    flex: 1,
+    marginLeft: Spacing.md,
+  },
+  playerNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  playerName: {
+    fontSize: 16,
+    fontFamily: "Poppins_700Bold",
+  },
+  hostBadge: {
+    marginLeft: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.sm,
+  },
+  hostBadgeText: {
+    fontSize: 10,
+    fontFamily: "Poppins_700Bold",
+    color: "#fff",
+  },
+  playerStats: {
+    marginTop: 4,
+  },
+  livesContainer: {
+    flexDirection: "row",
+  },
+  readyBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  lobbyActions: {
+    paddingVertical: Spacing.lg,
+  },
+  readyButton: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 2,
+    alignItems: "center",
+  },
+  readyButtonText: {
+    fontSize: 16,
+    fontFamily: "Poppins_700Bold",
+  },
+  startButton: {
+    marginTop: Spacing.sm,
+  },
+});

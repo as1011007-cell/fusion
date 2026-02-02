@@ -18,6 +18,8 @@ import IQGameScreen from "@/screens/IQGameScreen";
 import IQResultsScreen from "@/screens/IQResultsScreen";
 import IQMultiplayerLobbyScreen from "@/screens/IQMultiplayerLobbyScreen";
 import IQMultiplayerGameScreen from "@/screens/IQMultiplayerGameScreen";
+import LastTurnLobbyScreen from "@/screens/LastTurnLobbyScreen";
+import LastTurnGameScreen from "@/screens/LastTurnGameScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { GameColors } from "@/constants/theme";
 
@@ -51,6 +53,8 @@ export type RootStackParamList = {
     questionCount: number;
   };
   IQMultiplayerGame: undefined;
+  LastTurnLobby: undefined;
+  LastTurnGame: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -120,6 +124,12 @@ export default function RootStackNavigator() {
       <Stack.Screen
         name="IQMultiplayerGame"
         component={IQMultiplayerGameScreen}
+        options={{ gestureEnabled: false }}
+      />
+      <Stack.Screen name="LastTurnLobby" component={LastTurnLobbyScreen} />
+      <Stack.Screen
+        name="LastTurnGame"
+        component={LastTurnGameScreen}
         options={{ gestureEnabled: false }}
       />
     </Stack.Navigator>
