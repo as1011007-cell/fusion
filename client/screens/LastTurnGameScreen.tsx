@@ -941,10 +941,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   winnerAvatar: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
     marginBottom: Spacing.md,
+    borderWidth: 4,
+    borderColor: "#FFD700",
   },
   winnerName: {
     fontSize: 22,
