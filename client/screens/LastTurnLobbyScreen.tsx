@@ -79,8 +79,54 @@ export default function LastTurnLobbyScreen() {
 
   useEffect(() => {
     if (error) {
-      Alert.alert("Error", error, [{ text: "OK", onPress: clearError }]);
       setIsConnecting(false);
+      
+      // Show user-friendly messages based on error type
+      if (error === "Room not found") {
+        Alert.alert(
+          "Room Doesn't Exist",
+          "The room code you entered doesn't exist. Please check the code and try again.",
+          [
+            { 
+              text: "Try Again", 
+              onPress: () => {
+                clearError();
+                setJoinCode("");
+              }
+            }
+          ]
+        );
+      } else if (error === "Game already in progress") {
+        Alert.alert(
+          "Game Already Started",
+          "This game has already started. You cannot join a game in progress.",
+          [
+            { 
+              text: "OK", 
+              onPress: () => {
+                clearError();
+                setJoinCode("");
+              }
+            }
+          ]
+        );
+      } else if (error === "Room is full") {
+        Alert.alert(
+          "Room Full",
+          "This room is full. Try joining a different room.",
+          [
+            { 
+              text: "Try Again", 
+              onPress: () => {
+                clearError();
+                setJoinCode("");
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert("Error", error, [{ text: "OK", onPress: clearError }]);
+      }
     }
   }, [error]);
 
