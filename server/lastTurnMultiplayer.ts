@@ -346,6 +346,55 @@ function startVoting(room: LastTurnRoom, playerId: string, playerName: string, s
   
   const answerText = room.currentTruthQuestion?.choices[selectedChoice] || 'Unknown answer';
   
+  // Check if there are any eligible voters (other alive players)
+  const eligibleVoters = Array.from(room.players.keys()).filter(id => 
+    id !== playerId && room.players.get(id)?.lives && room.players.get(id)!.lives > 0
+  );
+  
+  // If no eligible voters (solo play or only player left), auto-accept the answer
+  if (eligibleVoters.length === 0) {
+    room.votingState = null;
+    room.awaitingTruthAnswer = false;
+    
+    // Store last answer
+    room.lastTruthAnswer = {
+      playerId,
+      playerName,
+      answer: answerText,
+    };
+    
+    // Broadcast auto-accepted result
+    broadcastToRoom(room, {
+      type: 'VOTING_RESULT',
+      playerId,
+      playerName,
+      answerText,
+      accepted: true,
+      acceptCount: 0,
+      rejectCount: 0,
+      acceptedBy: [],
+      rejectedBy: [],
+      room: getRoomState(room),
+    });
+    
+    // Move to next player after a short delay
+    setTimeout(() => {
+      if (room.status === 'playing') {
+        room.forcedPlayerId = null;
+        room.currentTruthQuestion = null;
+        room.currentTurnPlayerId = getNextPlayer(room);
+        room.turnTimer = 30;
+        
+        if (room.revealedSlots.length >= 5) {
+          startNewRound(room);
+        } else if (room.currentTurnPlayerId) {
+          sendTruthQuestion(room, room.currentTurnPlayerId);
+        }
+      }
+    }, 2000);
+    return;
+  }
+  
   // Broadcast voting started to all players
   broadcastToRoom(room, {
     type: 'VOTING_STARTED',
