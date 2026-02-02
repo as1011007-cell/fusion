@@ -669,7 +669,7 @@ const styles = StyleSheet.create({
   },
   gameModeCard: {
     width: 150,
-    height: 130,
+    height: 210,
     padding: Spacing.md,
     borderRadius: BorderRadius.lg,
     marginRight: Spacing.md,
