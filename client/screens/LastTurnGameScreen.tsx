@@ -254,9 +254,12 @@ export default function LastTurnGameScreen() {
     const isCrash = isRevealed && room?.chamberSlots[index];
     
     const angle = (index * 60) - 90;
-    const radius = (CHAMBER_SIZE / 2) - (SLOT_SIZE / 2) - 10;
+    const radius = (CHAMBER_SIZE / 2) - (SLOT_SIZE / 2) - 8;
     const x = Math.cos((angle * Math.PI) / 180) * radius;
     const y = Math.sin((angle * Math.PI) / 180) * radius;
+    
+    const centerX = CHAMBER_SIZE / 2 - SLOT_SIZE / 2;
+    const centerY = CHAMBER_SIZE / 2 - SLOT_SIZE / 2;
 
     return (
       <Animated.View
@@ -267,16 +270,15 @@ export default function LastTurnGameScreen() {
           {
             width: SLOT_SIZE,
             height: SLOT_SIZE,
+            borderRadius: SLOT_SIZE / 2,
+            left: centerX + x,
+            top: centerY + y,
             backgroundColor: isRevealed 
               ? (isCrash ? "#FF4444" : colors.primary + "40") 
               : colors.surface,
             borderColor: isRevealed 
               ? (isCrash ? "#FF4444" : colors.primary) 
               : "#2E3350",
-            transform: [
-              { translateX: x },
-              { translateY: y },
-            ],
           }
         ]}
       >
@@ -868,7 +870,6 @@ const styles = StyleSheet.create({
   },
   slot: {
     position: "absolute",
-    borderRadius: SLOT_SIZE / 2,
     borderWidth: 2,
     justifyContent: "center",
     alignItems: "center",
