@@ -30,8 +30,12 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import { MultiplayerProvider } from "@/context/MultiplayerContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { IQProvider } from "@/context/IQContext";
+import { initInterstitialAd } from "@/services/InterstitialAdService";
 
 SplashScreen.preventAutoHideAsync();
+
+// Initialize interstitial ads on app startup
+initInterstitialAd();
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({

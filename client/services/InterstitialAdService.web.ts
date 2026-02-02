@@ -1,5 +1,5 @@
-export function initInterstitialAd(): void {
-  // No-op for type checking - actual implementation in .native.ts and .web.ts
+export function initInterstitialAd() {
+  // No-op on web
 }
 
 export function showInterstitialAd(): boolean {
