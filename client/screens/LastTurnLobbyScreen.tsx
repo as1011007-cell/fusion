@@ -376,7 +376,7 @@ export default function LastTurnLobbyScreen() {
   );
 
   const renderLobby = () => (
-    <Animated.View entering={SlideInUp} style={styles.lobbyContainer}>
+    <Animated.View entering={SlideInUp} style={[styles.lobbyContainer, { paddingBottom: insets.bottom }]}>
       <View style={styles.roomHeader}>
         <View style={styles.roomCodeContainer}>
           <ThemedText style={[styles.roomCodeLabel, { color: GameColors.textSecondary }]}>Room Code</ThemedText>
@@ -970,6 +970,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.sm,
+    paddingBottom: Spacing.xs,
   },
   chatInput: {
     flex: 1,
