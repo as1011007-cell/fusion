@@ -28,6 +28,8 @@ import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGame } from "@/context/GameContext";
 import { useTheme, ThemeId } from "@/context/ThemeContext";
 import { useProfile } from "@/context/ProfileContext";
+import { useIQ } from "@/context/IQContext";
+import { initInterstitialAd, showInterstitialAd } from "@/services/InterstitialAdService";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Home">;
 
@@ -75,9 +77,10 @@ const themeConfig = {
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  const { totalCoins, gameState, setStarPointsCallback, setXPCallback } = useGame();
+  const { totalCoins, gameState, setStarPointsCallback, setXPCallback, resetGame } = useGame();
   const { currentTheme, starPoints, addStarPoints } = useTheme();
   const { settings, addExperience } = useProfile();
+  const { isGameActive, resetGame: resetIQGame } = useIQ();
   const colors = currentTheme.colors;
   const themeId = currentTheme.id as ThemeId;
   const config = themeConfig[themeId];
@@ -94,6 +97,22 @@ export default function HomeScreen() {
   useEffect(() => {
     setXPCallback(addExperience);
   }, [addExperience, setXPCallback]);
+
+  // Show interstitial ad if user left a game without finishing
+  useEffect(() => {
+    if (gameState.isPlaying || isGameActive) {
+      initInterstitialAd();
+      const adTimer = setTimeout(() => {
+        showInterstitialAd();
+      }, 500);
+      
+      // Reset game states
+      if (gameState.isPlaying) resetGame();
+      if (isGameActive) resetIQGame();
+      
+      return () => clearTimeout(adTimer);
+    }
+  }, []);
 
   useEffect(() => {
     logoScale.value = withRepeat(
