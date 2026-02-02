@@ -1,16 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Pressable } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { View, StyleSheet, Pressable, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
-import { InterstitialAd, AdEventType, TestIds } from 'react-native-google-mobile-ads';
+import { ThemedText } from "@/components/ThemedText";
 import { GameColors, Spacing, BorderRadius } from "@/constants/theme";
 
-const adUnitId = __DEV__ ? TestIds.INTERSTITIAL : 'ca-app-pub-9336364822145619~7648226398';
+let InterstitialAd: any = null;
+let AdEventType: any = null;
+let TestIds: any = null;
 
-const interstitial = InterstitialAd.createForAdRequest(adUnitId, {
-  keywords: ['fashion', 'clothing'],
-});
+try {
+  const ads = require('react-native-google-mobile-ads');
+  InterstitialAd = ads.InterstitialAd;
+  AdEventType = ads.AdEventType;
+  TestIds = ads.TestIds;
+} catch (e) {
+  // Module not available (Expo Go / Web)
+}
+
+const INTERSTITIAL_AD_UNIT_ID = 'ca-app-pub-9336364822145619/1234567890';
 
 type AdBannerProps = {
   style?: object;
@@ -19,30 +28,44 @@ type AdBannerProps = {
 export function AdBanner({ style }: AdBannerProps) {
   const { isAdFree } = useTheme();
   const [loaded, setLoaded] = useState(false);
+  const [adsAvailable, setAdsAvailable] = useState(false);
+  const interstitialRef = useRef<any>(null);
 
   useEffect(() => {
     if (isAdFree) return;
+    if (!InterstitialAd || Platform.OS === 'web') return;
 
-    const unsubscribeLoaded = interstitial.addAdEventListener(AdEventType.LOADED, () => {
-      setLoaded(true);
-    });
+    try {
+      const adUnitId = __DEV__ ? TestIds.INTERSTITIAL : INTERSTITIAL_AD_UNIT_ID;
+      const interstitial = InterstitialAd.createForAdRequest(adUnitId, {
+        keywords: ['games', 'trivia', 'entertainment'],
+      });
+      interstitialRef.current = interstitial;
+      setAdsAvailable(true);
 
-    const unsubscribeClosed = interstitial.addAdEventListener(AdEventType.CLOSED, () => {
-      setLoaded(false);
+      const unsubscribeLoaded = interstitial.addAdEventListener(AdEventType.LOADED, () => {
+        setLoaded(true);
+      });
+
+      const unsubscribeClosed = interstitial.addAdEventListener(AdEventType.CLOSED, () => {
+        setLoaded(false);
+        interstitial.load();
+      });
+
       interstitial.load();
-    });
 
-    interstitial.load();
-
-    return () => {
-      unsubscribeLoaded();
-      unsubscribeClosed();
-    };
+      return () => {
+        unsubscribeLoaded();
+        unsubscribeClosed();
+      };
+    } catch (e) {
+      console.log('Ads not available:', e);
+    }
   }, [isAdFree]);
 
   const showInterstitial = () => {
-    if (loaded) {
-      interstitial.show();
+    if (loaded && interstitialRef.current) {
+      interstitialRef.current.show();
     }
   };
 
@@ -64,23 +87,13 @@ export function AdBanner({ style }: AdBannerProps) {
         <View style={styles.placeholderContent}>
           <Feather name="gift" size={24} color={GameColors.secondary} />
           <View style={styles.textContainer}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <View style={styles.badge}>
-                <Feather name="star" size={10} color="#fff" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <View style={styles.premiumText}>
-                    <View style={styles.dot} />
-                    <View style={styles.line} />
-                  </View>
-                  <View style={styles.actionButton}>
-                    <Feather name="play" size={12} color="#fff" />
-                  </View>
-                </View>
-                <View style={[styles.line, { width: '60%', marginTop: 4, opacity: 0.3 }]} />
-              </View>
-            </View>
+            <ThemedText style={styles.adTitle}>Go Ad-Free!</ThemedText>
+            <ThemedText style={styles.adSubtitle}>
+              {adsAvailable && loaded ? "Tap to watch ad" : "Remove all ads for $5.99"}
+            </ThemedText>
+          </View>
+          <View style={styles.actionButton}>
+            <Feather name={adsAvailable && loaded ? "play" : "arrow-right"} size={14} color="#fff" />
           </View>
         </View>
       </LinearGradient>
