@@ -39,7 +39,7 @@ interface LastTurnRoom {
   chamberSlots: boolean[]; // true = crash slot
   revealedSlots: number[];
   crashSlotIndex: number;
-  gameMode: 'classic' | 'silent' | 'countdown' | 'truth';
+  gameMode: 'classic' | 'countdown' | 'truth';
   turnTimer: number;
   truthAnswerTimer: number; // seconds to type answer in truth mode
   awaitingTruthAnswer: boolean; // waiting for player to type answer
@@ -656,7 +656,7 @@ export function setupLastTurnMultiplayer(server: Server) {
             const room = rooms.get(currentRoomCode);
             if (!room || room.hostId !== playerId) return;
 
-            const validModes = ['classic', 'silent', 'countdown', 'truth'];
+            const validModes = ['classic', 'countdown', 'truth'];
             if (validModes.includes(message.gameMode)) {
               room.gameMode = message.gameMode;
               broadcastToRoom(room, {
@@ -894,9 +894,6 @@ export function setupLastTurnMultiplayer(server: Server) {
             const room = rooms.get(currentRoomCode);
             if (!room || room.status !== 'waiting') return;
             
-            // Silent mode - no chat allowed
-            if (room.gameMode === 'silent') return;
-
             const player = room.players.get(playerId);
             if (!player) return;
 

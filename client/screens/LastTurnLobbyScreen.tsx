@@ -21,7 +21,6 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const GAME_MODES = [
   { id: "classic", name: "Classic", icon: "heart", color: "#FF6B6B", description: "Start with 3 lives. Pull the trigger and hope you survive. Last player standing wins!" },
-  { id: "silent", name: "Silent", icon: "volume-x", color: "#9B59B6", description: "No chat allowed. Read your opponents through actions alone. Pure psychological tension." },
   { id: "countdown", name: "Countdown", icon: "clock", color: "#F39C12", description: "Timer gets shorter each round. Make quick decisions or face the consequences!" },
   { id: "truth", name: "Truth-or-Risk", icon: "message-circle", color: "#3498DB", description: "Answer a personal question truthfully or take your chances with the chamber." },
 ];
@@ -505,8 +504,7 @@ export default function LastTurnLobbyScreen() {
         ))}
       </ScrollView>
 
-      {room?.gameMode !== 'silent' && (
-        <View style={[styles.chatSection, { backgroundColor: colors.surface }]}>
+      <View style={[styles.chatSection, { backgroundColor: colors.surface }]}>
           <View style={styles.chatHeader}>
             <Feather name="message-circle" size={16} color={colors.accent} />
             <ThemedText style={[styles.chatTitle, { color: GameColors.textPrimary }]}>Lobby Chat</ThemedText>
@@ -562,7 +560,6 @@ export default function LastTurnLobbyScreen() {
             </Pressable>
           </View>
         </View>
-      )}
 
       <View style={styles.lobbyActions}>
         {!isHost && (

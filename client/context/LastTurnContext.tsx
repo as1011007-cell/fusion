@@ -23,7 +23,7 @@ export interface LastTurnRoomState {
   chamberSlots: boolean[]; // 6 slots, one is "crash"
   revealedSlots: number[]; // indices of revealed slots
   crashSlotIndex: number; // the slot that causes crash
-  gameMode: "classic" | "silent" | "countdown" | "truth";
+  gameMode: "classic" | "countdown" | "truth";
   turnTimer: number; // seconds remaining for current turn
   truthAnswerTimer: number; // seconds to type answer in truth mode
   awaitingTruthAnswer: boolean; // waiting for player to type answer
