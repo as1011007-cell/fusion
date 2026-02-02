@@ -518,9 +518,11 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: "center",
     alignItems: "center",
+    paddingTop: 10,
   },
   roundInfo: {
     alignItems: "center",
+    paddingTop: 10,
   },
   roundLabel: {
     fontSize: 12,
@@ -533,6 +535,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    paddingTop: 10,
   },
   timer: {
     fontSize: 16,
@@ -667,14 +670,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 100,
-    paddingTop: 80,
   },
   finishedContent: {
     alignItems: "center",
     padding: Spacing.xl,
   },
   finishedTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontFamily: "Poppins_700Bold",
     letterSpacing: 4,
     marginBottom: Spacing.xl,
