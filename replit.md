@@ -96,6 +96,23 @@ The game features a vibrant "Electric Collision" aesthetic with neon accents, pe
 - WebSocket server at /ws/multiplayer path
 - MultiplayerContext manages connection state and game sync
 
+### Last Turn Mode (February 2026)
+- New multiplayer game mode with chamber-based psychological risk gameplay
+- Real-time WebSocket multiplayer at /ws/lastturn path
+- Room creation with 6-character join codes (supports up to 6 players)
+- 4 distinct game modes:
+  - Classic: 3 lives per player, last one standing wins
+  - Silent: No chat allowed, pure tension gameplay
+  - Countdown: Timer decreases each round
+  - Truth-or-Risk: Answer personal questions or risk the chamber
+- Core gameplay: 6 chamber slots with 1 "crash" slot hidden
+- Token system: Force (make another player pull), Pass (skip turn), Revenge (after crash)
+- Lives system: Players start with 3 lives, lose one on crash
+- Ad integration: Shows interstitial ads after game ends (respects ad-free purchases)
+- LastTurnContext manages game state and WebSocket connection
+- LastTurnLobbyScreen for room creation/joining with game mode selection
+- LastTurnGameScreen for chamber-based gameplay mechanics
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

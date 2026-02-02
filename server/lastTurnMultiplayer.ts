@@ -1,5 +1,12 @@
 import { WebSocketServer, WebSocket } from 'ws';
-import { Server } from 'http';
+import { Server, IncomingMessage } from 'http';
+import { Duplex } from 'stream';
+
+let wssLastTurn: WebSocketServer;
+
+export function getLastTurnWSS(): WebSocketServer {
+  return wssLastTurn;
+}
 
 interface LastTurnPlayer {
   id: string;
@@ -298,23 +305,23 @@ function handlePull(room: LastTurnRoom, playerId: string) {
 }
 
 export function setupLastTurnMultiplayer(server: Server) {
-  const wss = new WebSocketServer({ server, path: '/ws/lastturn' });
+  wssLastTurn = new WebSocketServer({ noServer: true });
 
   console.log('Last Turn WebSocket server initialized');
 
   const pingInterval = setInterval(() => {
-    wss.clients.forEach((ws) => {
+    wssLastTurn.clients.forEach((ws) => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.ping();
       }
     });
   }, 25000);
 
-  wss.on('close', () => {
+  wssLastTurn.on('close', () => {
     clearInterval(pingInterval);
   });
 
-  wss.on('connection', (ws: WebSocket) => {
+  wssLastTurn.on('connection', (ws: WebSocket) => {
     let playerId: string | null = null;
     let currentRoomCode: string | null = null;
 

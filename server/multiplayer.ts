@@ -1,5 +1,12 @@
 import { WebSocketServer, WebSocket } from 'ws';
-import { Server } from 'http';
+import { Server, IncomingMessage } from 'http';
+import { Duplex } from 'stream';
+
+let wssMultiplayer: WebSocketServer;
+
+export function getMultiplayerWSS(): WebSocketServer {
+  return wssMultiplayer;
+}
 
 interface Player {
   id: string;
@@ -89,24 +96,24 @@ function getRoomState(room: GameRoom) {
 }
 
 export function setupMultiplayer(server: Server) {
-  const wss = new WebSocketServer({ server, path: '/ws/multiplayer' });
+  wssMultiplayer = new WebSocketServer({ noServer: true });
 
   console.log('WebSocket server initialized for multiplayer');
 
   // Ping all clients every 25 seconds to keep connections alive
   const pingInterval = setInterval(() => {
-    wss.clients.forEach((ws) => {
+    wssMultiplayer.clients.forEach((ws) => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.ping();
       }
     });
   }, 25000);
 
-  wss.on('close', () => {
+  wssMultiplayer.on('close', () => {
     clearInterval(pingInterval);
   });
 
-  wss.on('connection', (ws: WebSocket) => {
+  wssMultiplayer.on('connection', (ws: WebSocket) => {
     let playerId: string | null = null;
     let currentRoomCode: string | null = null;
     let isAlive = true;

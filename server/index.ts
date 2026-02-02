@@ -7,8 +7,9 @@ import * as path from "path";
 import { initStripe } from "./stripeInit";
 import { WebhookHandlers } from "./webhookHandlers";
 import { getStripePublishableKey, getUncachableStripeClient } from "./stripeClient";
-import { setupMultiplayer } from "./multiplayer";
-import { setupLastTurnMultiplayer } from "./lastTurnMultiplayer";
+import { setupMultiplayer, getMultiplayerWSS } from "./multiplayer";
+import { setupLastTurnMultiplayer, getLastTurnWSS } from "./lastTurnMultiplayer";
+import { parse as parseUrl } from "url";
 
 const app = express();
 const log = console.log;
@@ -456,6 +457,33 @@ function setupErrorHandler(app: express.Application) {
 
   setupMultiplayer(server);
   setupLastTurnMultiplayer(server);
+
+  // Handle WebSocket upgrades manually to route to correct server
+  server.on('upgrade', (request, socket, head) => {
+    const pathname = parseUrl(request.url || '').pathname;
+    
+    if (pathname === '/ws/multiplayer') {
+      const wss = getMultiplayerWSS();
+      if (wss) {
+        wss.handleUpgrade(request, socket, head, (ws) => {
+          wss.emit('connection', ws, request);
+        });
+      } else {
+        socket.destroy();
+      }
+    } else if (pathname === '/ws/lastturn') {
+      const wss = getLastTurnWSS();
+      if (wss) {
+        wss.handleUpgrade(request, socket, head, (ws) => {
+          wss.emit('connection', ws, request);
+        });
+      } else {
+        socket.destroy();
+      }
+    } else {
+      socket.destroy();
+    }
+  });
 
   setupErrorHandler(app);
 
