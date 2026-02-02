@@ -667,16 +667,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 100,
+    paddingTop: 80,
   },
   finishedContent: {
     alignItems: "center",
     padding: Spacing.xl,
   },
   finishedTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontFamily: "Poppins_700Bold",
     letterSpacing: 4,
     marginBottom: Spacing.xl,
+    textAlign: "center",
   },
   winnerAvatar: {
     width: 120,

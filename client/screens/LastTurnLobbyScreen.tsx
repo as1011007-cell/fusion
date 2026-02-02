@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.xl + 10,
   },
   selectContainer: {
     flex: 1,
@@ -775,7 +775,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   roomCode: {
-    fontSize: 28,
+    fontSize: 26,
     fontFamily: "Poppins_700Bold",
     letterSpacing: 4,
   },
