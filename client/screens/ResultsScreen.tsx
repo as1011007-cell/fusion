@@ -56,10 +56,11 @@ export default function ResultsScreen() {
       xpAwardedRef.current = true;
     }
 
-    // Show interstitial ad when game ends
+    // Initialize and show interstitial ad when game ends
+    initInterstitialAd();
     const adTimer = setTimeout(() => {
       showInterstitialAd();
-    }, 1000);
+    }, 2000);
     
     return () => clearTimeout(adTimer);
   }, []);
