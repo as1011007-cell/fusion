@@ -647,6 +647,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
   },
   selectContainer: {
     flex: 1,
@@ -684,7 +685,7 @@ const styles = StyleSheet.create({
   },
   createContainer: {
     flex: 1,
-    paddingTop: Spacing.xl,
+    paddingTop: Spacing.md,
   },
   sectionTitle: {
     fontSize: 18,
