@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { StyleSheet, View, Image, Pressable, Dimensions } from "react-native";
+import { StyleSheet, View, Image, Pressable, Dimensions, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -194,6 +194,20 @@ export default function HomeScreen() {
   const handleIQTest = () => {
     if (settings.hapticsEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate("IQSetup");
+  };
+
+  const handlePurchaseAdFree = () => {
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    
+    if (Platform.OS === 'ios') {
+      // iOS uses Apple in-app purchases
+      navigation.navigate("Shop");
+    } else {
+      // Android and Web use Stripe
+      navigation.navigate("Shop");
+    }
   };
 
   const renderPlayButton = () => {
@@ -706,7 +720,7 @@ export default function HomeScreen() {
       <Animated.View entering={FadeInUp.delay(900).springify()} style={[styles.footer, { paddingBottom: insets.bottom + Spacing.md }]}>
         {!isAdFree && (
           <Pressable 
-            onPress={handleShop}
+            onPress={handlePurchaseAdFree}
             style={[styles.adsFreeButton, { backgroundColor: colors.surface, borderColor: colors.primary + "40" }]}
           >
             <Feather name="shield" size={12} color={colors.primary} />
