@@ -107,7 +107,11 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const connect = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) return;
+    // Don't create new connection if one is already open or connecting
+    if (wsRef.current?.readyState === WebSocket.OPEN || 
+        wsRef.current?.readyState === WebSocket.CONNECTING) {
+      return;
+    }
 
     const wsUrl = getWebSocketUrl();
     console.log("Connecting to WebSocket:", wsUrl);
@@ -133,16 +137,18 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
     ws.onclose = () => {
       console.log("WebSocket disconnected");
       setConnected(false);
+      wsRef.current = null;
       if (heartbeatInterval) {
         clearInterval(heartbeatInterval);
       }
-      // Only reconnect if we're in a room
+      // Auto-reconnect after a short delay
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
       reconnectTimeoutRef.current = setTimeout(() => {
-        if (room) {
-          console.log("Attempting to reconnect...");
-          connect();
-        }
-      }, 2000);
+        console.log("Attempting to reconnect...");
+        connect();
+      }, 1000);
     };
 
     ws.onerror = (e) => {
@@ -255,15 +261,39 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
 
   const waitForConnection = useCallback((): Promise<void> => {
     return new Promise((resolve, reject) => {
+      // Already connected
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         resolve();
         return;
       }
       
-      connect();
+      // If connecting, wait for it
+      if (wsRef.current?.readyState === WebSocket.CONNECTING) {
+        let attempts = 0;
+        const maxAttempts = 30;
+        const checkConnection = setInterval(() => {
+          attempts++;
+          if (wsRef.current?.readyState === WebSocket.OPEN) {
+            clearInterval(checkConnection);
+            resolve();
+          } else if (attempts >= maxAttempts || wsRef.current?.readyState === WebSocket.CLOSED) {
+            clearInterval(checkConnection);
+            // Try fresh connection
+            connect();
+            waitForOpen(resolve, reject);
+          }
+        }, 100);
+        return;
+      }
       
+      // Start fresh connection
+      connect();
+      waitForOpen(resolve, reject);
+    });
+    
+    function waitForOpen(resolve: () => void, reject: (e: Error) => void) {
       let attempts = 0;
-      const maxAttempts = 20;
+      const maxAttempts = 30;
       const checkConnection = setInterval(() => {
         attempts++;
         if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -274,7 +304,7 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
           reject(new Error("Connection timeout"));
         }
       }, 100);
-    });
+    }
   }, [connect]);
 
   const createRoom = useCallback(async (playerName: string, avatarId: string, maxPlayers = 8, iqSettings?: IQSettings) => {
@@ -338,7 +368,8 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
     setWinner(null);
     setIsDraw(false);
     setChatMessages([]);
-    wsRef.current?.close();
+    setError(null);
+    // Don't close WebSocket - keep connection alive for seamless room transitions
   }, [send]);
 
   const playAgain = useCallback(() => {
