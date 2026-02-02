@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { StyleSheet, View, Pressable, Dimensions, Alert, TextInput, ScrollView, Keyboard } from "react-native";
+import React, { useState, useEffect } from "react";
+import { StyleSheet, View, Pressable, Dimensions, Alert, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -57,15 +57,14 @@ export default function LastTurnGameScreen() {
     passAction,
     forcePlayer,
     answerTruth,
+    voteTruth,
     leaveRoom,
     playAgain,
   } = useLastTurn();
 
   const [showingAction, setShowingAction] = useState(false);
   const [showForceModal, setShowForceModal] = useState(false);
-  const [truthAnswer, setTruthAnswer] = useState("");
-  const [showTruthAnswer, setShowTruthAnswer] = useState(false);
-  const truthInputRef = useRef<TextInput>(null);
+  const [hasVoted, setHasVoted] = useState(false);
   
   const chamberRotation = useSharedValue(0);
   const pulseScale = useSharedValue(1);
@@ -156,21 +155,12 @@ export default function LastTurnGameScreen() {
     }
   }, [gameFinished, isAdFree]);
 
-  // Show last truth answer when received
+  // Reset voting state when voting phase changes
   useEffect(() => {
-    if (room?.lastTruthAnswer) {
-      setShowTruthAnswer(true);
-      const timer = setTimeout(() => setShowTruthAnswer(false), 3000);
-      return () => clearTimeout(timer);
+    if (!room?.votingState) {
+      setHasVoted(false);
     }
-  }, [room?.lastTruthAnswer]);
-
-  // Focus truth input when it's my turn in truth mode
-  useEffect(() => {
-    if (room?.gameMode === 'truth' && room?.awaitingTruthAnswer && isMyTurn) {
-      setTimeout(() => truthInputRef.current?.focus(), 500);
-    }
-  }, [room?.awaitingTruthAnswer, isMyTurn, room?.gameMode]);
+  }, [room?.votingState]);
 
   const chamberStyle = useAnimatedStyle(() => ({
     transform: [
@@ -191,14 +181,21 @@ export default function LastTurnGameScreen() {
     pullSlot();
   };
 
-  const handleSubmitTruth = () => {
-    if (!truthAnswer.trim()) return;
-    Keyboard.dismiss();
+  const handleSelectChoice = (choiceIndex: number) => {
+    if (!isMyTurn) return;
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    answerTruth(truthAnswer.trim());
-    setTruthAnswer("");
+    answerTruth(choiceIndex);
+  };
+
+  const handleVote = (accept: boolean) => {
+    if (hasVoted) return;
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    voteTruth(accept);
+    setHasVoted(true);
   };
 
   const handlePass = () => {
@@ -342,85 +339,202 @@ export default function LastTurnGameScreen() {
   const renderTruthMode = () => {
     if (room?.gameMode !== 'truth') return null;
 
-    // Show another player's answer
-    if (showTruthAnswer && room?.lastTruthAnswer && room.lastTruthAnswer.playerId !== playerId) {
+    // Show voting result
+    if (room?.votingResult) {
       return (
-        <Animated.View entering={FadeIn} style={[styles.truthAnswerOverlay, { backgroundColor: colors.surface }]}>
-          <View style={styles.truthAnswerHeader}>
-            <Feather name="message-circle" size={20} color={colors.accent} />
-            <ThemedText style={[styles.truthAnswerName, { color: colors.accent }]}>
-              {room.lastTruthAnswer.playerName} answered:
+        <Animated.View entering={FadeIn} style={[styles.truthPopup, { backgroundColor: colors.backgroundDark }]}>
+          <View style={[styles.truthPopupCard, { backgroundColor: colors.surface }]}>
+            <View style={styles.truthPopupHeader}>
+              <Feather 
+                name={room.votingResult.accepted ? "check-circle" : "x-circle"} 
+                size={24} 
+                color={room.votingResult.accepted ? "#4CAF50" : "#FF4444"} 
+              />
+              <ThemedText style={[styles.truthPopupTitle, { color: room.votingResult.accepted ? "#4CAF50" : "#FF4444" }]}>
+                {room.votingResult.accepted ? "ANSWER ACCEPTED" : "ANSWER REJECTED"}
+              </ThemedText>
+            </View>
+            <ThemedText style={[styles.truthPopupPlayerName, { color: colors.accent }]}>
+              {room.votingResult.playerName}
             </ThemedText>
+            <ThemedText style={[styles.truthPopupAnswer, { color: GameColors.textPrimary }]}>
+              "{room.votingResult.answerText}"
+            </ThemedText>
+            <View style={styles.voteResultStats}>
+              <View style={[styles.voteResultBadge, { backgroundColor: "#4CAF50" + "30" }]}>
+                <Feather name="thumbs-up" size={16} color="#4CAF50" />
+                <ThemedText style={[styles.voteResultCount, { color: "#4CAF50" }]}>
+                  {room.votingResult.acceptCount}
+                </ThemedText>
+              </View>
+              <View style={[styles.voteResultBadge, { backgroundColor: "#FF4444" + "30" }]}>
+                <Feather name="thumbs-down" size={16} color="#FF4444" />
+                <ThemedText style={[styles.voteResultCount, { color: "#FF4444" }]}>
+                  {room.votingResult.rejectCount}
+                </ThemedText>
+              </View>
+            </View>
+            {!room.votingResult.accepted && room.votingResult.playerId === playerId && (
+              <ThemedText style={[styles.mustPullWarning, { color: "#FF4444" }]}>
+                You must pull the chamber!
+              </ThemedText>
+            )}
           </View>
-          <ThemedText style={[styles.truthAnswerText, { color: GameColors.textPrimary }]}>
-            "{room.lastTruthAnswer.answer}"
-          </ThemedText>
         </Animated.View>
       );
     }
 
-    // Show question and input for current player
-    if (room?.awaitingTruthAnswer && room?.truthQuestion) {
+    // Show voting phase
+    if (room?.votingState) {
+      const isAnsweringPlayer = room.votingState.playerId === playerId;
+      const myVote = room.votingState.votes.find(v => v.voterId === playerId);
+      
       return (
-        <Animated.View entering={FadeInDown} style={[styles.truthContainer, { backgroundColor: colors.surface }]}>
-          <View style={styles.truthHeader}>
-            <Feather name="help-circle" size={20} color={colors.secondary} />
-            <ThemedText style={[styles.truthTitle, { color: colors.secondary }]}>TRUTH OR RISK</ThemedText>
-            <View style={[styles.truthTimer, { backgroundColor: room.truthAnswerTimer <= 10 ? "#FF4444" : colors.primary + "30" }]}>
-              <ThemedText style={[styles.truthTimerText, { color: room.truthAnswerTimer <= 10 ? "#FFF" : colors.primary }]}>
-                {room.truthAnswerTimer}s
+        <Animated.View entering={FadeIn} style={[styles.truthPopup, { backgroundColor: colors.backgroundDark }]}>
+          <View style={[styles.truthPopupCard, { backgroundColor: colors.surface }]}>
+            <View style={styles.truthPopupHeader}>
+              <Feather name="users" size={24} color={colors.secondary} />
+              <ThemedText style={[styles.truthPopupTitle, { color: colors.secondary }]}>
+                VOTING TIME
               </ThemedText>
+              <View style={[styles.truthTimer, { backgroundColor: room.votingState.votingTimer <= 5 ? "#FF4444" : colors.primary + "30" }]}>
+                <ThemedText style={[styles.truthTimerText, { color: room.votingState.votingTimer <= 5 ? "#FFF" : colors.primary }]}>
+                  {room.votingState.votingTimer}s
+                </ThemedText>
+              </View>
             </View>
+            <ThemedText style={[styles.truthPopupPlayerName, { color: colors.accent }]}>
+              {room.votingState.playerName} answered:
+            </ThemedText>
+            <ThemedText style={[styles.truthPopupAnswer, { color: GameColors.textPrimary }]}>
+              "{room.votingState.answerText}"
+            </ThemedText>
+            
+            {isAnsweringPlayer ? (
+              <View style={styles.votingWaitingContainer}>
+                <ThemedText style={[styles.votingWaitingText, { color: GameColors.textSecondary }]}>
+                  Waiting for others to vote...
+                </ThemedText>
+                <ThemedText style={[styles.votingCountText, { color: colors.primary }]}>
+                  {room.votingState.votes.length} vote(s) received
+                </ThemedText>
+              </View>
+            ) : hasVoted || myVote ? (
+              <View style={styles.votingWaitingContainer}>
+                <ThemedText style={[styles.votingWaitingText, { color: GameColors.textSecondary }]}>
+                  Vote submitted! Waiting for others...
+                </ThemedText>
+                <ThemedText style={[styles.votingCountText, { color: colors.primary }]}>
+                  {room.votingState.votes.length} vote(s) received
+                </ThemedText>
+              </View>
+            ) : (
+              <View style={styles.votingButtonsContainer}>
+                <ThemedText style={[styles.votingPrompt, { color: GameColors.textSecondary }]}>
+                  Do you accept this answer?
+                </ThemedText>
+                <View style={styles.votingButtons}>
+                  <Pressable
+                    style={[styles.voteButton, styles.voteAcceptButton]}
+                    onPress={() => handleVote(true)}
+                  >
+                    <Feather name="thumbs-up" size={20} color="#FFF" />
+                    <ThemedText style={styles.voteButtonText}>Accept</ThemedText>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.voteButton, styles.voteRejectButton]}
+                    onPress={() => handleVote(false)}
+                  >
+                    <Feather name="thumbs-down" size={20} color="#FFF" />
+                    <ThemedText style={styles.voteButtonText}>Reject</ThemedText>
+                  </Pressable>
+                </View>
+              </View>
+            )}
           </View>
-          
-          <ThemedText style={[styles.truthQuestion, { color: GameColors.textPrimary }]}>
-            {room.truthQuestion}
-          </ThemedText>
+        </Animated.View>
+      );
+    }
 
-          {isMyTurn ? (
-            <View style={styles.truthInputContainer}>
-              <TextInput
-                ref={truthInputRef}
-                style={[styles.truthInput, { backgroundColor: colors.backgroundDark, color: GameColors.textPrimary, borderColor: colors.primary + "50" }]}
-                placeholder="Type your honest answer..."
-                placeholderTextColor={GameColors.textSecondary}
-                value={truthAnswer}
-                onChangeText={setTruthAnswer}
-                multiline
-                maxLength={500}
-                returnKeyType="done"
-                blurOnSubmit
-              />
-              <View style={styles.truthActions}>
+    // Show question with multiple choice options
+    if (room?.awaitingTruthAnswer && room?.truthQuestion && room?.truthChoices) {
+      return (
+        <Animated.View entering={FadeIn} style={[styles.truthPopup, { backgroundColor: colors.backgroundDark }]}>
+          <View style={[styles.truthPopupCard, { backgroundColor: colors.surface }]}>
+            <View style={styles.truthPopupHeader}>
+              <Feather name="help-circle" size={24} color={colors.secondary} />
+              <ThemedText style={[styles.truthPopupTitle, { color: colors.secondary }]}>
+                TRUTH OR RISK
+              </ThemedText>
+              <View style={[styles.truthTimer, { backgroundColor: room.truthAnswerTimer <= 5 ? "#FF4444" : colors.primary + "30" }]}>
+                <ThemedText style={[styles.truthTimerText, { color: room.truthAnswerTimer <= 5 ? "#FFF" : colors.primary }]}>
+                  {room.truthAnswerTimer}s
+                </ThemedText>
+              </View>
+            </View>
+            
+            <ThemedText style={[styles.truthPopupQuestion, { color: GameColors.textPrimary }]}>
+              {room.truthQuestion}
+            </ThemedText>
+
+            {isMyTurn ? (
+              <View style={styles.choicesContainer}>
+                {room.truthChoices.map((choice, index) => (
+                  <Pressable
+                    key={index}
+                    style={[styles.choiceButton, { backgroundColor: colors.backgroundDark, borderColor: colors.primary + "50" }]}
+                    onPress={() => handleSelectChoice(index)}
+                  >
+                    <View style={[styles.choiceLetter, { backgroundColor: colors.primary }]}>
+                      <ThemedText style={styles.choiceLetterText}>
+                        {String.fromCharCode(65 + index)}
+                      </ThemedText>
+                    </View>
+                    <ThemedText style={[styles.choiceText, { color: GameColors.textPrimary }]} numberOfLines={2}>
+                      {choice}
+                    </ThemedText>
+                  </Pressable>
+                ))}
                 <Pressable
-                  style={[styles.truthSubmitBtn, { backgroundColor: truthAnswer.trim() ? colors.primary : colors.surface }]}
-                  onPress={handleSubmitTruth}
-                  disabled={!truthAnswer.trim()}
-                >
-                  <Feather name="send" size={18} color={truthAnswer.trim() ? "#FFF" : GameColors.textSecondary} />
-                  <ThemedText style={[styles.truthSubmitText, { color: truthAnswer.trim() ? "#FFF" : GameColors.textSecondary }]}>
-                    Answer Truthfully
-                  </ThemedText>
-                </Pressable>
-                <ThemedText style={[styles.truthOrText, { color: GameColors.textSecondary }]}>or</ThemedText>
-                <Pressable
-                  style={[styles.truthRiskBtn, { backgroundColor: "#FF4444" + "30", borderColor: "#FF4444" }]}
+                  style={[styles.riskChamberButton, { backgroundColor: "#FF4444" + "20", borderColor: "#FF4444" }]}
                   onPress={handlePull}
                 >
                   <Feather name="zap" size={18} color="#FF4444" />
-                  <ThemedText style={[styles.truthRiskText, { color: "#FF4444" }]}>
-                    Risk the Chamber
+                  <ThemedText style={[styles.riskChamberText, { color: "#FF4444" }]}>
+                    Skip Question - Risk the Chamber
                   </ThemedText>
                 </Pressable>
               </View>
-            </View>
-          ) : (
-            <View style={styles.truthWaiting}>
-              <ThemedText style={[styles.truthWaitingText, { color: GameColors.textSecondary }]}>
-                Waiting for {currentTurnPlayer?.name} to answer...
+            ) : (
+              <View style={styles.waitingForAnswerContainer}>
+                <ThemedText style={[styles.waitingForAnswerText, { color: GameColors.textSecondary }]}>
+                  {currentTurnPlayer?.name} is choosing an answer...
+                </ThemedText>
+              </View>
+            )}
+          </View>
+        </Animated.View>
+      );
+    }
+
+    // Show must pull after reject
+    if (room?.mustPullAfterReject && isMyTurn) {
+      return (
+        <Animated.View entering={FadeIn} style={[styles.truthPopup, { backgroundColor: colors.backgroundDark }]}>
+          <View style={[styles.truthPopupCard, { backgroundColor: colors.surface }]}>
+            <View style={styles.truthPopupHeader}>
+              <Feather name="alert-triangle" size={24} color="#FF4444" />
+              <ThemedText style={[styles.truthPopupTitle, { color: "#FF4444" }]}>
+                ANSWER REJECTED
               </ThemedText>
             </View>
-          )}
+            <ThemedText style={[styles.mustPullMessage, { color: GameColors.textPrimary }]}>
+              The group rejected your answer!
+            </ThemedText>
+            <ThemedText style={[styles.mustPullSubtext, { color: GameColors.textSecondary }]}>
+              You must pull the chamber now.
+            </ThemedText>
+          </View>
         </Animated.View>
       );
     }
@@ -1022,5 +1136,183 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     fontSize: 16,
+  },
+  truthPopup: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 50,
+    padding: Spacing.lg,
+  },
+  truthPopupCard: {
+    width: "100%",
+    maxWidth: 380,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.lg,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  truthPopupHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
+  },
+  truthPopupTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: "Poppins_700Bold",
+    letterSpacing: 2,
+  },
+  truthPopupPlayerName: {
+    fontSize: 14,
+    fontFamily: "Poppins_700Bold",
+    marginBottom: Spacing.xs,
+  },
+  truthPopupAnswer: {
+    fontSize: 16,
+    fontStyle: "italic",
+    lineHeight: 24,
+    marginBottom: Spacing.md,
+  },
+  truthPopupQuestion: {
+    fontSize: 16,
+    fontFamily: "Poppins_700Bold",
+    lineHeight: 24,
+    marginBottom: Spacing.lg,
+    textAlign: "center",
+  },
+  choicesContainer: {
+    gap: Spacing.sm,
+  },
+  choiceButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    gap: Spacing.md,
+  },
+  choiceLetter: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  choiceLetterText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontFamily: "Poppins_700Bold",
+  },
+  choiceText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  riskChamberButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 2,
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  riskChamberText: {
+    fontSize: 14,
+    fontFamily: "Poppins_700Bold",
+  },
+  waitingForAnswerContainer: {
+    alignItems: "center",
+    paddingVertical: Spacing.lg,
+  },
+  waitingForAnswerText: {
+    fontSize: 14,
+    fontStyle: "italic",
+  },
+  votingButtonsContainer: {
+    alignItems: "center",
+    gap: Spacing.md,
+  },
+  votingPrompt: {
+    fontSize: 14,
+    marginBottom: Spacing.sm,
+  },
+  votingButtons: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  voteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.lg,
+    gap: Spacing.sm,
+    minWidth: 120,
+  },
+  voteAcceptButton: {
+    backgroundColor: "#4CAF50",
+  },
+  voteRejectButton: {
+    backgroundColor: "#FF4444",
+  },
+  voteButtonText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontFamily: "Poppins_700Bold",
+  },
+  votingWaitingContainer: {
+    alignItems: "center",
+    paddingVertical: Spacing.md,
+    gap: Spacing.xs,
+  },
+  votingWaitingText: {
+    fontSize: 14,
+    fontStyle: "italic",
+  },
+  votingCountText: {
+    fontSize: 16,
+    fontFamily: "Poppins_700Bold",
+  },
+  voteResultStats: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: Spacing.lg,
+    marginTop: Spacing.sm,
+  },
+  voteResultBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    gap: Spacing.xs,
+  },
+  voteResultCount: {
+    fontSize: 16,
+    fontFamily: "Poppins_700Bold",
+  },
+  mustPullWarning: {
+    fontSize: 16,
+    fontFamily: "Poppins_700Bold",
+    textAlign: "center",
+    marginTop: Spacing.md,
+  },
+  mustPullMessage: {
+    fontSize: 16,
+    fontFamily: "Poppins_700Bold",
+    textAlign: "center",
+    marginBottom: Spacing.sm,
+  },
+  mustPullSubtext: {
+    fontSize: 14,
+    textAlign: "center",
   },
 });

@@ -12,6 +12,24 @@ export interface LastTurnPlayer {
   hasRevengeToken: boolean;
 }
 
+export interface VotingState {
+  playerId: string;
+  playerName: string;
+  selectedChoice: number;
+  answerText: string;
+  votingTimer: number;
+  votes: { voterId: string; voterName: string; accept: boolean }[];
+}
+
+export interface VotingResult {
+  playerId: string;
+  playerName: string;
+  answerText: string;
+  accepted: boolean;
+  acceptCount: number;
+  rejectCount: number;
+}
+
 export interface LastTurnRoomState {
   id: string;
   code: string;
@@ -25,13 +43,17 @@ export interface LastTurnRoomState {
   crashSlotIndex: number; // the slot that causes crash
   gameMode: "classic" | "countdown" | "truth";
   turnTimer: number; // seconds remaining for current turn
-  truthAnswerTimer: number; // seconds to type answer in truth mode
-  awaitingTruthAnswer: boolean; // waiting for player to type answer
+  truthAnswerTimer: number; // seconds to select answer in truth mode
+  awaitingTruthAnswer: boolean; // waiting for player to select answer
   lastTruthAnswer: { playerId: string; playerName: string; answer: string } | null;
   maxPlayers: number;
   forcedPlayerId: string | null; // player being forced to pull
   lastCrashPlayerId: string | null; // player who got last crash (for revenge)
   truthQuestion: string | null; // for truth-or-risk mode
+  truthChoices: string[] | null; // multiple choice options
+  votingState: VotingState | null; // current voting phase
+  votingResult: VotingResult | null; // result of last vote
+  mustPullAfterReject: boolean; // player must pull after rejected answer
 }
 
 export interface TurnAction {
@@ -69,7 +91,8 @@ interface LastTurnContextType {
   pullSlot: () => void;
   passAction: () => void;
   forcePlayer: (targetPlayerId: string) => void;
-  answerTruth: (answer: string) => void;
+  answerTruth: (selectedChoice: number) => void;
+  voteTruth: (accept: boolean) => void;
   sendChatMessage: (message: string) => void;
   leaveRoom: () => void;
   playAgain: () => void;
@@ -191,8 +214,12 @@ export function LastTurnProvider({ children }: { children: ReactNode }) {
         setRoom(prev => prev ? { 
           ...prev, 
           truthQuestion: message.question,
+          truthChoices: message.choices || null,
           awaitingTruthAnswer: true,
-          truthAnswerTimer: 45,
+          truthAnswerTimer: 15,
+          votingState: null,
+          votingResult: null,
+          mustPullAfterReject: false,
         } : null);
         break;
 
@@ -217,6 +244,78 @@ export function LastTurnProvider({ children }: { children: ReactNode }) {
           ...prev, 
           awaitingTruthAnswer: false,
           truthQuestion: null,
+          truthChoices: null,
+        } : null);
+        break;
+
+      case "VOTING_STARTED":
+        setRoom(prev => prev ? {
+          ...prev,
+          awaitingTruthAnswer: false,
+          votingState: {
+            playerId: message.playerId,
+            playerName: message.playerName,
+            selectedChoice: message.selectedChoice,
+            answerText: message.answerText,
+            votingTimer: message.votingTimer,
+            votes: [],
+          },
+          votingResult: null,
+        } : null);
+        break;
+
+      case "VOTE_RECEIVED":
+        setRoom(prev => {
+          if (!prev || !prev.votingState) return prev;
+          return {
+            ...prev,
+            votingState: {
+              ...prev.votingState,
+              votes: [
+                ...prev.votingState.votes,
+                { voterId: message.voterId, voterName: message.voterName, accept: message.accept }
+              ],
+            },
+          };
+        });
+        break;
+
+      case "VOTING_TIMER_UPDATE":
+        setRoom(prev => {
+          if (!prev || !prev.votingState) return prev;
+          return {
+            ...prev,
+            votingState: {
+              ...prev.votingState,
+              votingTimer: message.timer,
+            },
+          };
+        });
+        break;
+
+      case "VOTING_RESULT":
+        setRoom(prev => prev ? {
+          ...prev,
+          votingState: null,
+          votingResult: {
+            playerId: message.playerId,
+            playerName: message.playerName,
+            answerText: message.answerText,
+            accepted: message.accepted,
+            acceptCount: message.acceptCount,
+            rejectCount: message.rejectCount,
+          },
+          mustPullAfterReject: !message.accepted,
+        } : null);
+        break;
+
+      case "MUST_PULL_AFTER_REJECT":
+        setRoom(prev => prev ? {
+          ...prev,
+          mustPullAfterReject: true,
+          votingState: null,
+          truthQuestion: null,
+          truthChoices: null,
         } : null);
         break;
 
@@ -353,8 +452,12 @@ export function LastTurnProvider({ children }: { children: ReactNode }) {
     send({ type: "FORCE_PLAYER", targetPlayerId });
   }, [send]);
 
-  const answerTruth = useCallback((answer: string) => {
-    send({ type: "ANSWER_TRUTH", answer });
+  const answerTruth = useCallback((selectedChoice: number) => {
+    send({ type: "ANSWER_TRUTH", selectedChoice });
+  }, [send]);
+
+  const voteTruth = useCallback((accept: boolean) => {
+    send({ type: "VOTE_TRUTH", accept });
   }, [send]);
 
   const sendChatMessage = useCallback((message: string) => {
@@ -419,6 +522,7 @@ export function LastTurnProvider({ children }: { children: ReactNode }) {
         passAction,
         forcePlayer,
         answerTruth,
+        voteTruth,
         sendChatMessage,
         leaveRoom,
         playAgain,
