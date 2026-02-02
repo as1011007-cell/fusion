@@ -254,7 +254,7 @@ export default function LastTurnGameScreen() {
     const isCrash = isRevealed && room?.chamberSlots[index];
     
     const angle = (index * 60) - 90;
-    const edgeGap = 2;
+    const edgeGap = 6;
     const radius = (CHAMBER_SIZE - SLOT_SIZE) / 2 - edgeGap;
     const radians = (angle * Math.PI) / 180;
     const x = Math.round(Math.cos(radians) * radius);
