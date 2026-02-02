@@ -304,6 +304,36 @@ export default function LastTurnLobbyScreen() {
         })}
       </ScrollView>
 
+      <Pressable 
+        style={[styles.howToPlayHeader, { backgroundColor: colors.surface }]}
+        onPress={() => setShowHowToPlay(!showHowToPlay)}
+      >
+        <View style={styles.howToPlayTitleRow}>
+          <Feather name="help-circle" size={18} color={colors.accent} />
+          <ThemedText style={[styles.howToPlayTitle, { color: GameColors.textPrimary }]}>How to Play</ThemedText>
+        </View>
+        <Feather 
+          name={showHowToPlay ? "chevron-up" : "chevron-down"} 
+          size={20} 
+          color={GameColors.textSecondary} 
+        />
+      </Pressable>
+      
+      {showHowToPlay && (
+        <Animated.View entering={FadeIn.duration(200)} style={[styles.howToPlayContent, { backgroundColor: colors.surface }]}>
+          {HOW_TO_PLAY.map((item, index) => (
+            <View key={index} style={styles.howToPlayItem}>
+              <View style={[styles.howToPlayIcon, { backgroundColor: colors.primary + '20' }]}>
+                <Feather name={item.icon as any} size={16} color={colors.primary} />
+              </View>
+              <ThemedText style={[styles.howToPlayText, { color: GameColors.textSecondary }]}>
+                {item.text}
+              </ThemedText>
+            </View>
+          ))}
+        </Animated.View>
+      )}
+
       <Animated.View style={pulseAnimatedStyle}>
         <GradientButton
           onPress={handleCreateRoom}
