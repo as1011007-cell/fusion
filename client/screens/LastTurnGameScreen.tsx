@@ -361,17 +361,31 @@ export default function LastTurnGameScreen() {
               "{room.votingResult.answerText}"
             </ThemedText>
             <View style={styles.voteResultStats}>
-              <View style={[styles.voteResultBadge, { backgroundColor: "#4CAF50" + "30" }]}>
-                <Feather name="thumbs-up" size={16} color="#4CAF50" />
-                <ThemedText style={[styles.voteResultCount, { color: "#4CAF50" }]}>
-                  {room.votingResult.acceptCount}
-                </ThemedText>
+              <View style={styles.voteResultColumn}>
+                <View style={[styles.voteResultBadge, { backgroundColor: "#4CAF50" + "30" }]}>
+                  <Feather name="thumbs-up" size={16} color="#4CAF50" />
+                  <ThemedText style={[styles.voteResultCount, { color: "#4CAF50" }]}>
+                    {room.votingResult.acceptCount}
+                  </ThemedText>
+                </View>
+                {room.votingResult.acceptedBy.length > 0 && (
+                  <ThemedText style={[styles.voterNames, { color: "#4CAF50" }]}>
+                    {room.votingResult.acceptedBy.join(", ")}
+                  </ThemedText>
+                )}
               </View>
-              <View style={[styles.voteResultBadge, { backgroundColor: "#FF4444" + "30" }]}>
-                <Feather name="thumbs-down" size={16} color="#FF4444" />
-                <ThemedText style={[styles.voteResultCount, { color: "#FF4444" }]}>
-                  {room.votingResult.rejectCount}
-                </ThemedText>
+              <View style={styles.voteResultColumn}>
+                <View style={[styles.voteResultBadge, { backgroundColor: "#FF4444" + "30" }]}>
+                  <Feather name="thumbs-down" size={16} color="#FF4444" />
+                  <ThemedText style={[styles.voteResultCount, { color: "#FF4444" }]}>
+                    {room.votingResult.rejectCount}
+                  </ThemedText>
+                </View>
+                {room.votingResult.rejectedBy.length > 0 && (
+                  <ThemedText style={[styles.voterNames, { color: "#FF4444" }]}>
+                    {room.votingResult.rejectedBy.join(", ")}
+                  </ThemedText>
+                )}
               </View>
             </View>
             {!room.votingResult.accepted && room.votingResult.playerId === playerId && (
@@ -1284,8 +1298,17 @@ const styles = StyleSheet.create({
   voteResultStats: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: Spacing.lg,
-    marginTop: Spacing.sm,
+    gap: Spacing.xl,
+    marginTop: Spacing.md,
+  },
+  voteResultColumn: {
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  voterNames: {
+    fontSize: 12,
+    textAlign: "center",
+    maxWidth: 120,
   },
   voteResultBadge: {
     flexDirection: "row",

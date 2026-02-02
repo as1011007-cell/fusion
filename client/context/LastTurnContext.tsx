@@ -28,6 +28,8 @@ export interface VotingResult {
   accepted: boolean;
   acceptCount: number;
   rejectCount: number;
+  acceptedBy: string[];
+  rejectedBy: string[];
 }
 
 export interface LastTurnRoomState {
@@ -304,6 +306,8 @@ export function LastTurnProvider({ children }: { children: ReactNode }) {
             accepted: message.accepted,
             acceptCount: message.acceptCount,
             rejectCount: message.rejectCount,
+            acceptedBy: message.acceptedBy || [],
+            rejectedBy: message.rejectedBy || [],
           },
           mustPullAfterReject: !message.accepted,
         } : null);

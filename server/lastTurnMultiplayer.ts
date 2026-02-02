@@ -427,9 +427,22 @@ function handleVote(room: LastTurnRoom, voterId: string, accept: boolean) {
 function finishVoting(room: LastTurnRoom) {
   if (!room.votingState) return;
   
-  const votes = Array.from(room.votingState.votes.values());
-  const acceptCount = votes.filter(v => v === true).length;
-  const rejectCount = votes.filter(v => v === false).length;
+  const votes = Array.from(room.votingState.votes.entries());
+  const acceptCount = votes.filter(([_, v]) => v === true).length;
+  const rejectCount = votes.filter(([_, v]) => v === false).length;
+  
+  // Collect voter names for display
+  const acceptedBy: string[] = [];
+  const rejectedBy: string[] = [];
+  votes.forEach(([voterId, accepted]) => {
+    const voter = room.players.get(voterId);
+    const name = voter?.name || 'Player';
+    if (accepted) {
+      acceptedBy.push(name);
+    } else {
+      rejectedBy.push(name);
+    }
+  });
   
   // Majority rejects = player must pull, otherwise accepted
   const accepted = acceptCount >= rejectCount;
@@ -450,7 +463,7 @@ function finishVoting(room: LastTurnRoom) {
     answer: answerText,
   };
   
-  // Broadcast voting result
+  // Broadcast voting result with voter names
   broadcastToRoom(room, {
     type: 'VOTING_RESULT',
     playerId: answeringPlayerId,
@@ -459,6 +472,8 @@ function finishVoting(room: LastTurnRoom) {
     accepted,
     acceptCount,
     rejectCount,
+    acceptedBy,
+    rejectedBy,
     room: getRoomState(room),
   });
   
