@@ -1104,12 +1104,12 @@ const styles = StyleSheet.create({
   },
   themedButtonText: {
     fontFamily: "Poppins_700Bold",
-    fontSize: Math.min(12, SCREEN_WIDTH * 0.03),
-    letterSpacing: 1.5,
+    fontSize: Math.min(15, SCREEN_WIDTH * 0.038),
+    letterSpacing: 2.5,
     textAlign: "center",
     textTransform: "uppercase",
     color: "#fff",
-    lineHeight: 18,
+    lineHeight: 22,
     includeFontPadding: false,
   },
   compactButton: {
@@ -1142,8 +1142,8 @@ const styles = StyleSheet.create({
     ...Typography.body,
     color: "#fff",
     fontWeight: "700",
-    fontSize: Math.min(12, SCREEN_WIDTH * 0.03),
-    letterSpacing: 0.5,
+    fontSize: Math.min(15, SCREEN_WIDTH * 0.038),
+    letterSpacing: 2.5,
     textShadowColor: "rgba(0,0,0,0.3)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
@@ -1186,8 +1186,8 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     ...Typography.body,
     fontWeight: "700",
-    fontSize: Math.min(14, SCREEN_WIDTH * 0.035),
-    letterSpacing: 0.2,
+    fontSize: Math.min(15, SCREEN_WIDTH * 0.038),
+    letterSpacing: 2.5,
   },
   secondaryButtonDesc: {
     ...Typography.caption,
