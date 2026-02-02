@@ -706,7 +706,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   actionButton: {
-    marginTop: Spacing.lg,
+    marginTop: Spacing.xl,
   },
   joinContainer: {
     flex: 1,
