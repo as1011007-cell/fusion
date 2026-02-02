@@ -141,14 +141,7 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
       if (heartbeatInterval) {
         clearInterval(heartbeatInterval);
       }
-      // Auto-reconnect after a short delay
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
-      reconnectTimeoutRef.current = setTimeout(() => {
-        console.log("Attempting to reconnect...");
-        connect();
-      }, 1000);
+      // Don't auto-reconnect - user can rejoin with room code
     };
 
     ws.onerror = (e) => {
@@ -369,7 +362,13 @@ export function MultiplayerProvider({ children }: { children: ReactNode }) {
     setIsDraw(false);
     setChatMessages([]);
     setError(null);
-    // Don't close WebSocket - keep connection alive for seamless room transitions
+    // Close connection - user can reconnect with room code
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+    wsRef.current?.close();
+    wsRef.current = null;
   }, [send]);
 
   const playAgain = useCallback(() => {
