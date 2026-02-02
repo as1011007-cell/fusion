@@ -342,7 +342,7 @@ export default function LastTurnGameScreen() {
     // Show voting result
     if (room?.votingResult) {
       return (
-        <Animated.View entering={FadeIn} style={[styles.truthPopup, { backgroundColor: 'rgba(0, 0, 0, 0.4)' }]}>
+        <Animated.View entering={FadeIn} style={styles.truthPopup}>
           <View style={[styles.truthPopupCard, { backgroundColor: colors.surface }]}>
             <View style={styles.truthPopupHeader}>
               <Feather 
@@ -404,7 +404,7 @@ export default function LastTurnGameScreen() {
       const myVote = room.votingState.votes.find(v => v.voterId === playerId);
       
       return (
-        <Animated.View entering={FadeIn} style={[styles.truthPopup, { backgroundColor: 'rgba(0, 0, 0, 0.4)' }]}>
+        <Animated.View entering={FadeIn} style={styles.truthPopup}>
           <View style={[styles.truthPopupCard, { backgroundColor: colors.surface }]}>
             <View style={styles.truthPopupHeader}>
               <Feather name="users" size={24} color={colors.secondary} />
@@ -473,7 +473,7 @@ export default function LastTurnGameScreen() {
     // Show question with multiple choice options
     if (room?.awaitingTruthAnswer && room?.truthQuestion && room?.truthChoices) {
       return (
-        <Animated.View entering={FadeIn} style={[styles.truthPopup, { backgroundColor: 'rgba(0, 0, 0, 0.4)' }]}>
+        <Animated.View entering={FadeIn} style={styles.truthPopup}>
           <View style={[styles.truthPopupCard, { backgroundColor: colors.surface }]}>
             <View style={styles.truthPopupHeader}>
               <Feather name="help-circle" size={24} color={colors.secondary} />
@@ -896,9 +896,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   pullButton: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -916,9 +916,10 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   pullButtonText: {
-    fontSize: 16,
+    fontSize: 12,
     fontFamily: "Poppins_700Bold",
     marginTop: 2,
+    textAlign: "center",
   },
   finishedOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -1133,8 +1134,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   truthPopup: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: "center",
+    position: "absolute",
+    top: 100,
+    left: 0,
+    right: 0,
+    justifyContent: "flex-start",
     alignItems: "center",
     zIndex: 50,
     padding: Spacing.lg,
