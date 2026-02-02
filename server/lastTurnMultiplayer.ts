@@ -1279,13 +1279,22 @@ export function setupLastTurnMultiplayer(server: Server) {
       }
     }
 
-    // If current turn player left
-    if (room.currentTurnPlayerId === playerId && room.status === 'playing') {
+    // If current turn player left or the answering player in voting left
+    const isCurrentTurnPlayer = room.currentTurnPlayerId === playerId;
+    const isVotingPlayer = room.votingState?.playerId === playerId;
+    
+    if ((isCurrentTurnPlayer || isVotingPlayer) && room.status === 'playing') {
       // Clear truth mode state
       if (room.truthAnswerTimerInterval) {
         clearInterval(room.truthAnswerTimerInterval);
         room.truthAnswerTimerInterval = null;
       }
+      // Clear voting state
+      if (room.votingTimerInterval) {
+        clearInterval(room.votingTimerInterval);
+        room.votingTimerInterval = null;
+      }
+      room.votingState = null;
       room.awaitingTruthAnswer = false;
       room.currentTruthQuestion = null;
       
