@@ -704,6 +704,15 @@ export default function HomeScreen() {
       </View>
 
       <Animated.View entering={FadeInUp.delay(900).springify()} style={[styles.footer, { paddingBottom: insets.bottom + Spacing.md }]}>
+        {!isAdFree && (
+          <Pressable 
+            onPress={handleShop}
+            style={[styles.adsFreeButton, { backgroundColor: colors.surface, borderColor: colors.primary + "40" }]}
+          >
+            <Feather name="shield" size={12} color={colors.primary} />
+            <ThemedText style={[styles.adsFreeText, { color: colors.primary }]}>ADS FREE</ThemedText>
+          </Pressable>
+        )}
         <ThemedText style={styles.footerText}>What Would They Say?</ThemedText>
       </Animated.View>
     </LinearGradient>
@@ -1048,6 +1057,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.sm,
+    gap: 8,
+  },
+  adsFreeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    gap: 4,
+  },
+  adsFreeText: {
+    fontSize: 10,
+    fontFamily: Typography.fontFamily.bold,
+    letterSpacing: 1,
   },
   footerText: {
     ...Typography.small,
