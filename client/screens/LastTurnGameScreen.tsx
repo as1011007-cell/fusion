@@ -36,8 +36,8 @@ import { useLastTurnSounds } from "@/hooks/useLastTurnSounds";
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CHAMBER_SIZE = Math.min(SCREEN_WIDTH - 60, 320);
-const SLOT_SIZE = CHAMBER_SIZE / 4;
+const CHAMBER_SIZE = Math.min(SCREEN_WIDTH - 40, 340);
+const SLOT_SIZE = CHAMBER_SIZE / 3.5;
 
 export default function LastTurnGameScreen() {
   const insets = useSafeAreaInsets();
