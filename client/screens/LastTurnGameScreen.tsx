@@ -285,7 +285,7 @@ export default function LastTurnGameScreen() {
   };
 
   const renderGameFinished = () => (
-    <Animated.View entering={FadeIn} style={[styles.finishedOverlay, { backgroundColor: colors.backgroundDark + "F0" }]}>
+    <Animated.View entering={FadeIn} style={[styles.finishedOverlay, { backgroundColor: colors.backgroundDark + "F0", paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 }]}>
       <Animated.View entering={ZoomIn.delay(300)} style={styles.finishedContent}>
         <ThemedText style={[styles.finishedTitle, { color: colors.primary }]}>GAME OVER</ThemedText>
         
@@ -667,12 +667,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 100,
-    paddingTop: 60,
   },
   finishedContent: {
     alignItems: "center",
     padding: Spacing.xl,
-    paddingTop: Spacing.lg,
   },
   finishedTitle: {
     fontSize: 32,
