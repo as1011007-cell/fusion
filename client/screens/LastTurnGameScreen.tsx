@@ -840,6 +840,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    marginTop: -40,
   },
   turnIndicator: {
     fontSize: 18,
