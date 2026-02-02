@@ -3,20 +3,22 @@ import { View, StyleSheet, Pressable, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
-import { ThemedText } from "@/components/ThemedText";
 import { GameColors, Spacing, BorderRadius } from "@/constants/theme";
 
+// Dynamically import to avoid Metro web bundling errors
 let InterstitialAd: any = null;
 let AdEventType: any = null;
 let TestIds: any = null;
 
-try {
-  const ads = require('react-native-google-mobile-ads');
-  InterstitialAd = ads.InterstitialAd;
-  AdEventType = ads.AdEventType;
-  TestIds = ads.TestIds;
-} catch (e) {
-  // Module not available (Expo Go / Web)
+if (Platform.OS !== 'web') {
+  try {
+    const ads = require('react-native-google-mobile-ads');
+    InterstitialAd = ads.InterstitialAd;
+    AdEventType = ads.AdEventType;
+    TestIds = ads.TestIds;
+  } catch (e) {
+    console.warn('AdMob native module not found');
+  }
 }
 
 const INTERSTITIAL_AD_UNIT_ID = 'ca-app-pub-9336364822145619/1234567890';
@@ -32,8 +34,7 @@ export function AdBanner({ style }: AdBannerProps) {
   const interstitialRef = useRef<any>(null);
 
   useEffect(() => {
-    if (isAdFree) return;
-    if (!InterstitialAd || Platform.OS === 'web') return;
+    if (isAdFree || Platform.OS === 'web' || !InterstitialAd) return;
 
     try {
       const adUnitId = __DEV__ ? TestIds.INTERSTITIAL : INTERSTITIAL_AD_UNIT_ID;
@@ -69,7 +70,8 @@ export function AdBanner({ style }: AdBannerProps) {
     }
   };
 
-  if (isAdFree) {
+  // Hide completely on web to prevent any native component interference
+  if (isAdFree || Platform.OS === 'web') {
     return null;
   }
 
@@ -87,13 +89,23 @@ export function AdBanner({ style }: AdBannerProps) {
         <View style={styles.placeholderContent}>
           <Feather name="gift" size={24} color={GameColors.secondary} />
           <View style={styles.textContainer}>
-            <ThemedText style={styles.adTitle}>Go Ad-Free!</ThemedText>
-            <ThemedText style={styles.adSubtitle}>
-              {adsAvailable && loaded ? "Tap to watch ad" : "Remove all ads for $5.99"}
-            </ThemedText>
-          </View>
-          <View style={styles.actionButton}>
-            <Feather name={adsAvailable && loaded ? "play" : "arrow-right"} size={14} color="#fff" />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={styles.badge}>
+                <Feather name="star" size={10} color="#fff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={styles.premiumText}>
+                    <View style={styles.dot} />
+                    <View style={styles.line} />
+                  </View>
+                  <View style={styles.actionButton}>
+                    <Feather name="play" size={12} color="#fff" />
+                  </View>
+                </View>
+                <View style={[styles.line, { width: '60%', marginTop: 4, opacity: 0.3 }]} />
+              </View>
+            </View>
           </View>
         </View>
       </LinearGradient>
