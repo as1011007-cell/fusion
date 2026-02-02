@@ -258,7 +258,7 @@ function sendTruthQuestion(room: LastTurnRoom, playerId: string) {
   const question = room.truthQuestions.pop() || TRUTH_QUESTIONS[0];
   room.currentTruthQuestion = question;
   room.awaitingTruthAnswer = true;
-  room.truthAnswerTimer = 15; // 15 seconds to select an answer
+  room.truthAnswerTimer = 30; // 30 seconds to select an answer
   
   const player = room.players.get(playerId);
   

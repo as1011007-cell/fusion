@@ -218,7 +218,7 @@ export function LastTurnProvider({ children }: { children: ReactNode }) {
           truthQuestion: message.question,
           truthChoices: message.choices || null,
           awaitingTruthAnswer: true,
-          truthAnswerTimer: 15,
+          truthAnswerTimer: 30,
           votingState: null,
           votingResult: null,
           mustPullAfterReject: false,
