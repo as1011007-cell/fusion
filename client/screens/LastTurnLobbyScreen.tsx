@@ -764,17 +764,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: Spacing.md,
   },
-  roomCodeContainer: {},
+  roomCodeContainer: {
+    paddingTop: 10,
+  },
   roomCodeLabel: {
-    fontSize: 12,
-    marginBottom: 4,
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: 2,
   },
   roomCodeRow: {
     flexDirection: "row",
     alignItems: "center",
   },
   roomCode: {
-    fontSize: 26,
+    fontSize: 22,
     fontFamily: "Poppins_700Bold",
     letterSpacing: 4,
   },
