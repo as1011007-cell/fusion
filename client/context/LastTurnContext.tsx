@@ -215,6 +215,7 @@ export function LastTurnProvider({ children }: { children: ReactNode }) {
       case "TRUTH_QUESTION":
         setRoom(prev => prev ? { 
           ...prev, 
+          ...message.room,
           truthQuestion: message.question,
           truthChoices: message.choices || null,
           awaitingTruthAnswer: true,
@@ -298,6 +299,7 @@ export function LastTurnProvider({ children }: { children: ReactNode }) {
       case "VOTING_RESULT":
         setRoom(prev => prev ? {
           ...prev,
+          ...message.room,
           votingState: null,
           votingResult: {
             playerId: message.playerId,
