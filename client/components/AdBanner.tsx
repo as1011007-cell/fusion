@@ -1,10 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "@/context/ThemeContext";
-import { ThemedText } from "@/components/ThemedText";
+import { InterstitialAd, AdEventType, TestIds } from 'react-native-google-mobile-ads';
 import { GameColors, Spacing, BorderRadius } from "@/constants/theme";
+
+const adUnitId = __DEV__ ? TestIds.INTERSTITIAL : 'ca-app-pub-9336364822145619~7648226398';
+
+const interstitial = InterstitialAd.createForAdRequest(adUnitId, {
+  keywords: ['fashion', 'clothing'],
+});
 
 type AdBannerProps = {
   style?: object;
@@ -12,43 +18,73 @@ type AdBannerProps = {
 
 export function AdBanner({ style }: AdBannerProps) {
   const { isAdFree } = useTheme();
-  const [isDismissed, setIsDismissed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
-  if (isAdFree || isDismissed) {
+  useEffect(() => {
+    if (isAdFree) return;
+
+    const unsubscribeLoaded = interstitial.addAdEventListener(AdEventType.LOADED, () => {
+      setLoaded(true);
+    });
+
+    const unsubscribeClosed = interstitial.addAdEventListener(AdEventType.CLOSED, () => {
+      setLoaded(false);
+      interstitial.load();
+    });
+
+    interstitial.load();
+
+    return () => {
+      unsubscribeLoaded();
+      unsubscribeClosed();
+    };
+  }, [isAdFree]);
+
+  const showInterstitial = () => {
+    if (loaded) {
+      interstitial.show();
+    }
+  };
+
+  if (isAdFree) {
     return null;
   }
 
-  const handleClose = () => {
-    setIsDismissed(true);
-  };
-
   return (
-    <View style={[styles.container, style]}>
+    <Pressable style={[styles.container, style]} onPress={showInterstitial}>
       <LinearGradient
         colors={["#1a1a2e", "#16213e"]}
         style={styles.adContent}
       >
-        <Pressable 
-          style={styles.closeButton} 
-          onPress={handleClose}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Feather name="x" size={16} color="rgba(255,255,255,0.7)" />
-        </Pressable>
         <View style={styles.adLabel}>
-          <ThemedText style={styles.adLabelText}>AD</ThemedText>
+          <View style={styles.adLabelInner}>
+            <Feather name="zap" size={12} color={GameColors.secondary} />
+          </View>
         </View>
         <View style={styles.placeholderContent}>
           <Feather name="gift" size={24} color={GameColors.secondary} />
           <View style={styles.textContainer}>
-            <ThemedText style={styles.adTitle}>Go Ad-Free!</ThemedText>
-            <ThemedText style={styles.adSubtitle}>
-              Remove all ads for just $5
-            </ThemedText>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={styles.badge}>
+                <Feather name="star" size={10} color="#fff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={styles.premiumText}>
+                    <View style={styles.dot} />
+                    <View style={styles.line} />
+                  </View>
+                  <View style={styles.actionButton}>
+                    <Feather name="play" size={12} color="#fff" />
+                  </View>
+                </View>
+                <View style={[styles.line, { width: '60%', marginTop: 4, opacity: 0.3 }]} />
+              </View>
+            </View>
           </View>
         </View>
       </LinearGradient>
-    </View>
+    </Pressable>
   );
 }
 
@@ -64,32 +100,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.1)",
     position: "relative",
-  },
-  closeButton: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 10,
+    overflow: 'hidden',
   },
   adLabel: {
     position: "absolute",
-    top: 8,
-    right: 40,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    top: 0,
+    right: 0,
+    zIndex: 10,
   },
-  adLabelText: {
-    fontSize: 10,
-    color: "rgba(255,255,255,0.6)",
-    fontWeight: "600",
+  adLabelInner: {
+    backgroundColor: "rgba(255,255,255,0.1)",
+    padding: 6,
+    borderBottomLeftRadius: 12,
   },
   placeholderContent: {
     flexDirection: "row",
@@ -99,14 +121,39 @@ const styles = StyleSheet.create({
   textContainer: {
     flex: 1,
   },
-  adTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#fff",
+  badge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: GameColors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  adSubtitle: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.6)",
-    marginTop: 2,
+  premiumText: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
   },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: GameColors.secondary,
+  },
+  line: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#fff',
+    width: '100%',
+    opacity: 0.5,
+  },
+  actionButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: GameColors.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
 });
