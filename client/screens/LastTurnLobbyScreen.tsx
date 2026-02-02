@@ -59,10 +59,9 @@ export default function LastTurnLobbyScreen() {
     resetGameState,
   } = useLastTurn();
 
-  const [mode, setMode] = useState<"select" | "create" | "join" | "lobby">("select");
+  const [mode, setMode] = useState<"select" | "join" | "lobby">("select");
   const [joinCode, setJoinCode] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
-  const [selectedMode, setSelectedMode] = useState("classic");
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const codeInputRef = useRef<TextInput>(null);
@@ -181,7 +180,7 @@ export default function LastTurnLobbyScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     setIsConnecting(true);
-    createRoom(currentProfile?.name || "Player", currentProfile?.avatarId || "avatar-1", selectedMode);
+    createRoom(currentProfile?.name || "Player", currentProfile?.avatarId || "avatar-1", "classic");
   };
 
   const handleJoinRoom = () => {
@@ -242,7 +241,6 @@ export default function LastTurnLobbyScreen() {
     if (settings.hapticsEnabled) {
       Haptics.selectionAsync();
     }
-    setSelectedMode(modeId);
     if (room && playerId === room.hostId) {
       setGameMode(modeId);
     }
@@ -285,16 +283,25 @@ export default function LastTurnLobbyScreen() {
       </ThemedText>
 
       <View style={styles.buttonGroup}>
-        <Pressable
-          style={[styles.modeButton, { backgroundColor: colors.surface, borderColor: colors.primary }]}
-          onPress={() => setMode("create")}
-        >
-          <Feather name="plus-circle" size={28} color={colors.primary} />
-          <ThemedText style={[styles.modeButtonText, { color: GameColors.textPrimary }]}>Create Room</ThemedText>
-          <ThemedText style={[styles.modeButtonDesc, { color: GameColors.textSecondary }]}>
-            Host a new game
-          </ThemedText>
-        </Pressable>
+        <Animated.View style={pulseAnimatedStyle}>
+          <Pressable
+            style={[styles.modeButton, { backgroundColor: colors.surface, borderColor: colors.primary, opacity: isConnecting ? 0.7 : 1 }]}
+            onPress={handleCreateRoom}
+            disabled={isConnecting}
+          >
+            {isConnecting ? (
+              <ActivityIndicator size={28} color={colors.primary} />
+            ) : (
+              <Feather name="plus-circle" size={28} color={colors.primary} />
+            )}
+            <ThemedText style={[styles.modeButtonText, { color: GameColors.textPrimary }]}>
+              {isConnecting ? "Creating..." : "Create Room"}
+            </ThemedText>
+            <ThemedText style={[styles.modeButtonDesc, { color: GameColors.textSecondary }]}>
+              Host a new game
+            </ThemedText>
+          </Pressable>
+        </Animated.View>
 
         <Pressable
           style={[styles.modeButton, { backgroundColor: colors.surface, borderColor: colors.secondary }]}
@@ -307,87 +314,6 @@ export default function LastTurnLobbyScreen() {
           </ThemedText>
         </Pressable>
       </View>
-    </Animated.View>
-  );
-
-  const renderCreateMode = () => (
-    <Animated.View entering={FadeInDown} style={[styles.createContainer, { paddingTop: insets.top + Spacing.xl + 40 }]}>
-      <ThemedText style={[styles.sectionTitle, { color: GameColors.textPrimary }]}>Select Game Mode</ThemedText>
-      
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.modesScroll} contentContainerStyle={styles.modesScrollContent}>
-        {GAME_MODES.map((gameMode) => {
-          const isSelected = selectedMode === gameMode.id;
-          return (
-            <Pressable
-              key={gameMode.id}
-              style={[
-                styles.gameModeCard,
-                { 
-                  backgroundColor: isSelected ? gameMode.color + '15' : colors.surface,
-                  borderColor: isSelected ? gameMode.color : "#2E3350",
-                  borderWidth: isSelected ? 2 : 1,
-                }
-              ]}
-              onPress={() => handleModeChange(gameMode.id)}
-            >
-              <View style={[styles.gameModeIconContainer, { backgroundColor: gameMode.color + '20' }]}>
-                <Feather name={gameMode.icon as any} size={24} color={gameMode.color} />
-              </View>
-              <ThemedText style={[styles.gameModeName, { color: isSelected ? gameMode.color : GameColors.textPrimary }]}>
-                {gameMode.name}
-              </ThemedText>
-              <ThemedText style={[styles.gameModeDesc, { color: GameColors.textSecondary }]}>
-                {gameMode.description}
-              </ThemedText>
-              {isSelected && (
-                <View style={[styles.selectedBadge, { backgroundColor: gameMode.color }]}>
-                  <Feather name="check" size={12} color="#fff" />
-                </View>
-              )}
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-
-      <Animated.View style={pulseAnimatedStyle}>
-        <GradientButton
-          onPress={handleCreateRoom}
-          disabled={isConnecting}
-          style={styles.actionButton}
-        >
-          {isConnecting ? "Creating..." : "Create Room"}
-        </GradientButton>
-      </Animated.View>
-
-      <Pressable 
-        style={[styles.howToPlayHeader, { backgroundColor: colors.surface, marginTop: Spacing.lg }]}
-        onPress={() => setShowHowToPlay(!showHowToPlay)}
-      >
-        <View style={styles.howToPlayTitleRow}>
-          <Feather name="help-circle" size={18} color={colors.accent} />
-          <ThemedText style={[styles.howToPlayTitle, { color: GameColors.textPrimary }]}>How to Play</ThemedText>
-        </View>
-        <Feather 
-          name={showHowToPlay ? "chevron-up" : "chevron-down"} 
-          size={20} 
-          color={GameColors.textSecondary} 
-        />
-      </Pressable>
-      
-      {showHowToPlay && (
-        <Animated.View entering={FadeIn.duration(200)} style={[styles.howToPlayContent, { backgroundColor: colors.surface }]}>
-          {HOW_TO_PLAY.map((item, index) => (
-            <View key={index} style={styles.howToPlayItem}>
-              <View style={[styles.howToPlayIcon, { backgroundColor: colors.primary + '20' }]}>
-                <Feather name={item.icon as any} size={16} color={colors.primary} />
-              </View>
-              <ThemedText style={[styles.howToPlayText, { color: GameColors.textSecondary }]}>
-                {item.text}
-              </ThemedText>
-            </View>
-          ))}
-        </Animated.View>
-      )}
     </Animated.View>
   );
 
@@ -445,28 +371,40 @@ export default function LastTurnLobbyScreen() {
 
       {isHost && room?.status === "waiting" && (
         <View style={styles.hostModeSelector}>
-          <ThemedText style={[styles.hostModeLabel, { color: GameColors.textSecondary }]}>Game Mode:</ThemedText>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {GAME_MODES.map((gameMode) => (
-              <Pressable
-                key={gameMode.id}
-                style={[
-                  styles.miniModeButton,
-                  { 
-                    backgroundColor: room?.gameMode === gameMode.id ? colors.primary : colors.surface,
-                    borderColor: "#2E3350",
-                  }
-                ]}
-                onPress={() => handleModeChange(gameMode.id)}
-              >
-                <ThemedText style={[
-                  styles.miniModeText,
-                  { color: room?.gameMode === gameMode.id ? colors.backgroundDark : GameColors.textPrimary }
-                ]}>
-                  {gameMode.name}
-                </ThemedText>
-              </Pressable>
-            ))}
+          <ThemedText style={[styles.hostModeLabel, { color: GameColors.textPrimary }]}>Select Game Mode</ThemedText>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.modeCardsContainer}>
+            {GAME_MODES.map((gameMode) => {
+              const isSelected = room?.gameMode === gameMode.id;
+              return (
+                <Pressable
+                  key={gameMode.id}
+                  style={[
+                    styles.lobbyModeCard,
+                    { 
+                      backgroundColor: isSelected ? gameMode.color + '15' : colors.surface,
+                      borderColor: isSelected ? gameMode.color : "#2E3350",
+                      borderWidth: isSelected ? 2 : 1,
+                    }
+                  ]}
+                  onPress={() => handleModeChange(gameMode.id)}
+                >
+                  <View style={[styles.lobbyModeIconContainer, { backgroundColor: gameMode.color + '20' }]}>
+                    <Feather name={gameMode.icon as any} size={20} color={gameMode.color} />
+                  </View>
+                  <ThemedText style={[styles.lobbyModeName, { color: isSelected ? gameMode.color : GameColors.textPrimary }]}>
+                    {gameMode.name}
+                  </ThemedText>
+                  <ThemedText style={[styles.lobbyModeDesc, { color: GameColors.textSecondary }]} numberOfLines={3}>
+                    {gameMode.description}
+                  </ThemedText>
+                  {isSelected && (
+                    <View style={[styles.lobbySelectedBadge, { backgroundColor: gameMode.color }]}>
+                      <Feather name="check" size={10} color="#fff" />
+                    </View>
+                  )}
+                </Pressable>
+              );
+            })}
           </ScrollView>
         </View>
       )}
@@ -658,7 +596,6 @@ export default function LastTurnLobbyScreen() {
 
       <View style={styles.content}>
         {mode === "select" && renderSelectMode()}
-        {mode === "create" && renderCreateMode()}
         {mode === "join" && renderJoinMode()}
         {mode === "lobby" && renderLobby()}
       </View>
@@ -728,58 +665,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: Spacing.xs,
   },
-  createContainer: {
-    flex: 1,
-    paddingTop: Spacing.md,
-  },
   sectionTitle: {
     fontSize: 18,
     fontFamily: "Poppins_700Bold",
     marginBottom: Spacing.md,
-  },
-  modesScroll: {
-    marginBottom: Spacing.xl,
-  },
-  modesScrollContent: {
-    paddingRight: Spacing.lg,
-  },
-  gameModeCard: {
-    width: 150,
-    height: 210,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    marginRight: Spacing.md,
-    position: "relative",
-    overflow: "hidden",
-  },
-  gameModeIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: Spacing.sm,
-  },
-  gameModeName: {
-    fontSize: 16,
-    fontFamily: "Poppins_700Bold",
-    marginBottom: Spacing.xs,
-    letterSpacing: 0.5,
-  },
-  gameModeDesc: {
-    fontSize: 12,
-    lineHeight: 16,
-    flex: 1,
-  },
-  selectedBadge: {
-    position: "absolute",
-    top: Spacing.sm,
-    right: Spacing.sm,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
   },
   actionButton: {
     marginTop: Spacing.xl,
@@ -849,18 +738,48 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   hostModeLabel: {
-    fontSize: 12,
+    fontSize: 16,
+    fontFamily: "Poppins_700Bold",
+    marginBottom: Spacing.sm,
+  },
+  modeCardsContainer: {
+    paddingRight: Spacing.md,
+  },
+  lobbyModeCard: {
+    width: 130,
+    height: 160,
+    padding: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    marginRight: Spacing.sm,
+    position: "relative",
+    overflow: "hidden",
+  },
+  lobbyModeIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: Spacing.xs,
   },
-  miniModeButton: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
-    marginRight: Spacing.sm,
-    borderWidth: 1,
-  },
-  miniModeText: {
+  lobbyModeName: {
     fontSize: 14,
+    fontFamily: "Poppins_700Bold",
+    marginBottom: 4,
+  },
+  lobbyModeDesc: {
+    fontSize: 10,
+    lineHeight: 14,
+  },
+  lobbySelectedBadge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
   },
   howToPlayHeader: {
     flexDirection: "row",
