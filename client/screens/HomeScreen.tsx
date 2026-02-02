@@ -710,7 +710,7 @@ export default function HomeScreen() {
             style={[styles.adsFreeButton, { backgroundColor: colors.surface, borderColor: colors.primary + "40" }]}
           >
             <Feather name="shield" size={12} color={colors.primary} />
-            <ThemedText style={[styles.adsFreeText, { color: colors.primary }]}>ADS FREE</ThemedText>
+            <ThemedText style={[styles.adsFreeText, { color: colors.primary }]}>GET RID OF ALL THE ADS</ThemedText>
           </Pressable>
         )}
         <ThemedText style={styles.footerText}>What Would They Say?</ThemedText>
