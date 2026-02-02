@@ -37,7 +37,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CHAMBER_SIZE = Math.min(SCREEN_WIDTH * 0.75, 280);
-const SLOT_SIZE = CHAMBER_SIZE * 0.22;
+const SLOT_SIZE = CHAMBER_SIZE * 0.28;
 
 export default function LastTurnGameScreen() {
   const insets = useSafeAreaInsets();
