@@ -218,10 +218,11 @@ export default function HomeScreen() {
     }
     
     const isExpoGo = Constants.appOwnership === 'expo';
-    const isNative = Platform.OS === 'ios' || Platform.OS === 'android';
+    const isNativePlatform = Platform.OS === 'ios' || Platform.OS === 'android';
+    const storeName = Platform.OS === 'ios' ? 'App Store' : 'Play Store';
     
-    if (Platform.OS === 'ios' && !isExpoGo) {
-      // iOS uses Apple in-app purchases
+    // Use native in-app purchases for iOS and Android (when not in Expo Go)
+    if (isNativePlatform && !isExpoGo) {
       try {
         const connected = await inAppPurchaseService.connect();
         if (connected) {
@@ -241,16 +242,16 @@ export default function HomeScreen() {
           }
         } else {
           Alert.alert(
-            "App Store Purchase",
-            "In-app purchases are available through the App Store. Please download from the App Store to make purchases.",
+            `${storeName} Purchase`,
+            `In-app purchases are available through the ${storeName}. Please install from the ${storeName} to make purchases.`,
             [{ text: "OK" }]
           );
         }
       } catch (error) {
-        console.error('StoreKit purchase error:', error);
+        console.error('Native purchase error:', error);
       }
     } else {
-      // Android, Web, and Expo Go use Stripe
+      // Web and Expo Go use Stripe
       try {
         const apiUrl = getApiUrl();
         const response = await fetch(`${apiUrl}/api/stripe/products`);
