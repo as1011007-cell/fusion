@@ -691,16 +691,14 @@ const styles = StyleSheet.create({
   },
   lobbyContainer: {
     flex: 1,
-    paddingTop: Spacing.sm,
   },
   roomHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   roomCodeContainer: {
-    paddingTop: 10,
   },
   roomCodeLabel: {
     fontSize: 11,
