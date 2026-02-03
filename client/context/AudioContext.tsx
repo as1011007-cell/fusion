@@ -66,22 +66,36 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     }
   }, [isLastTurnActive, currentGameMusic, backgroundPlayer, settings.musicEnabled]);
 
-  const stopAllGameMusic = useCallback(() => {
+  const stopAllGameMusic = useCallback(async () => {
     try {
-      if (feudPlayer?.playing) feudPlayer.pause();
-      if (iqPlayer?.playing) iqPlayer.pause();
-      if (lastTurnPlayer?.playing) lastTurnPlayer.pause();
+      if (feudPlayer) {
+        feudPlayer.pause();
+        feudPlayer.seekTo(0);
+      }
+      if (iqPlayer) {
+        iqPlayer.pause();
+        iqPlayer.seekTo(0);
+      }
+      if (lastTurnPlayer) {
+        lastTurnPlayer.pause();
+        lastTurnPlayer.seekTo(0);
+      }
     } catch (e) {
       console.log("Error stopping game music:", e);
     }
   }, [feudPlayer, iqPlayer, lastTurnPlayer]);
 
-  const startGameMusic = useCallback((type: GameMusicType) => {
+  const startGameMusic = useCallback(async (type: GameMusicType) => {
+    if (type === null) return;
+    
     if (type === currentGameMusic && musicStartedRef.current) {
       return;
     }
 
-    stopAllGameMusic();
+    await stopAllGameMusic();
+    
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
     setIsLastTurnActive(true);
     setCurrentGameMusic(type);
     musicStartedRef.current = true;
@@ -89,15 +103,15 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     if (!settings.musicEnabled) return;
 
     try {
-      if (type === "feud" && feudPlayer) {
-        feudPlayer.seekTo(0);
-        feudPlayer.play();
-      } else if (type === "iq" && iqPlayer) {
-        iqPlayer.seekTo(0);
-        iqPlayer.play();
-      } else if (type === "lastturn" && lastTurnPlayer) {
-        lastTurnPlayer.seekTo(0);
-        lastTurnPlayer.play();
+      let player = null;
+      if (type === "feud") player = feudPlayer;
+      else if (type === "iq") player = iqPlayer;
+      else if (type === "lastturn") player = lastTurnPlayer;
+      
+      if (player) {
+        player.seekTo(0);
+        await new Promise(resolve => setTimeout(resolve, 20));
+        player.play();
       }
     } catch (e) {
       console.log("Error starting game music:", e);
