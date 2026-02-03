@@ -1,5 +1,6 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useAudioPlayer } from "expo-audio";
+import { useAudioContext } from "@/context/AudioContext";
 
 const pullSafeSound = require("../../assets/sounds/pull-safe.mp3");
 const pullCrashSound = require("../../assets/sounds/pull-crash.mp3");
@@ -10,6 +11,8 @@ const revengeSound = require("../../assets/sounds/revenge.mp3");
 export type LastTurnSoundType = "pull-safe" | "pull-crash" | "skip" | "force" | "revenge";
 
 export function useLastTurnSounds() {
+  const { setLastTurnActive } = useAudioContext();
+  
   const pullSafePlayer = useAudioPlayer(pullSafeSound);
   const pullCrashPlayer = useAudioPlayer(pullCrashSound);
   const skipPlayer = useAudioPlayer(skipSound);
@@ -29,7 +32,7 @@ export function useLastTurnSounds() {
     if (player) {
       try {
         player.seekTo(0);
-        player.volume = 0.7;
+        player.volume = 1.0;
         player.play();
       } catch (error) {
         console.log("Error playing sound:", type, error);
@@ -37,5 +40,13 @@ export function useLastTurnSounds() {
     }
   }, [pullSafePlayer, pullCrashPlayer, skipPlayer, forcePlayer, revengePlayer]);
 
-  return { playSound };
+  const startGameAudio = useCallback(() => {
+    setLastTurnActive(true);
+  }, [setLastTurnActive]);
+
+  const stopGameAudio = useCallback(() => {
+    setLastTurnActive(false);
+  }, [setLastTurnActive]);
+
+  return { playSound, startGameAudio, stopGameAudio };
 }

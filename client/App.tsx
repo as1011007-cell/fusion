@@ -29,6 +29,7 @@ import { ProfileProvider } from "@/context/ProfileContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { MultiplayerProvider } from "@/context/MultiplayerContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { AudioProvider } from "@/context/AudioContext";
 import { IQProvider } from "@/context/IQContext";
 import { LastTurnProvider } from "@/context/LastTurnContext";
 
@@ -59,27 +60,29 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ProfileProvider>
-            <ThemeProvider>
-              <GameProvider>
-                <IQProvider>
-                <MultiplayerProvider>
-                <LastTurnProvider>
-                <SafeAreaProvider>
-                  <GestureHandlerRootView style={styles.root}>
-                    <KeyboardProvider>
-                      <NavigationContainer>
-                        <RootStackNavigator />
-                      </NavigationContainer>
-                      <BackgroundMusic />
-                      <StatusBar style="light" />
-                    </KeyboardProvider>
-                  </GestureHandlerRootView>
-                </SafeAreaProvider>
-                </LastTurnProvider>
-                </MultiplayerProvider>
-                </IQProvider>
-              </GameProvider>
-            </ThemeProvider>
+            <AudioProvider>
+              <ThemeProvider>
+                <GameProvider>
+                  <IQProvider>
+                  <MultiplayerProvider>
+                  <LastTurnProvider>
+                  <SafeAreaProvider>
+                    <GestureHandlerRootView style={styles.root}>
+                      <KeyboardProvider>
+                        <NavigationContainer>
+                          <RootStackNavigator />
+                        </NavigationContainer>
+                        <BackgroundMusic />
+                        <StatusBar style="light" />
+                      </KeyboardProvider>
+                    </GestureHandlerRootView>
+                  </SafeAreaProvider>
+                  </LastTurnProvider>
+                  </MultiplayerProvider>
+                  </IQProvider>
+                </GameProvider>
+              </ThemeProvider>
+            </AudioProvider>
           </ProfileProvider>
         </AuthProvider>
       </QueryClientProvider>

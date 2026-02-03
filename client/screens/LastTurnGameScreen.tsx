@@ -45,7 +45,7 @@ export default function LastTurnGameScreen() {
   const { currentProfile, settings } = useProfile();
   const { currentTheme, isAdFree } = useTheme();
   const colors = currentTheme.colors;
-  const { playSound } = useLastTurnSounds();
+  const { playSound, startGameAudio, stopGameAudio } = useLastTurnSounds();
   
   const {
     playerId,
@@ -73,6 +73,13 @@ export default function LastTurnGameScreen() {
   const isMyTurn = room?.currentTurnPlayerId === playerId || room?.forcedPlayerId === playerId;
   const myPlayer = room?.players.find(p => p.id === playerId);
   const currentTurnPlayer = room?.players.find(p => p.id === room?.currentTurnPlayerId);
+
+  useEffect(() => {
+    startGameAudio();
+    return () => {
+      stopGameAudio();
+    };
+  }, [startGameAudio, stopGameAudio]);
 
   useEffect(() => {
     chamberRotation.value = withRepeat(

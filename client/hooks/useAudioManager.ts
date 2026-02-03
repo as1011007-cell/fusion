@@ -1,11 +1,13 @@
 import { useEffect, useCallback, useState } from "react";
 import { useAudioPlayer } from "expo-audio";
 import { useProfile } from "@/context/ProfileContext";
+import { useAudioContext } from "@/context/AudioContext";
 
 const backgroundMusic = require("../../assets/sounds/background-music.mp3");
 
 export function useAudioManager() {
   const { settings } = useProfile();
+  const { isLastTurnActive } = useAudioContext();
   const [isReady, setIsReady] = useState(false);
   
   const player = useAudioPlayer(backgroundMusic);
@@ -21,12 +23,12 @@ export function useAudioManager() {
   useEffect(() => {
     if (!isReady || !player) return;
 
-    if (settings.musicEnabled) {
+    if (settings.musicEnabled && !isLastTurnActive) {
       player.play();
     } else {
       player.pause();
     }
-  }, [settings.musicEnabled, isReady, player]);
+  }, [settings.musicEnabled, isReady, player, isLastTurnActive]);
 
   useEffect(() => {
     if (player) {
@@ -35,9 +37,9 @@ export function useAudioManager() {
   }, [settings.musicVolume, player]);
 
   const playBackgroundMusic = useCallback(() => {
-    if (!settings.musicEnabled || !player) return;
+    if (!settings.musicEnabled || !player || isLastTurnActive) return;
     player.play();
-  }, [settings.musicEnabled, player]);
+  }, [settings.musicEnabled, player, isLastTurnActive]);
 
   const stopBackgroundMusic = useCallback(() => {
     if (player) {
