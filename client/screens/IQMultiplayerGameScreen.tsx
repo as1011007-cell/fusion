@@ -363,10 +363,7 @@ export default function IQMultiplayerGameScreen() {
 
   useEffect(() => {
     startGameAudio();
-    return () => {
-      stopGameAudio();
-    };
-  }, [startGameAudio, stopGameAudio]);
+  }, [startGameAudio]);
 
   useEffect(() => {
     if (currentQuestion) {

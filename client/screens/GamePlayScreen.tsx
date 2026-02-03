@@ -55,10 +55,7 @@ export default function GamePlayScreen() {
 
   useEffect(() => {
     startGameAudio();
-    return () => {
-      stopGameAudio();
-    };
-  }, [startGameAudio, stopGameAudio]);
+  }, [startGameAudio]);
 
   useEffect(() => {
     if (gameState.showResults) {

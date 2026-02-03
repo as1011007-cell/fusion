@@ -212,10 +212,7 @@ export default function IQGameScreen() {
 
   useEffect(() => {
     startGameAudio();
-    return () => {
-      stopGameAudio();
-    };
-  }, [startGameAudio, stopGameAudio]);
+  }, [startGameAudio]);
 
   useEffect(() => {
     if (!currentQuestion) {

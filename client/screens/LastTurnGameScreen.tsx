@@ -78,10 +78,7 @@ export default function LastTurnGameScreen() {
 
   useEffect(() => {
     startGameAudio();
-    return () => {
-      stopGameAudio();
-    };
-  }, [startGameAudio, stopGameAudio]);
+  }, [startGameAudio]);
 
   useEffect(() => {
     const currentRound = room?.currentRound || 0;

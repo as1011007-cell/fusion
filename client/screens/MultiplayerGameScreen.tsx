@@ -67,10 +67,7 @@ export default function MultiplayerGameScreen() {
 
   useEffect(() => {
     startGameAudio();
-    return () => {
-      stopGameAudio();
-    };
-  }, [startGameAudio, stopGameAudio]);
+  }, [startGameAudio]);
 
   const currentPanel: Panel = useMemo(() => {
     if (!localQuestion) {
