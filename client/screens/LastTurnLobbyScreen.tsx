@@ -394,7 +394,7 @@ export default function LastTurnLobbyScreen() {
                   <ThemedText style={[styles.lobbyModeName, { color: isSelected ? gameMode.color : GameColors.textPrimary }]}>
                     {gameMode.name}
                   </ThemedText>
-                  <ThemedText style={[styles.lobbyModeDesc, { color: GameColors.textSecondary }]} numberOfLines={3}>
+                  <ThemedText style={[styles.lobbyModeDesc, { color: GameColors.textSecondary }]}>
                     {gameMode.description}
                   </ThemedText>
                   {isSelected && (
@@ -744,13 +744,12 @@ const styles = StyleSheet.create({
     paddingRight: Spacing.md,
   },
   lobbyModeCard: {
-    width: 130,
-    height: 160,
+    width: 140,
+    minHeight: 180,
     padding: Spacing.sm,
     borderRadius: BorderRadius.md,
     marginRight: Spacing.sm,
     position: "relative",
-    overflow: "hidden",
   },
   lobbyModeIconContainer: {
     width: 36,
