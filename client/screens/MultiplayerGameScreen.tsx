@@ -21,6 +21,7 @@ import { useProfile, avatarImages } from "@/context/ProfileContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useGame, Panel } from "@/context/GameContext";
 import { initInterstitialAd, showInterstitialAd } from "@/services/InterstitialAdService";
+import { useFeudGameSounds } from "@/hooks/useFeudGameSounds";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -34,6 +35,7 @@ export default function MultiplayerGameScreen() {
   const { currentTheme, isAdFree } = useTheme();
   const colors = currentTheme.colors;
   const { panels } = useGame();
+  const { startGameAudio, stopGameAudio } = useFeudGameSounds();
   
   const {
     playerId,
@@ -62,6 +64,13 @@ export default function MultiplayerGameScreen() {
   const [isAdvancing, setIsAdvancing] = useState(false);
 
   const isHost = room?.hostId === playerId;
+
+  useEffect(() => {
+    startGameAudio();
+    return () => {
+      stopGameAudio();
+    };
+  }, [startGameAudio, stopGameAudio]);
 
   const currentPanel: Panel = useMemo(() => {
     if (!localQuestion) {
@@ -103,6 +112,7 @@ export default function MultiplayerGameScreen() {
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    stopGameAudio();
     leaveRoom();
     navigation.navigate("Home");
   };
@@ -156,12 +166,14 @@ export default function MultiplayerGameScreen() {
 
   useEffect(() => {
     if (roomReset && room?.status === "waiting") {
+      stopGameAudio();
       clearRoomReset();
       navigation.navigate("MultiplayerLobby" as any);
     }
-  }, [roomReset, room?.status]);
+  }, [roomReset, room?.status, stopGameAudio]);
 
   const handleGoHome = () => {
+    stopGameAudio();
     leaveRoom();
     navigation.navigate("Home");
   };

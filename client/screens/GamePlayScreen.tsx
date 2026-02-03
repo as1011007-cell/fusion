@@ -21,6 +21,7 @@ import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGame, Panel } from "@/context/GameContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useProfile } from "@/context/ProfileContext";
+import { useFeudGameSounds } from "@/hooks/useFeudGameSounds";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "GamePlay">;
 
@@ -48,8 +49,16 @@ export default function GamePlayScreen() {
   const { currentTheme } = useTheme();
   const { settings } = useProfile();
   const colors = currentTheme.colors;
+  const { startGameAudio, stopGameAudio } = useFeudGameSounds();
 
   const [timerActive, setTimerActive] = useState(true);
+
+  useEffect(() => {
+    startGameAudio();
+    return () => {
+      stopGameAudio();
+    };
+  }, [startGameAudio, stopGameAudio]);
 
   useEffect(() => {
     if (gameState.showResults) {
@@ -67,6 +76,7 @@ export default function GamePlayScreen() {
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    stopGameAudio();
     resetGame();
     navigation.goBack();
   };
@@ -84,6 +94,7 @@ export default function GamePlayScreen() {
 
   const handleNextRound = () => {
     if (gameState.currentRound >= gameState.totalRounds) {
+      stopGameAudio();
       navigation.navigate("Results");
     } else {
       nextRound();
