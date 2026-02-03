@@ -8,7 +8,7 @@ const skipSound = require("../../assets/sounds/skip.mp3");
 const forceSound = require("../../assets/sounds/force.mp3");
 const revengeSound = require("../../assets/sounds/revenge.mp3");
 const intenseMusic = require("../../assets/sounds/intense-music.mp3");
-const roundStartSound = require("../../assets/sounds/round-start.m4a");
+const roundStartSound = require("../../assets/sounds/round-start.mp3");
 const timerWarningSound = require("../../assets/sounds/timer-warning.mp3");
 
 export type LastTurnSoundType = "pull-safe" | "pull-crash" | "skip" | "force" | "revenge" | "round-start" | "timer-warning";
