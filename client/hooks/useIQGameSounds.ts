@@ -13,7 +13,7 @@ export function useIQGameSounds() {
   useEffect(() => {
     if (iqMusicPlayer) {
       iqMusicPlayer.loop = true;
-      iqMusicPlayer.volume = 0.4;
+      iqMusicPlayer.volume = 0.5;
     }
   }, [iqMusicPlayer]);
 
