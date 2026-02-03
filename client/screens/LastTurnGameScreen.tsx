@@ -193,9 +193,10 @@ export default function LastTurnGameScreen() {
   // Navigate back to lobby when game is reset (play again)
   useEffect(() => {
     if (room?.status === "waiting" && !gameFinished) {
+      stopGameAudio();
       navigation.replace("LastTurnLobby");
     }
-  }, [room?.status, gameFinished]);
+  }, [room?.status, gameFinished, stopGameAudio]);
 
   // Reset voting state when voting phase changes
   useEffect(() => {
@@ -276,6 +277,7 @@ export default function LastTurnGameScreen() {
           text: "Leave", 
           style: "destructive",
           onPress: () => {
+            stopGameAudio();
             leaveRoom();
             navigation.navigate("Home");
           }
@@ -292,6 +294,7 @@ export default function LastTurnGameScreen() {
   };
 
   const handleGoHome = () => {
+    stopGameAudio();
     leaveRoom();
     navigation.navigate("Home");
   };
