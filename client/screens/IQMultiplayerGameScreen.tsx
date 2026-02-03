@@ -29,6 +29,7 @@ import { useProfile, avatarImages } from "@/context/ProfileContext";
 import { useTheme } from "@/context/ThemeContext";
 import { IQDifficulty } from "@/context/IQContext";
 import { initInterstitialAd, showInterstitialAd } from "@/services/InterstitialAdService";
+import { useIQGameSounds } from "@/hooks/useIQGameSounds";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -327,6 +328,7 @@ export default function IQMultiplayerGameScreen() {
   const { settings } = useProfile();
   const { currentTheme, isAdFree } = useTheme();
   const colors = currentTheme.colors;
+  const { startGameAudio, stopGameAudio } = useIQGameSounds();
 
   const {
     playerId,
@@ -360,6 +362,13 @@ export default function IQMultiplayerGameScreen() {
   const isHost = room?.hostId === playerId;
 
   useEffect(() => {
+    startGameAudio();
+    return () => {
+      stopGameAudio();
+    };
+  }, [startGameAudio, stopGameAudio]);
+
+  useEffect(() => {
     if (currentQuestion) {
       setLocalQuestion(currentQuestion);
       setSelectedIndex(null);
@@ -380,6 +389,7 @@ export default function IQMultiplayerGameScreen() {
 
   useEffect(() => {
     if (roomReset && room?.status === "waiting") {
+      stopGameAudio();
       clearRoomReset();
       navigation.navigate("IQMultiplayerLobby", {
         difficulty: "all",
@@ -387,7 +397,7 @@ export default function IQMultiplayerGameScreen() {
         questionCount: TOTAL_ROUNDS,
       });
     }
-  }, [roomReset, room?.status]);
+  }, [roomReset, room?.status, stopGameAudio]);
 
   // Show interstitial ad when IQ multiplayer game ends (skip if ad-free)
   useEffect(() => {
@@ -404,6 +414,7 @@ export default function IQMultiplayerGameScreen() {
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    stopGameAudio();
     leaveRoom();
     navigation.navigate("Home");
   };
@@ -464,6 +475,7 @@ export default function IQMultiplayerGameScreen() {
   };
 
   const handleGoHome = () => {
+    stopGameAudio();
     leaveRoom();
     navigation.navigate("Home");
   };

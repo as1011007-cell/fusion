@@ -24,6 +24,7 @@ import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useIQ } from "@/context/IQContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useProfile } from "@/context/ProfileContext";
+import { useIQGameSounds } from "@/hooks/useIQGameSounds";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "IQGame">;
 
@@ -200,6 +201,7 @@ export default function IQGameScreen() {
   const { currentTheme } = useTheme();
   const { settings } = useProfile();
   const colors = currentTheme.colors;
+  const { startGameAudio, stopGameAudio } = useIQGameSounds();
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -207,6 +209,13 @@ export default function IQGameScreen() {
   const [timerActive, setTimerActive] = useState(true);
   const [questionKey, setQuestionKey] = useState(0);
   const questionStartTime = useRef(Date.now());
+
+  useEffect(() => {
+    startGameAudio();
+    return () => {
+      stopGameAudio();
+    };
+  }, [startGameAudio, stopGameAudio]);
 
   useEffect(() => {
     if (!currentQuestion) {
@@ -227,6 +236,7 @@ export default function IQGameScreen() {
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    stopGameAudio();
     resetGame();
     navigation.goBack();
   };
@@ -276,6 +286,7 @@ export default function IQGameScreen() {
 
     const hasMore = nextQuestion();
     if (!hasMore) {
+      stopGameAudio();
       const results = endGame();
       navigation.replace("IQResults", results);
     }
