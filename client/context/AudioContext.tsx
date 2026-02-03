@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect, useRef } from "react";
-import { useAudioPlayer } from "expo-audio";
+import { useAudioPlayer, setAudioModeAsync } from "expo-audio";
 import { useProfile } from "@/context/ProfileContext";
 
 const backgroundMusic = require("../../assets/sounds/background-music.mp3");
@@ -25,6 +25,12 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const [isLastTurnActive, setIsLastTurnActive] = useState(false);
   const [currentGameMusic, setCurrentGameMusic] = useState<GameMusicType>(null);
   const musicStartedRef = useRef(false);
+
+  useEffect(() => {
+    setAudioModeAsync({
+      playsInSilentMode: true,
+    });
+  }, []);
 
   const backgroundPlayer = useAudioPlayer(backgroundMusic);
   const feudPlayer = useAudioPlayer(feudMusic);
