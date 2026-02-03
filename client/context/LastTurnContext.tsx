@@ -230,6 +230,10 @@ export function LastTurnProvider({ children }: { children: ReactNode }) {
         setRoom(prev => prev ? { ...prev, truthAnswerTimer: message.timer } : null);
         break;
 
+      case "TURN_TIMER_UPDATE":
+        setRoom(prev => prev ? { ...prev, turnTimer: message.timer } : null);
+        break;
+
       case "TRUTH_ANSWERED":
         setRoom(prev => prev ? { 
           ...prev, 

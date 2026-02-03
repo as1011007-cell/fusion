@@ -589,6 +589,14 @@ function startTurnTimer(room: LastTurnRoom) {
   room.turnTimerInterval = setInterval(() => {
     room.turnTimer--;
     
+    // Broadcast timer update every 5 seconds or when under 5 seconds
+    if (room.turnTimer % 5 === 0 || room.turnTimer <= 5) {
+      broadcastToRoom(room, {
+        type: 'TURN_TIMER_UPDATE',
+        timer: room.turnTimer,
+      });
+    }
+    
     if (room.turnTimer <= 0) {
       // Auto-pull on timer expiry
       if (room.currentTurnPlayerId) {
@@ -1196,6 +1204,13 @@ export function setupLastTurnMultiplayer(server: Server) {
             room.truthAnswerTimer = 45;
             room.truthQuestions = shuffleArray([...TRUTH_QUESTIONS]);
             
+            // Clear voting state
+            room.votingState = null;
+            
+            // Reset turn order for fresh random selection on next start
+            room.turnOrder = [];
+            room.currentTurnIndex = -1;
+            
             // Clear all timers
             if (room.turnTimerInterval) {
               clearInterval(room.turnTimerInterval);
@@ -1204,6 +1219,10 @@ export function setupLastTurnMultiplayer(server: Server) {
             if (room.truthAnswerTimerInterval) {
               clearInterval(room.truthAnswerTimerInterval);
               room.truthAnswerTimerInterval = null;
+            }
+            if (room.votingTimerInterval) {
+              clearInterval(room.votingTimerInterval);
+              room.votingTimerInterval = null;
             }
 
             const { slots, crashIndex } = generateChamber();
