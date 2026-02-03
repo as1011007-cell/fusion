@@ -25,7 +25,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const [isLastTurnActive, setIsLastTurnActive] = useState(false);
   const [currentGameMusic, setCurrentGameMusic] = useState<GameMusicType>(null);
   const musicStartedRef = useRef(false);
-  const pendingMusicRef = useRef<GameMusicType>(null);
 
   useEffect(() => {
     setAudioModeAsync({
@@ -67,7 +66,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     }
   }, [isLastTurnActive, currentGameMusic, backgroundPlayer, settings.musicEnabled]);
 
-  const stopAllGameMusic = useCallback(async () => {
+  const stopAllGameMusic = useCallback(() => {
     try {
       if (feudPlayer) {
         feudPlayer.pause();
@@ -86,22 +85,14 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     }
   }, [feudPlayer, iqPlayer, lastTurnPlayer]);
 
-  const startGameMusic = useCallback(async (type: GameMusicType) => {
+  const startGameMusic = useCallback((type: GameMusicType) => {
     if (type === null) return;
-    
-    pendingMusicRef.current = type;
     
     if (type === currentGameMusic && musicStartedRef.current) {
       return;
     }
 
-    await stopAllGameMusic();
-    
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    if (pendingMusicRef.current !== type) {
-      return;
-    }
+    stopAllGameMusic();
     
     setIsLastTurnActive(true);
     setCurrentGameMusic(type);
@@ -117,10 +108,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       
       if (player) {
         player.seekTo(0);
-        await new Promise(resolve => setTimeout(resolve, 50));
-        if (pendingMusicRef.current !== type) {
-          return;
-        }
         player.play();
       }
     } catch (e) {
@@ -129,7 +116,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   }, [currentGameMusic, feudPlayer, iqPlayer, lastTurnPlayer, stopAllGameMusic, settings.musicEnabled]);
 
   const stopGameMusic = useCallback(() => {
-    pendingMusicRef.current = null;
     stopAllGameMusic();
     setIsLastTurnActive(false);
     setCurrentGameMusic(null);

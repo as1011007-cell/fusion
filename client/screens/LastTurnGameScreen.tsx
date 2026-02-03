@@ -77,15 +77,8 @@ export default function LastTurnGameScreen() {
   const currentTurnPlayer = room?.players.find(p => p.id === room?.currentTurnPlayerId);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      startGameAudio();
-    }, 100);
-    
-    return () => {
-      clearTimeout(timer);
-      stopGameAudio();
-    };
-  }, [startGameAudio, stopGameAudio]);
+    startGameAudio();
+  }, []);
 
   useEffect(() => {
     const currentRound = room?.currentRound || 0;

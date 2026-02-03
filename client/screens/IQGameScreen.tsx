@@ -211,15 +211,8 @@ export default function IQGameScreen() {
   const questionStartTime = useRef(Date.now());
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      startGameAudio();
-    }, 100);
-    
-    return () => {
-      clearTimeout(timer);
-      stopGameAudio();
-    };
-  }, [startGameAudio, stopGameAudio]);
+    startGameAudio();
+  }, []);
 
   useEffect(() => {
     if (!currentQuestion) {

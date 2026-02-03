@@ -54,15 +54,8 @@ export default function GamePlayScreen() {
   const [timerActive, setTimerActive] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      startGameAudio();
-    }, 100);
-    
-    return () => {
-      clearTimeout(timer);
-      stopGameAudio();
-    };
-  }, [startGameAudio, stopGameAudio]);
+    startGameAudio();
+  }, []);
 
   useEffect(() => {
     if (gameState.showResults) {
