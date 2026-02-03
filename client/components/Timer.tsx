@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
   useSharedValue,
@@ -7,9 +7,12 @@ import Animated, {
   useAnimatedProps,
 } from "react-native-reanimated";
 import Svg, { Circle } from "react-native-svg";
+import { useAudioPlayer } from "expo-audio";
 
 import { ThemedText } from "@/components/ThemedText";
 import { GameColors, Typography } from "@/constants/theme";
+
+const timerWarningSound = require("../../assets/sounds/timer-warning.mp3");
 
 interface TimerProps {
   duration: number;
@@ -22,6 +25,8 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 export function Timer({ duration, onComplete, isActive }: TimerProps) {
   const [timeLeft, setTimeLeft] = useState(duration);
   const progress = useSharedValue(1);
+  const warningPlayed = useRef(false);
+  const timerWarningPlayer = useAudioPlayer(timerWarningSound);
 
   const size = 60;
   const strokeWidth = 4;
@@ -32,6 +37,7 @@ export function Timer({ duration, onComplete, isActive }: TimerProps) {
     if (!isActive) {
       setTimeLeft(duration);
       progress.value = 1;
+      warningPlayed.current = false;
       return;
     }
 
@@ -53,6 +59,19 @@ export function Timer({ duration, onComplete, isActive }: TimerProps) {
 
     return () => clearInterval(interval);
   }, [isActive, duration]);
+
+  useEffect(() => {
+    if (timeLeft === 5 && isActive && !warningPlayed.current && timerWarningPlayer) {
+      try {
+        timerWarningPlayer.seekTo(0);
+        timerWarningPlayer.volume = 1.0;
+        timerWarningPlayer.play();
+        warningPlayed.current = true;
+      } catch (error) {
+        console.log("Error playing timer warning:", error);
+      }
+    }
+  }, [timeLeft, isActive, timerWarningPlayer]);
 
   const animatedProps = useAnimatedProps(() => ({
     strokeDashoffset: circumference * (1 - progress.value),
