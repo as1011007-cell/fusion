@@ -65,6 +65,7 @@ export default function LastTurnGameScreen() {
   const [showingAction, setShowingAction] = useState(false);
   const [showForceModal, setShowForceModal] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
+  const [lastRound, setLastRound] = useState(0);
   
   const chamberRotation = useSharedValue(0);
   const pulseScale = useSharedValue(1);
@@ -80,6 +81,14 @@ export default function LastTurnGameScreen() {
       stopGameAudio();
     };
   }, [startGameAudio, stopGameAudio]);
+
+  useEffect(() => {
+    const currentRound = room?.currentRound || 0;
+    if (currentRound > 0 && currentRound !== lastRound) {
+      playSound("round-start");
+      setLastRound(currentRound);
+    }
+  }, [room?.currentRound, lastRound, playSound]);
 
   useEffect(() => {
     chamberRotation.value = withRepeat(

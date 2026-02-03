@@ -8,8 +8,9 @@ const skipSound = require("../../assets/sounds/skip.mp3");
 const forceSound = require("../../assets/sounds/force.mp3");
 const revengeSound = require("../../assets/sounds/revenge.mp3");
 const intenseMusic = require("../../assets/sounds/intense-music.mp3");
+const roundStartSound = require("../../assets/sounds/round-start.m4a");
 
-export type LastTurnSoundType = "pull-safe" | "pull-crash" | "skip" | "force" | "revenge";
+export type LastTurnSoundType = "pull-safe" | "pull-crash" | "skip" | "force" | "revenge" | "round-start";
 
 export function useLastTurnSounds() {
   const { setLastTurnActive } = useAudioContext();
@@ -21,6 +22,7 @@ export function useLastTurnSounds() {
   const forcePlayer = useAudioPlayer(forceSound);
   const revengePlayer = useAudioPlayer(revengeSound);
   const intenseMusicPlayer = useAudioPlayer(intenseMusic);
+  const roundStartPlayer = useAudioPlayer(roundStartSound);
 
   useEffect(() => {
     if (intenseMusicPlayer) {
@@ -36,6 +38,7 @@ export function useLastTurnSounds() {
       "skip": skipPlayer,
       "force": forcePlayer,
       "revenge": revengePlayer,
+      "round-start": roundStartPlayer,
     };
 
     const player = players[type];
@@ -48,7 +51,7 @@ export function useLastTurnSounds() {
         console.log("Error playing sound:", type, error);
       }
     }
-  }, [pullSafePlayer, pullCrashPlayer, skipPlayer, forcePlayer, revengePlayer]);
+  }, [pullSafePlayer, pullCrashPlayer, skipPlayer, forcePlayer, revengePlayer, roundStartPlayer]);
 
   const startGameAudio = useCallback(() => {
     setLastTurnActive(true);
