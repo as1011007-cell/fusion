@@ -161,6 +161,7 @@ export default function MultiplayerGameScreen() {
   };
 
   const handlePlayAgain = () => {
+    stopGameAudio();
     playAgain();
   };
 

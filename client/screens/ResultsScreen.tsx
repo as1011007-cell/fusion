@@ -24,6 +24,7 @@ import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useGame } from "@/context/GameContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useProfile } from "@/context/ProfileContext";
+import { useFeudGameSounds } from "@/hooks/useFeudGameSounds";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Results">;
 
@@ -35,6 +36,7 @@ export default function ResultsScreen() {
   const { settings, addExperience } = useProfile();
   const colors = currentTheme.colors;
   const xpAwardedRef = useRef(false);
+  const { stopGameAudio } = useFeudGameSounds();
 
   const scoreScale = useSharedValue(0);
 
@@ -71,6 +73,7 @@ export default function ResultsScreen() {
   }));
 
   const handlePlayAgain = () => {
+    stopGameAudio();
     resetGame();
     if (gameState.mode === "party") {
       navigation.navigate("PartySetup");
@@ -80,6 +83,7 @@ export default function ResultsScreen() {
   };
 
   const handleGoHome = () => {
+    stopGameAudio();
     resetGame();
     navigation.navigate("Home");
   };

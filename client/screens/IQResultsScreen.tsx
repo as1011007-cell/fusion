@@ -27,6 +27,7 @@ import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useIQ } from "@/context/IQContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useProfile } from "@/context/ProfileContext";
+import { useIQGameSounds } from "@/hooks/useIQGameSounds";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "IQResults">;
 type RouteProps = RouteProp<RootStackParamList, "IQResults">;
@@ -195,6 +196,7 @@ export default function IQResultsScreen() {
   const { settings, addExperience } = useProfile();
   const colors = currentTheme.colors;
   const xpAwardedRef = useRef(false);
+  const { stopGameAudio } = useIQGameSounds();
 
   const { finalScore, correctCount, avgTime, iqEstimate, totalQuestions, categoryBreakdown } = route.params;
 
@@ -226,6 +228,7 @@ export default function IQResultsScreen() {
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
+    stopGameAudio();
     resetGame();
     navigation.navigate("IQSetup");
   };
@@ -234,6 +237,7 @@ export default function IQResultsScreen() {
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
+    stopGameAudio();
     resetGame();
     navigation.navigate("Home");
   };

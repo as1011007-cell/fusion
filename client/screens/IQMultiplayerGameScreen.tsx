@@ -471,6 +471,7 @@ export default function IQMultiplayerGameScreen() {
   };
 
   const handlePlayAgain = () => {
+    stopGameAudio();
     playAgain();
   };
 

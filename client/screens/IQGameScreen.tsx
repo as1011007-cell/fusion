@@ -286,7 +286,6 @@ export default function IQGameScreen() {
 
     const hasMore = nextQuestion();
     if (!hasMore) {
-      stopGameAudio();
       const results = endGame();
       navigation.replace("IQResults", results);
     }

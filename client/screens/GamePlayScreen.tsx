@@ -94,7 +94,6 @@ export default function GamePlayScreen() {
 
   const handleNextRound = () => {
     if (gameState.currentRound >= gameState.totalRounds) {
-      stopGameAudio();
       navigation.navigate("Results");
     } else {
       nextRound();
