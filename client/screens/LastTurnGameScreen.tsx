@@ -66,6 +66,7 @@ export default function LastTurnGameScreen() {
   const [showForceModal, setShowForceModal] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
   const [lastRound, setLastRound] = useState(0);
+  const [timerWarningPlayed, setTimerWarningPlayed] = useState(false);
   
   const chamberRotation = useSharedValue(0);
   const pulseScale = useSharedValue(1);
@@ -87,8 +88,26 @@ export default function LastTurnGameScreen() {
     if (currentRound > 0 && currentRound !== lastRound) {
       playSound("round-start");
       setLastRound(currentRound);
+      setTimerWarningPlayed(false);
     }
   }, [room?.currentRound, lastRound, playSound]);
+
+  useEffect(() => {
+    const turnTimer = room?.turnTimer || 0;
+    const votingTimer = room?.votingState?.votingTimer || 0;
+    const truthTimer = room?.truthAnswerTimer || 0;
+    
+    const anyTimerLow = turnTimer === 5 || votingTimer === 5 || truthTimer === 5;
+    
+    if (anyTimerLow && !timerWarningPlayed) {
+      playSound("timer-warning");
+      setTimerWarningPlayed(true);
+    }
+    
+    if (turnTimer > 5 && votingTimer > 5 && truthTimer > 5) {
+      setTimerWarningPlayed(false);
+    }
+  }, [room?.turnTimer, room?.votingState?.votingTimer, room?.truthAnswerTimer, timerWarningPlayed, playSound]);
 
   useEffect(() => {
     chamberRotation.value = withRepeat(
