@@ -290,6 +290,7 @@ export default function LastTurnGameScreen() {
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
+    stopGameAudio();
     playAgain();
   };
 
