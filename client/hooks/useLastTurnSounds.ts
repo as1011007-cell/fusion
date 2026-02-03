@@ -25,7 +25,7 @@ export function useLastTurnSounds() {
   useEffect(() => {
     if (intenseMusicPlayer) {
       intenseMusicPlayer.loop = true;
-      intenseMusicPlayer.volume = 0.15;
+      intenseMusicPlayer.volume = 0.5;
     }
   }, [intenseMusicPlayer]);
 
