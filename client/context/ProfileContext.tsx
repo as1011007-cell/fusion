@@ -219,20 +219,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   // Check for needsCloudSync flag (set by AuthContext on login/register)
   useEffect(() => {
+    if (!isInitialLoadComplete) return;
+
     const checkAndSyncFromCloud = async () => {
-      if (!isInitialLoadComplete) return;
-      
       const needsSync = await AsyncStorage.getItem("needsCloudSync");
       if (needsSync === "true") {
-        // Get the authenticated user from AsyncStorage
         const authUserData = await AsyncStorage.getItem("authUser");
         if (authUserData) {
           const authUser = JSON.parse(authUserData);
           console.log("needsCloudSync flag detected, syncing from cloud for user:", authUser.id);
-          // Clear the flag first to prevent re-syncing
           await AsyncStorage.removeItem("needsCloudSync");
-          
-          // Load from cloud using auth user's ID
+
+          cloudLoadTimestampRef.current = Date.now();
+
           const success = await loadFromCloud(authUser.id);
           if (success) {
             console.log("Cloud sync completed successfully on login");
@@ -240,8 +239,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         }
       }
     };
-    
+
     checkAndSyncFromCloud();
+    const interval = setInterval(checkAndSyncFromCloud, 1500);
+    return () => clearInterval(interval);
   }, [isInitialLoadComplete]);
 
   // Save locally and sync to cloud when data changes (after initial load)
@@ -259,19 +260,19 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       
       const authUser = JSON.parse(authUserData);
       
-      // Skip auto-sync if we just loaded from cloud (within last 3 seconds)
+      // Skip auto-sync if we just loaded from cloud (within last 10 seconds)
       const timeSinceCloudLoad = Date.now() - cloudLoadTimestampRef.current;
-      if (timeSinceCloudLoad < 3000) {
+      if (timeSinceCloudLoad < 10000) {
         console.log("Skipping auto-sync (just loaded from cloud)");
         return;
       }
       
-      console.log("Scheduling cloud sync in 1 second for user:", authUser.id);
+      console.log("Scheduling cloud sync in 2 seconds for user:", authUser.id);
       // Debounce cloud sync to avoid too many requests
       const timeoutId = setTimeout(async () => {
         // Double check we haven't loaded from cloud during debounce
         const checkTime = Date.now() - cloudLoadTimestampRef.current;
-        if (checkTime < 3000) {
+        if (checkTime < 10000) {
           console.log("Skipping auto-sync in timeout (just loaded from cloud)");
           return;
         }
@@ -531,6 +532,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       return false;
     }
     
+    // Set timestamp early to prevent auto-sync from overwriting during fetch
+    cloudLoadTimestampRef.current = Date.now();
+    
     try {
       const baseUrl = getApiUrl();
       const response = await fetch(`${baseUrl}/api/cloud-sync/load/${encodeURIComponent(userId)}`);
@@ -544,7 +548,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       console.log("loadFromCloud: Retrieved data from server");
 
       if (result.success && result.data) {
-        // Set timestamp to skip auto-sync for a period after loading from cloud
+        // Refresh timestamp after fetch completes
         cloudLoadTimestampRef.current = Date.now();
         
         const parsed = result.data;
