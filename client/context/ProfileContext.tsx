@@ -460,6 +460,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       console.log("syncToCloud: No socialId, returning false");
       return false;
     }
+
+    const timeSinceCloudLoad = Date.now() - cloudLoadTimestampRef.current;
+    if (timeSinceCloudLoad < 10000) {
+      console.log("syncToCloud: Skipping (just loaded from cloud)");
+      return false;
+    }
     
     try {
       const currentThemeId = await AsyncStorage.getItem("currentThemeId");
