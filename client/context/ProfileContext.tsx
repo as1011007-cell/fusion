@@ -245,9 +245,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [isInitialLoadComplete]);
 
-  // Save locally when data changes (after initial load) - no auto cloud sync
   useEffect(() => {
     if (!isInitialLoadComplete) return;
+    
+    const timeSinceCloudLoad = Date.now() - cloudLoadTimestampRef.current;
+    if (timeSinceCloudLoad < 5000) return;
     
     saveData();
   }, [profiles, avatars, settings, answeredQuestions, currentProfile, experiencePoints, isInitialLoadComplete]);

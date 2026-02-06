@@ -368,20 +368,6 @@ export default function ProfileScreen() {
             <ThemedText style={styles.editButtonText}>Edit Profile</ThemedText>
           </Pressable>
 
-          {currentProfile?.socialProvider ? (
-            <Pressable 
-              onPress={async () => {
-                const success = await syncToCloud();
-                if (success) {
-                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                }
-              }} 
-              style={styles.syncButton}
-            >
-              <Feather name="cloud" size={16} color={GameColors.correct} />
-              <ThemedText style={styles.syncButtonText}>Sync Progress</ThemedText>
-            </Pressable>
-          ) : null}
         </View>
       </Animated.View>
     );

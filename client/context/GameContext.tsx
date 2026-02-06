@@ -151,6 +151,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [lastWeeklyClaimDate, setLastWeeklyClaimDate] = useState<string | null>(null);
   const starPointsCallbackRef = React.useRef<StarPointsCallback>(null);
   const xpCallbackRef = React.useRef<((xp: number) => void) | null>(null);
+  const initialLoadDoneRef = React.useRef(false);
+  const reloadTimestampRef = React.useRef<number>(0);
 
   const setStarPointsCallback = useCallback((callback: StarPointsCallback) => {
     starPointsCallbackRef.current = callback;
@@ -161,7 +163,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    loadPlayerData();
+    loadPlayerData().then(() => {
+      initialLoadDoneRef.current = true;
+    });
   }, []);
 
   useEffect(() => {
@@ -170,6 +174,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       if (needsReload === "true") {
         console.log("Game reload flag detected, reloading game data");
         await AsyncStorage.removeItem("needsGameReload");
+        reloadTimestampRef.current = Date.now();
         await loadPlayerData();
       }
     };
@@ -213,6 +218,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
   };
 
   const savePlayerData = async () => {
+    if (!initialLoadDoneRef.current) return;
+    
+    const timeSinceReload = Date.now() - reloadTimestampRef.current;
+    if (timeSinceReload < 5000) return;
+    
     try {
       await AsyncStorage.setItem("totalCoins", totalCoins.toString());
       await AsyncStorage.setItem("totalGamesPlayed", totalGamesPlayed.toString());
