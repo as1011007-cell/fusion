@@ -991,17 +991,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: Spacing.md,
   },
-  autoSyncInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Spacing.xs,
-    marginBottom: Spacing.sm,
-  },
-  autoSyncText: {
-    ...Typography.caption,
-    color: GameColors.correct,
-  },
   cloudSyncButtons: {
     flexDirection: "row",
     gap: Spacing.sm,

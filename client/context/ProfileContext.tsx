@@ -574,7 +574,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           const localCoins = parseInt(await AsyncStorage.getItem("totalCoins") || "0", 10);
           const localGamesPlayed = parseInt(await AsyncStorage.getItem("totalGamesPlayed") || "0", 10);
           const localHighScore = parseInt(await AsyncStorage.getItem("highScore") || "0", 10);
-          const localPowerCards = JSON.parse(await AsyncStorage.getItem("powerCards") || '{"skip":0,"steal":0,"doubleBluff":0}');
+          const localPowerCards = JSON.parse(await AsyncStorage.getItem("powerCards") || '[]');
           
           // Merge: keep higher values
           const mergedCoins = Math.max(localCoins, totalCoins || 0);
@@ -589,13 +589,28 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           if (answeredQuestionIds) await AsyncStorage.setItem("answeredQuestionIds", JSON.stringify(answeredQuestionIds));
           if (multiplayerAnsweredIds) await AsyncStorage.setItem("multiplayerAnsweredQuestionIds", JSON.stringify(multiplayerAnsweredIds));
           
-          // Merge power cards: keep higher of each
           if (powerCards) {
-            const mergedPowerCards = {
-              skip: Math.max(localPowerCards.skip || 0, powerCards.skip || 0),
-              steal: Math.max(localPowerCards.steal || 0, powerCards.steal || 0),
-              doubleBluff: Math.max(localPowerCards.doubleBluff || 0, powerCards.doubleBluff || 0),
+            const getCount = (cards: any, id: string): number => {
+              if (Array.isArray(cards)) {
+                const card = cards.find((c: any) => c.id === id);
+                return card?.count || 0;
+              }
+              if (cards && typeof cards === 'object') {
+                return cards[id] || cards[id.replace('-', '')] || 0;
+              }
+              return 0;
             };
+            
+            const cardDefs = [
+              { id: "skip", name: "Skip", description: "Skip this question", icon: "skip-forward" },
+              { id: "steal", name: "Steal", description: "Reveal one wrong answer", icon: "copy" },
+              { id: "double-bluff", name: "Double Bluff", description: "Double your points if correct", icon: "zap" },
+            ];
+            
+            const mergedPowerCards = cardDefs.map(def => ({
+              ...def,
+              count: Math.max(getCount(localPowerCards, def.id), getCount(powerCards, def.id)),
+            }));
             await AsyncStorage.setItem("powerCards", JSON.stringify(mergedPowerCards));
           }
           
