@@ -245,6 +245,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/admin/unlock-all", authMiddleware, async (req: AuthenticatedRequest, res) => {
+    try {
+      const adminEmail = "admin@feudfusion.com";
+      
+      if (req.user?.email !== adminEmail) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const userId = req.user.userId;
+      const [existing] = await db.select().from(cloudSync).where(eq(cloudSync.userId, userId)).limit(1);
+
+      if (!existing) {
+        return res.status(404).json({ error: "No cloud data found. Save to cloud first." });
+      }
+
+      const data = existing.data as any;
+
+      data.gameData = {
+        ...data.gameData,
+        totalCoins: 99999,
+        powerCards: [
+          { id: "skip", icon: "skip-forward", name: "Skip", count: 99, description: "Skip this question" },
+          { id: "steal", icon: "copy", name: "Steal", count: 99, description: "Reveal one wrong answer" },
+          { id: "double-bluff", icon: "zap", name: "Double Bluff", count: 99, description: "Double your points if correct" },
+        ],
+      };
+
+      data.themeData = {
+        ...data.themeData,
+        starPoints: 99999,
+        ownedThemes: ["electric", "sunset", "ocean", "forest", "galaxy"],
+        isAdFree: true,
+        hasSupported: true,
+      };
+
+      if (data.avatars) {
+        data.avatars = data.avatars.map((a: any) => ({ ...a, owned: true }));
+      }
+
+      await db.update(cloudSync)
+        .set({ data, updatedAt: new Date() })
+        .where(eq(cloudSync.userId, userId));
+
+      res.json({ success: true, message: "All purchases unlocked for admin" });
+    } catch (error) {
+      console.error("Error unlocking admin purchases:", error);
+      res.status(500).json({ error: "Failed to unlock purchases" });
+    }
+  });
+
   app.use("/api", apiRateLimiter);
 
   const httpServer = createServer(app);
