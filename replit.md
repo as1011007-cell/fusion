@@ -37,8 +37,14 @@ The game features a vibrant "Electric Collision" aesthetic with neon accents, pe
 - Secure password hashing with bcrypt (12 rounds)
 - JWT-based session management with 7-day token expiry
 - AuthContext manages authentication state with AuthProvider wrapper
-- Cloud sync for logged-in users: Save/Load progress to cloud
-- Progress includes: profiles, avatars, settings, answered questions, XP
+- Cloud sync: Manual "Save to Cloud" / "Load from Cloud" buttons on ProfileScreen
+- Load from cloud fully REPLACES local data (no merging) to prevent overwrite bugs
+- Auto cloud load on login via needsCloudSync flag (also replaces, not merges)
+- GameContext auto-reloads via needsGameReload flag after cloud load
+- ThemeContext auto-reloads via needsThemeReload flag after cloud load
+- syncToCloud has 10-second cooldown after cloud load to prevent stale overwrites
+- ThemeContext saveThemeData has 5-second cooldown after reload to prevent stale overwrites
+- Progress includes: profiles, avatars, settings, answered questions, XP, themes, star points, coins, power cards
 - AuthScreen for login, registration, and password reset flows
 
 ### API Security (January 2026)
