@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export type ThemeId = "electric" | "sunset" | "ocean" | "forest" | "galaxy";
@@ -126,23 +126,26 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [starPoints, setStarPoints] = useState(0);
   const [isAdFree, setIsAdFree] = useState(false);
   const [hasSupported, setHasSupportedState] = useState(false);
+  const reloadTimestampRef = useRef<number>(0);
+  const initialLoadDoneRef = useRef(false);
 
   useEffect(() => {
-    loadThemeData();
+    loadThemeData().then(() => {
+      initialLoadDoneRef.current = true;
+    });
   }, []);
 
-  // Check for theme reload flag (set by ProfileContext after cloud sync)
   useEffect(() => {
     const checkForThemeReload = async () => {
       const needsReload = await AsyncStorage.getItem("needsThemeReload");
       if (needsReload === "true") {
         console.log("Theme reload flag detected, reloading theme data");
         await AsyncStorage.removeItem("needsThemeReload");
+        reloadTimestampRef.current = Date.now();
         await loadThemeData();
       }
     };
     
-    // Check periodically for theme reload flag
     const interval = setInterval(checkForThemeReload, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -186,6 +189,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   const saveThemeData = async () => {
+    if (!initialLoadDoneRef.current) return;
+    
+    const timeSinceReload = Date.now() - reloadTimestampRef.current;
+    if (timeSinceReload < 5000) return;
+    
     try {
       await AsyncStorage.setItem("currentThemeId", currentThemeId);
       const ownedIds = themes.filter((t) => t.owned).map((t) => t.id);
