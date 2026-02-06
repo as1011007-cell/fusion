@@ -164,6 +164,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
     loadPlayerData();
   }, []);
 
+  useEffect(() => {
+    const checkForGameReload = async () => {
+      const needsReload = await AsyncStorage.getItem("needsGameReload");
+      if (needsReload === "true") {
+        console.log("Game reload flag detected, reloading game data");
+        await AsyncStorage.removeItem("needsGameReload");
+        await loadPlayerData();
+      }
+    };
+    
+    const interval = setInterval(checkForGameReload, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const loadPlayerData = async () => {
     try {
       const coins = await AsyncStorage.getItem("totalCoins");

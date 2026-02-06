@@ -446,7 +446,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       return false;
     }
     
-    // Set timestamp early to prevent auto-sync from overwriting during fetch
     cloudLoadTimestampRef.current = Date.now();
     
     try {
@@ -462,13 +461,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       console.log("loadFromCloud: Retrieved data from server");
 
       if (result.success && result.data) {
-        // Refresh timestamp after fetch completes
         cloudLoadTimestampRef.current = Date.now();
         
         const parsed = result.data;
+
         if (parsed.profiles) {
           setProfiles(parsed.profiles);
-          // Find and set the current profile (match by userId or take the first one)
           const matchingProfile = parsed.profiles.find((p: Profile) => p.socialId === userId);
           if (matchingProfile) {
             setCurrentProfile(matchingProfile);
@@ -477,113 +475,54 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             setCurrentProfile(parsed.profiles[0]);
             await AsyncStorage.setItem("currentProfileId", parsed.profiles[0].id);
           }
-          // Save profiles to AsyncStorage too
           await AsyncStorage.setItem("profiles", JSON.stringify(parsed.profiles));
         }
+
         if (parsed.avatars) {
-          // Get local avatars to merge (preserve purchases)
-          const localAvatarsData = await AsyncStorage.getItem("avatars");
-          const localAvatars: Avatar[] = localAvatarsData ? JSON.parse(localAvatarsData) : avatars;
-          
-          // Create a map of all avatars, merging ownership status
-          const avatarMap = new Map<string, Avatar>();
-          
-          // First add all local avatars
-          localAvatars.forEach((avatar: Avatar) => {
-            avatarMap.set(avatar.id, {
-              ...avatar,
-              image: avatarImages[avatar.id] || avatarImages["avatar-1"],
-            });
-          });
-          
-          // Then merge cloud avatars - keep owned=true if either is true
-          parsed.avatars.forEach((cloudAvatar: Avatar) => {
-            const existing = avatarMap.get(cloudAvatar.id);
-            if (existing) {
-              avatarMap.set(cloudAvatar.id, {
-                ...existing,
-                owned: existing.owned || cloudAvatar.owned,
-                image: avatarImages[cloudAvatar.id] || avatarImages["avatar-1"],
-              });
-            } else {
-              avatarMap.set(cloudAvatar.id, {
-                ...cloudAvatar,
-                image: avatarImages[cloudAvatar.id] || avatarImages["avatar-1"],
-              });
-            }
-          });
-          
-          const mergedAvatars = Array.from(avatarMap.values());
-          setAvatars(mergedAvatars);
-          await AsyncStorage.setItem("avatars", JSON.stringify(mergedAvatars));
-          console.log("Cloud sync merged avatars - owned:", mergedAvatars.filter(a => a.owned).length);
+          const cloudAvatars = parsed.avatars.map((cloudAvatar: Avatar) => ({
+            ...cloudAvatar,
+            image: avatarImages[cloudAvatar.id] || avatarImages["avatar-1"],
+          }));
+          setAvatars(cloudAvatars);
+          await AsyncStorage.setItem("avatars", JSON.stringify(cloudAvatars));
+          console.log("Cloud loaded avatars - owned:", cloudAvatars.filter((a: Avatar) => a.owned).length);
         }
+
         if (parsed.settings) {
           setSettings(parsed.settings);
           await AsyncStorage.setItem("settings", JSON.stringify(parsed.settings));
         }
+
         if (parsed.answeredQuestions) {
           setAnsweredQuestions(new Set(parsed.answeredQuestions));
           await AsyncStorage.setItem("answeredQuestions", JSON.stringify(parsed.answeredQuestions));
         }
+
         if (parsed.experiencePoints !== undefined) {
-          // Merge: keep higher XP
-          const localXP = parseInt(await AsyncStorage.getItem("experiencePoints") || "0", 10);
-          const mergedXP = Math.max(localXP, parsed.experiencePoints);
-          setExperiencePoints(mergedXP);
-          await AsyncStorage.setItem("experiencePoints", mergedXP.toString());
-          console.log("Cloud sync merged XP - local:", localXP, "cloud:", parsed.experiencePoints, "merged:", mergedXP);
+          setExperiencePoints(parsed.experiencePoints);
+          await AsyncStorage.setItem("experiencePoints", parsed.experiencePoints.toString());
+          console.log("Cloud loaded XP:", parsed.experiencePoints);
         }
 
         if (parsed.themeData) {
           const { currentThemeId, ownedThemes, starPoints, isAdFree, hasSupported } = parsed.themeData;
           
-          // Get local values to merge (keep the better value)
-          const localStarPoints = parseInt(await AsyncStorage.getItem("starPoints") || "0", 10);
-          const localOwnedThemes = JSON.parse(await AsyncStorage.getItem("ownedThemes") || '["electric-collision"]');
-          const localIsAdFree = (await AsyncStorage.getItem("isAdFree")) === "true";
-          const localHasSupported = (await AsyncStorage.getItem("hasSupported")) === "true";
-          
-          // Merge: keep higher star points
-          const mergedStarPoints = Math.max(localStarPoints, starPoints || 0);
-          await AsyncStorage.setItem("starPoints", mergedStarPoints.toString());
-          
-          // Merge: union of owned themes
-          const cloudThemes = ownedThemes || [];
-          const mergedThemes = [...new Set([...localOwnedThemes, ...cloudThemes])];
-          await AsyncStorage.setItem("ownedThemes", JSON.stringify(mergedThemes));
-          
-          // Keep current theme if set
+          await AsyncStorage.setItem("starPoints", (starPoints || 0).toString());
+          await AsyncStorage.setItem("ownedThemes", JSON.stringify(ownedThemes || ["electric"]));
           if (currentThemeId) await AsyncStorage.setItem("currentThemeId", currentThemeId);
+          await AsyncStorage.setItem("isAdFree", (isAdFree || false).toString());
+          await AsyncStorage.setItem("hasSupported", (hasSupported || false).toString());
           
-          // Merge: keep true if either is true (preserve purchases)
-          const mergedAdFree = localIsAdFree || isAdFree || false;
-          const mergedSupported = localHasSupported || hasSupported || false;
-          await AsyncStorage.setItem("isAdFree", mergedAdFree.toString());
-          await AsyncStorage.setItem("hasSupported", mergedSupported.toString());
-          
-          // Signal ThemeContext to reload
           await AsyncStorage.setItem("needsThemeReload", "true");
-          console.log("Cloud sync merged theme data - stars:", mergedStarPoints, "themes:", mergedThemes.length);
+          console.log("Cloud loaded theme data - stars:", starPoints, "themes:", ownedThemes?.length);
         }
 
         if (parsed.gameData) {
           const { totalCoins, totalGamesPlayed, highScore, lastWeeklyClaimDate, answeredQuestionIds, multiplayerAnsweredIds, powerCards } = parsed.gameData;
           
-          // Get local values to merge
-          const localCoins = parseInt(await AsyncStorage.getItem("totalCoins") || "0", 10);
-          const localGamesPlayed = parseInt(await AsyncStorage.getItem("totalGamesPlayed") || "0", 10);
-          const localHighScore = parseInt(await AsyncStorage.getItem("highScore") || "0", 10);
-          const localPowerCards = JSON.parse(await AsyncStorage.getItem("powerCards") || '[]');
-          
-          // Merge: keep higher values
-          const mergedCoins = Math.max(localCoins, totalCoins || 0);
-          const mergedGamesPlayed = Math.max(localGamesPlayed, totalGamesPlayed || 0);
-          const mergedHighScore = Math.max(localHighScore, highScore || 0);
-          
-          await AsyncStorage.setItem("totalCoins", mergedCoins.toString());
-          await AsyncStorage.setItem("totalGamesPlayed", mergedGamesPlayed.toString());
-          await AsyncStorage.setItem("highScore", mergedHighScore.toString());
+          await AsyncStorage.setItem("totalCoins", (totalCoins || 0).toString());
+          await AsyncStorage.setItem("totalGamesPlayed", (totalGamesPlayed || 0).toString());
+          await AsyncStorage.setItem("highScore", (highScore || 0).toString());
           
           if (lastWeeklyClaimDate) await AsyncStorage.setItem("lastWeeklyClaimDate", lastWeeklyClaimDate);
           if (answeredQuestionIds) await AsyncStorage.setItem("answeredQuestionIds", JSON.stringify(answeredQuestionIds));
@@ -607,14 +546,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
               { id: "double-bluff", name: "Double Bluff", description: "Double your points if correct", icon: "zap" },
             ];
             
-            const mergedPowerCards = cardDefs.map(def => ({
+            const cloudPowerCards = cardDefs.map(def => ({
               ...def,
-              count: Math.max(getCount(localPowerCards, def.id), getCount(powerCards, def.id)),
+              count: getCount(powerCards, def.id),
             }));
-            await AsyncStorage.setItem("powerCards", JSON.stringify(mergedPowerCards));
+            await AsyncStorage.setItem("powerCards", JSON.stringify(cloudPowerCards));
           }
           
-          console.log("Cloud sync merged game data - coins:", mergedCoins, "games:", mergedGamesPlayed);
+          await AsyncStorage.setItem("needsGameReload", "true");
+          console.log("Cloud loaded game data - coins:", totalCoins, "games:", totalGamesPlayed);
         }
 
         return true;
