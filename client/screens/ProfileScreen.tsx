@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { StyleSheet, View, ScrollView, Pressable, TextInput, Image, Platform, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -39,32 +39,12 @@ export default function ProfileScreen() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const autoSyncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
   useFocusEffect(
     useCallback(() => {
       reloadThemeData();
       reloadPlayerData();
     }, [reloadThemeData, reloadPlayerData])
   );
-
-  useEffect(() => {
-    if (!user || !isAuthenticated) return;
-    
-    if (autoSyncTimeoutRef.current) {
-      clearTimeout(autoSyncTimeoutRef.current);
-    }
-    
-    autoSyncTimeoutRef.current = setTimeout(async () => {
-      await syncToCloud(user.id, user.email);
-    }, 2000);
-
-    return () => {
-      if (autoSyncTimeoutRef.current) {
-        clearTimeout(autoSyncTimeoutRef.current);
-      }
-    };
-  }, [currentProfile, profiles, avatars, experiencePoints, user, isAuthenticated]);
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -161,12 +141,28 @@ export default function ProfileScreen() {
 
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
+  const handleSaveToCloud = async () => {
+    if (!user) return;
+    
+    setIsSyncing(true);
+    setSyncMessage(null);
+    const success = await syncToCloud(user.id, user.email);
+    if (success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setSyncMessage("Progress saved to cloud!");
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setSyncMessage("Failed to save. Try again.");
+    }
+    setIsSyncing(false);
+    setTimeout(() => setSyncMessage(null), 3000);
+  };
+
   const handleLoadFromCloud = async () => {
     if (!user) return;
     
     setIsSyncing(true);
     setSyncMessage(null);
-    console.log("Attempting to load from cloud with user.id:", user.id);
     const success = await loadFromCloud(user.id);
     if (success) {
       await reloadPlayerData();
@@ -458,13 +454,17 @@ export default function ProfileScreen() {
                       </ThemedText>
                     </View>
                   </View>
-                  <View style={styles.autoSyncInfo}>
-                    <Feather name="check-circle" size={14} color={GameColors.correct} />
-                    <ThemedText style={styles.autoSyncText}>
-                      Progress saves automatically
-                    </ThemedText>
-                  </View>
                   <View style={styles.cloudSyncButtons}>
+                    <Pressable 
+                      style={styles.cloudSyncButton} 
+                      onPress={handleSaveToCloud}
+                      disabled={isSyncing}
+                    >
+                      <Feather name="upload-cloud" size={18} color={GameColors.correct} />
+                      <ThemedText style={[styles.cloudSyncButtonText, { color: GameColors.correct }]}>
+                        {isSyncing ? "Saving..." : "Save to Cloud"}
+                      </ThemedText>
+                    </Pressable>
                     <Pressable 
                       style={styles.cloudSyncButton} 
                       onPress={handleLoadFromCloud}
