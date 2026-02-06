@@ -245,104 +245,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, [isInitialLoadComplete]);
 
-  // Save locally and sync to cloud when data changes (after initial load)
+  // Save locally when data changes (after initial load) - no auto cloud sync
   useEffect(() => {
     if (!isInitialLoadComplete) return;
     
-    console.log("Auto-sync useEffect triggered - saving locally");
     saveData();
-    
-    // Auto-sync to cloud if user is logged in
-    const autoSyncToCloud = async () => {
-      // Check for authenticated user
-      const authUserData = await AsyncStorage.getItem("authUser");
-      if (!authUserData) return;
-      
-      const authUser = JSON.parse(authUserData);
-      
-      // Skip auto-sync if we just loaded from cloud (within last 10 seconds)
-      const timeSinceCloudLoad = Date.now() - cloudLoadTimestampRef.current;
-      if (timeSinceCloudLoad < 10000) {
-        console.log("Skipping auto-sync (just loaded from cloud)");
-        return;
-      }
-      
-      console.log("Scheduling cloud sync in 2 seconds for user:", authUser.id);
-      // Debounce cloud sync to avoid too many requests
-      const timeoutId = setTimeout(async () => {
-        // Double check we haven't loaded from cloud during debounce
-        const checkTime = Date.now() - cloudLoadTimestampRef.current;
-        if (checkTime < 10000) {
-          console.log("Skipping auto-sync in timeout (just loaded from cloud)");
-          return;
-        }
-        console.log("Executing cloud sync now for user:", authUser.id);
-        await syncToCloudInternal(authUser.id);
-      }, 1000);
-      return timeoutId;
-    };
-    
-    let timeoutId: NodeJS.Timeout | undefined;
-    autoSyncToCloud().then(id => { timeoutId = id; });
-    
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
   }, [profiles, avatars, settings, answeredQuestions, currentProfile, experiencePoints, isInitialLoadComplete]);
-
-  // Internal sync function that syncs all data to cloud
-  const syncToCloudInternal = async (userId: string) => {
-    try {
-      // Get all data from AsyncStorage for complete sync
-      const currentThemeId = await AsyncStorage.getItem("currentThemeId");
-      const ownedThemes = await AsyncStorage.getItem("ownedThemes");
-      const starPoints = await AsyncStorage.getItem("starPoints");
-      const isAdFree = await AsyncStorage.getItem("isAdFree");
-      const hasSupported = await AsyncStorage.getItem("hasSupported");
-      const totalCoins = await AsyncStorage.getItem("totalCoins");
-      const totalGamesPlayed = await AsyncStorage.getItem("totalGamesPlayed");
-      const highScore = await AsyncStorage.getItem("highScore");
-      const lastWeeklyClaimDate = await AsyncStorage.getItem("lastWeeklyClaimDate");
-      const answeredQuestionIds = await AsyncStorage.getItem("answeredQuestionIds");
-      const multiplayerAnsweredIds = await AsyncStorage.getItem("multiplayerAnsweredQuestionIds");
-      const powerCards = await AsyncStorage.getItem("powerCards");
-
-      const baseUrl = getApiUrl();
-      const dataToSync = {
-        profiles,
-        avatars: avatars.map(({ image, ...rest }) => rest),
-        settings,
-        answeredQuestions: [...answeredQuestions],
-        experiencePoints,
-        themeData: {
-          currentThemeId,
-          ownedThemes: ownedThemes ? JSON.parse(ownedThemes) : ["electric"],
-          starPoints: starPoints ? parseInt(starPoints, 10) : 0,
-          isAdFree: isAdFree === "true",
-          hasSupported: hasSupported === "true",
-        },
-        gameData: {
-          totalCoins: totalCoins ? parseInt(totalCoins, 10) : 100,
-          totalGamesPlayed: totalGamesPlayed ? parseInt(totalGamesPlayed, 10) : 0,
-          highScore: highScore ? parseInt(highScore, 10) : 0,
-          lastWeeklyClaimDate,
-          answeredQuestionIds: answeredQuestionIds ? JSON.parse(answeredQuestionIds) : [],
-          multiplayerAnsweredIds: multiplayerAnsweredIds ? JSON.parse(multiplayerAnsweredIds) : [],
-          powerCards: powerCards ? JSON.parse(powerCards) : null,
-        },
-        lastSync: new Date().toISOString(),
-      };
-      
-      await fetch(`${baseUrl}/api/cloud-sync/save`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, data: dataToSync }),
-      });
-      console.log("Auto-sync to cloud completed");
-    } catch (error) {
-      console.error("Auto-sync to cloud failed:", error);
-    }
-  };
 
   const createProfile = (name: string, avatarId: string, customPhoto?: string) => {
     const newProfile: Profile = {
