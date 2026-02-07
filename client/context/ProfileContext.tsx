@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
+import * as StoreReview from "expo-store-review";
 import { getApiUrl } from "@/lib/query-client";
 
 export const avatarImages: { [key: string]: any } = {
@@ -359,8 +361,26 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return totalQuestions - answeredQuestions.size;
   };
 
-  const addExperience = (xp: number) => {
-    setExperiencePoints((prev) => prev + xp);
+  const addExperience = async (xp: number) => {
+    const prevLevel = calculateLevel(experiencePoints).level;
+    const newXP = experiencePoints + xp;
+    setExperiencePoints(newXP);
+    const newLevel = calculateLevel(newXP).level;
+
+    if (prevLevel < 4 && newLevel >= 4) {
+      try {
+        const alreadyAsked = await AsyncStorage.getItem("storeReviewAsked");
+        if (!alreadyAsked) {
+          const isAvailable = await StoreReview.isAvailableAsync();
+          if (isAvailable) {
+            await StoreReview.requestReview();
+            await AsyncStorage.setItem("storeReviewAsked", "true");
+          }
+        }
+      } catch (e) {
+        // silently ignore review errors
+      }
+    }
   };
 
   const syncToCloud = async (overrideSocialId?: string, email?: string): Promise<boolean> => {
