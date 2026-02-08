@@ -593,36 +593,41 @@ export default function LastTurnGameScreen() {
   };
 
   const renderGameFinished = () => (
-    <Animated.View entering={FadeIn} style={[styles.finishedOverlay, { paddingTop: insets.top + 100, paddingBottom: insets.bottom + 40 }]}>
-      <Animated.View entering={ZoomIn.delay(300)} style={styles.finishedContent}>
-        <ThemedText style={[styles.finishedTitle, { color: colors.primary }]}>GAME OVER</ThemedText>
-        
-        {winner ? (
-          <>
-            <Image
-              source={avatarImages[winner.avatarId] || avatarImages["avatar-1"]}
-              style={styles.winnerAvatar}
-              contentFit="contain"
-            />
-            <ThemedText style={[styles.winnerName, { color: GameColors.textPrimary }]}>{winner.name}</ThemedText>
-            <ThemedText style={[styles.winnerLabel, { color: colors.secondary }]}>WINNER</ThemedText>
-          </>
-        ) : (
-          <ThemedText style={[styles.noWinner, { color: GameColors.textSecondary }]}>No winner</ThemedText>
-        )}
+    <Animated.View entering={FadeIn} style={[styles.finishedOverlay]}>
+      <ScrollView
+        contentContainerStyle={[styles.finishedScrollContent, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 40 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <Animated.View entering={ZoomIn.delay(300)} style={styles.finishedContent}>
+          <ThemedText style={[styles.finishedTitle, { color: colors.primary }]}>GAME OVER</ThemedText>
+          
+          {winner ? (
+            <>
+              <Image
+                source={avatarImages[winner.avatarId] || avatarImages["avatar-1"]}
+                style={styles.winnerAvatar}
+                contentFit="contain"
+              />
+              <ThemedText style={[styles.winnerName, { color: GameColors.textPrimary }]}>{winner.name}</ThemedText>
+              <ThemedText style={[styles.winnerLabel, { color: colors.secondary }]}>WINNER</ThemedText>
+            </>
+          ) : (
+            <ThemedText style={[styles.noWinner, { color: GameColors.textSecondary }]}>No winner</ThemedText>
+          )}
 
-        <View style={styles.finishedButtons}>
-          <GradientButton
-            onPress={handlePlayAgain}
-            style={styles.finishedButton}
-          >
-            Play Again
-          </GradientButton>
-          <Pressable style={[styles.homeButton, { backgroundColor: colors.surface }]} onPress={handleGoHome}>
-            <ThemedText style={[styles.homeButtonText, { color: GameColors.textPrimary }]}>Go Home</ThemedText>
-          </Pressable>
-        </View>
-      </Animated.View>
+          <View style={styles.finishedButtons}>
+            <GradientButton
+              onPress={handlePlayAgain}
+              style={styles.finishedButton}
+            >
+              Play Again
+            </GradientButton>
+            <Pressable style={[styles.homeButton, { backgroundColor: colors.surface }]} onPress={handleGoHome}>
+              <ThemedText style={[styles.homeButtonText, { color: GameColors.textPrimary }]}>Go Home</ThemedText>
+            </Pressable>
+          </View>
+        </Animated.View>
+      </ScrollView>
     </Animated.View>
   );
 
@@ -986,16 +991,17 @@ const styles = StyleSheet.create({
   },
   finishedOverlay: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: "center",
-    alignItems: "center",
     zIndex: 100,
     backgroundColor: "rgba(0,0,0,0.95)",
+  },
+  finishedScrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   finishedContent: {
     alignItems: "center",
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing["3xl"],
-    paddingBottom: Spacing.xl,
   },
   finishedTitle: {
     fontSize: 26,
