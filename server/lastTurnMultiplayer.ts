@@ -290,14 +290,11 @@ function startTruthAnswerTimer(room: LastTurnRoom) {
   room.truthAnswerTimerInterval = setInterval(() => {
     room.truthAnswerTimer--;
     
-    // Broadcast timer update every 5 seconds
-    if (room.truthAnswerTimer % 5 === 0 || room.truthAnswerTimer <= 10) {
-      broadcastToRoom(room, {
-        type: 'TRUTH_TIMER_UPDATE',
-        timer: room.truthAnswerTimer,
-        room: getRoomState(room),
-      });
-    }
+    broadcastToRoom(room, {
+      type: 'TRUTH_TIMER_UPDATE',
+      timer: room.truthAnswerTimer,
+      room: getRoomState(room),
+    });
     
     if (room.truthAnswerTimer <= 0) {
       // Time's up - player didn't answer, they must pull
@@ -418,14 +415,11 @@ function startVoting(room: LastTurnRoom, playerId: string, playerName: string, s
     
     room.votingState.votingTimer--;
     
-    // Broadcast timer update
-    if (room.votingState.votingTimer % 5 === 0 || room.votingState.votingTimer <= 5) {
-      broadcastToRoom(room, {
-        type: 'VOTING_TIMER_UPDATE',
-        timer: room.votingState.votingTimer,
-        room: getRoomState(room),
-      });
-    }
+    broadcastToRoom(room, {
+      type: 'VOTING_TIMER_UPDATE',
+      timer: room.votingState.votingTimer,
+      room: getRoomState(room),
+    });
     
     if (room.votingState.votingTimer <= 0) {
       // Time's up - resolve voting
