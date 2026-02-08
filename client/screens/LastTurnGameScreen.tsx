@@ -1008,6 +1008,7 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_700Bold",
     letterSpacing: 4,
     marginBottom: Spacing.xl,
+    marginTop: 40,
     textAlign: "center",
   },
   winnerAvatar: {
