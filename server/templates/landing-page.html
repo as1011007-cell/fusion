@@ -287,6 +287,33 @@
         }
       }
 
+      .app-logo {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        margin: 0 auto 16px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      }
+      .footer-links {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #ddd;
+        display: flex;
+        justify-content: center;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+      .footer-links a {
+        font-size: 14px;
+        color: #666;
+        text-decoration: none;
+        transition: color 0.15s;
+      }
+      .footer-links a:hover {
+        color: #333;
+        text-decoration: underline;
+      }
+
       /* Dark mode */
       @media (prefers-color-scheme: dark) {
         body {
@@ -358,6 +385,15 @@
         .open-button:hover {
           background: #e0e0e0;
         }
+        .footer-links {
+          border-top-color: #333;
+        }
+        .footer-links a {
+          color: #888;
+        }
+        .footer-links a:hover {
+          color: #ccc;
+        }
       }
     </style>
   </head>
@@ -369,6 +405,7 @@
       </div>
 
       <div class="content" id="content">
+        <img src="/assets/images/icon.png" alt="Feud Fusion" class="app-logo" />
         <h1>APP_NAME_PLACEHOLDER</h1>
         <p class="subtitle">Preview this app on your phone</p>
 
@@ -435,6 +472,11 @@
               >Open in Expo Go</a
             >
           </div>
+        </div>
+
+        <div class="footer-links">
+          <a href="https://www.feudfusion.com/privacy" target="_blank">Privacy Policy</a>
+          <a href="mailto:support@feudfusion.com">Support</a>
         </div>
       </div>
     </div>
