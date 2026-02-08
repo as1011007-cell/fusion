@@ -589,13 +589,10 @@ function startTurnTimer(room: LastTurnRoom) {
   room.turnTimerInterval = setInterval(() => {
     room.turnTimer--;
     
-    // Broadcast timer update every 5 seconds or when under 5 seconds
-    if (room.turnTimer % 5 === 0 || room.turnTimer <= 5) {
-      broadcastToRoom(room, {
-        type: 'TURN_TIMER_UPDATE',
-        timer: room.turnTimer,
-      });
-    }
+    broadcastToRoom(room, {
+      type: 'TURN_TIMER_UPDATE',
+      timer: room.turnTimer,
+    });
     
     if (room.turnTimer <= 0) {
       // Auto-pull on timer expiry
