@@ -120,7 +120,7 @@ export default function SettingsScreen() {
               </View>
               <View style={styles.settingContent}>
                 <ThemedText style={styles.settingTitle}>FEUD FUSION</ThemedText>
-                <ThemedText style={styles.settingDesc}>Version 1.0.0</ThemedText>
+                <ThemedText style={styles.settingDesc}>Version 1.30.9</ThemedText>
               </View>
             </View>
 
