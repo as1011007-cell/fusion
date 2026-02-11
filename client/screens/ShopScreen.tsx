@@ -276,20 +276,36 @@ export default function ShopScreen() {
     }
   };
 
-  const handlePurchaseStarPoints = () => {
+  const retryStoreConnection = async (): Promise<boolean> => {
+    try {
+      const connected = await inAppPurchaseService.connect();
+      if (connected) {
+        const products = await inAppPurchaseService.loadProducts();
+        setStoreKitProducts(products);
+        setStoreKitReady(true);
+        return true;
+      }
+    } catch (error) {
+      console.log("Retry store connection failed:", error);
+    }
+    return false;
+  };
+
+  const handlePurchaseStarPoints = async () => {
     if (isNative && storeKitReady) {
-      // iOS uses App Store, Android uses Play Store
       handlePurchaseStarPointsNative();
     } else if (isNative && !storeKitReady) {
-      // Native but not connected (Expo Go or store not available)
-      const storeName = Platform.OS === "ios" ? "App Store" : "Play Store";
-      Alert.alert(
-        `${storeName} Purchase`,
-        `In-app purchases are available through the ${storeName}. Please install from the ${storeName} to make purchases.`,
-        [{ text: "OK" }]
-      );
+      const retried = await retryStoreConnection();
+      if (retried) {
+        handlePurchaseStarPointsNative();
+      } else {
+        Alert.alert(
+          "Purchase Unavailable",
+          "Unable to connect to the store. Please check your internet connection and try again.",
+          [{ text: "OK" }]
+        );
+      }
     } else {
-      // Web uses Stripe
       handlePurchaseStarPointsStripe();
     }
   };
@@ -396,20 +412,21 @@ export default function ShopScreen() {
     }
   };
 
-  const handlePurchaseAdFree = () => {
+  const handlePurchaseAdFree = async () => {
     if (isNative && storeKitReady) {
-      // iOS uses App Store, Android uses Play Store
       handlePurchaseAdFreeNative();
     } else if (isNative && !storeKitReady) {
-      // Native but not connected (Expo Go or store not available)
-      const storeName = Platform.OS === "ios" ? "App Store" : "Play Store";
-      Alert.alert(
-        `${storeName} Purchase`,
-        `In-app purchases are available through the ${storeName}. Please install from the ${storeName} to make purchases.`,
-        [{ text: "OK" }]
-      );
+      const retried = await retryStoreConnection();
+      if (retried) {
+        handlePurchaseAdFreeNative();
+      } else {
+        Alert.alert(
+          "Purchase Unavailable",
+          "Unable to connect to the store. Please check your internet connection and try again.",
+          [{ text: "OK" }]
+        );
+      }
     } else {
-      // Web uses Stripe
       handlePurchaseAdFreeStripe();
     }
   };
@@ -518,20 +535,21 @@ export default function ShopScreen() {
     }
   };
 
-  const handleSupportDeveloper = () => {
+  const handleSupportDeveloper = async () => {
     if (isNative && storeKitReady) {
-      // iOS uses App Store, Android uses Play Store
       handleSupportDeveloperNative();
     } else if (isNative && !storeKitReady) {
-      // Native but not connected (Expo Go or store not available)
-      const storeName = Platform.OS === "ios" ? "App Store" : "Play Store";
-      Alert.alert(
-        `${storeName} Purchase`,
-        `In-app purchases are available through the ${storeName}. Please install from the ${storeName} to make purchases.`,
-        [{ text: "OK" }]
-      );
+      const retried = await retryStoreConnection();
+      if (retried) {
+        handleSupportDeveloperNative();
+      } else {
+        Alert.alert(
+          "Purchase Unavailable",
+          "Unable to connect to the store. Please check your internet connection and try again.",
+          [{ text: "OK" }]
+        );
+      }
     } else {
-      // Web uses Stripe
       handleSupportDeveloperStripe();
     }
   };
