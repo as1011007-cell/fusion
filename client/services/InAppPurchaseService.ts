@@ -15,7 +15,7 @@ interface PurchaseResult {
   error?: string;
 }
 
-interface IAPItemDetails {
+export interface IAPItemDetails {
   productId: string;
   title: string;
   description: string;
@@ -24,26 +24,28 @@ interface IAPItemDetails {
   priceCurrencyCode: string;
 }
 
-const isExpoGo = Constants.appOwnership === 'expo';
-const isNative = Platform.OS === 'ios' || Platform.OS === 'android';
+const isExpoGo = Constants.appOwnership === "expo";
+const isNative = Platform.OS === "ios" || Platform.OS === "android";
 
-let IAPModule: any = null;
+let RNIap: any = null;
 
 if (isNative && !isExpoGo) {
   try {
-    IAPModule = require('expo-in-app-purchases');
+    RNIap = require("react-native-iap");
   } catch (e) {
-    console.log('expo-in-app-purchases not available');
+    console.log("react-native-iap not available");
   }
 }
 
 class InAppPurchaseService {
-  private isConnected = false;
+  private connected = false;
   private products: IAPItemDetails[] = [];
-  private purchaseListener: any = null;
+  private purchaseUpdateSubscription: any = null;
+  private purchaseErrorSubscription: any = null;
+  private pendingPurchaseResolve: ((result: PurchaseResult) => void) | null = null;
 
   isAvailable(): boolean {
-    return isNative && !isExpoGo && IAPModule !== null;
+    return isNative && !isExpoGo && RNIap !== null;
   }
 
   getStoreName(): string {
@@ -57,8 +59,19 @@ class InAppPurchaseService {
     }
 
     try {
-      await IAPModule.connectAsync();
-      this.isConnected = true;
+      const result = await RNIap.initConnection();
+      console.log("IAP connection result:", result);
+      this.connected = true;
+
+      if (Platform.OS === "android") {
+        try {
+          await RNIap.flushFailedPurchasesCachedAsPendingAndroid();
+        } catch (e) {
+          console.log("No failed purchases to flush");
+        }
+      }
+
+      this.setupListeners();
       console.log(`Connected to ${this.getStoreName()}`);
       return true;
     } catch (error) {
@@ -67,28 +80,72 @@ class InAppPurchaseService {
     }
   }
 
+  private setupListeners(): void {
+    if (!RNIap) return;
+
+    if (this.purchaseUpdateSubscription) {
+      this.purchaseUpdateSubscription.remove();
+    }
+    if (this.purchaseErrorSubscription) {
+      this.purchaseErrorSubscription.remove();
+    }
+
+    this.purchaseUpdateSubscription = RNIap.purchaseUpdatedListener(
+      async (purchase: any) => {
+        console.log("Purchase updated:", purchase.productId);
+        try {
+          await RNIap.finishTransaction({ purchase, isConsumable: false });
+          console.log("Transaction finished for:", purchase.productId);
+        } catch (finishError) {
+          console.error("Error finishing transaction:", finishError);
+        }
+
+        if (this.pendingPurchaseResolve) {
+          this.pendingPurchaseResolve({
+            success: true,
+            productId: purchase.productId,
+          });
+          this.pendingPurchaseResolve = null;
+        }
+      }
+    );
+
+    this.purchaseErrorSubscription = RNIap.purchaseErrorListener(
+      (error: any) => {
+        console.log("Purchase error:", error.code, error.message);
+        if (this.pendingPurchaseResolve) {
+          const isCancelled =
+            error.code === "E_USER_CANCELLED" ||
+            error.responseCode === 1;
+          this.pendingPurchaseResolve({
+            success: false,
+            error: isCancelled ? "Purchase was cancelled" : (error.message || "Purchase failed"),
+          });
+          this.pendingPurchaseResolve = null;
+        }
+      }
+    );
+  }
+
   async loadProducts(): Promise<IAPItemDetails[]> {
-    if (!this.isConnected || !IAPModule) {
+    if (!this.connected || !RNIap) {
       return [];
     }
 
     try {
       const productIds = Object.values(PRODUCT_IDS);
-      const { responseCode, results } = await IAPModule.getProductsAsync(productIds);
-      
-      if (responseCode === IAPModule.IAPResponseCode.OK && results) {
-        this.products = results.map((product: any) => ({
-          productId: product.productId,
-          title: product.title,
-          description: product.description,
-          price: product.price,
-          priceAmountMicros: product.priceAmountMicros || 0,
-          priceCurrencyCode: product.priceCurrencyCode || 'USD',
-        }));
-        console.log(`Loaded ${this.products.length} products`);
-        return this.products;
-      }
-      return [];
+      const products = await RNIap.getProducts({ skus: productIds });
+
+      this.products = products.map((product: any) => ({
+        productId: product.productId,
+        title: product.title || product.name || "",
+        description: product.description || "",
+        price: product.localizedPrice || product.price || "0",
+        priceAmountMicros: product.price ? Math.round(parseFloat(product.price) * 1000000) : 0,
+        priceCurrencyCode: product.currency || "USD",
+      }));
+      console.log(`Loaded ${this.products.length} products from ${this.getStoreName()}`);
+      return this.products;
     } catch (error) {
       console.error("Failed to load products:", error);
       return [];
@@ -96,11 +153,11 @@ class InAppPurchaseService {
   }
 
   getProduct(productId: ProductId): IAPItemDetails | undefined {
-    return this.products.find(p => p.productId === productId);
+    return this.products.find((p) => p.productId === productId);
   }
 
   async purchaseProduct(productId: ProductId): Promise<PurchaseResult> {
-    if (!this.isConnected || !IAPModule) {
+    if (!this.connected || !RNIap) {
       return {
         success: false,
         error: "Store not connected",
@@ -108,77 +165,71 @@ class InAppPurchaseService {
     }
 
     return new Promise(async (resolve) => {
-      try {
-        this.purchaseListener = IAPModule.setPurchaseListener(({ responseCode, results, errorCode }: any) => {
-          if (responseCode === IAPModule.IAPResponseCode.OK) {
-            const purchase = results?.find((r: any) => r.productId === productId);
-            if (purchase) {
-              IAPModule.finishTransactionAsync(purchase, true);
-              resolve({
-                success: true,
-                productId: purchase.productId,
-              });
-            }
-          } else if (responseCode === IAPModule.IAPResponseCode.USER_CANCELED) {
-            resolve({
-              success: false,
-              error: "Purchase was cancelled",
-            });
-          } else {
-            resolve({
-              success: false,
-              error: `Purchase failed with code: ${errorCode || responseCode}`,
-            });
-          }
-        });
+      this.pendingPurchaseResolve = resolve;
 
-        await IAPModule.purchaseItemAsync(productId);
+      const timeout = setTimeout(() => {
+        if (this.pendingPurchaseResolve === resolve) {
+          this.pendingPurchaseResolve = null;
+          resolve({ success: false, error: "Purchase timed out" });
+        }
+      }, 120000);
+
+      try {
+        if (Platform.OS === "ios") {
+          await RNIap.requestPurchase({ sku: productId });
+        } else {
+          await RNIap.requestPurchase({ skus: [productId] });
+        }
       } catch (error: any) {
-        resolve({
-          success: false,
-          error: error.message || "Purchase failed",
-        });
+        clearTimeout(timeout);
+        if (this.pendingPurchaseResolve === resolve) {
+          this.pendingPurchaseResolve = null;
+          const isCancelled =
+            error.code === "E_USER_CANCELLED" ||
+            error.message?.includes("cancel");
+          resolve({
+            success: false,
+            error: isCancelled ? "Purchase was cancelled" : (error.message || "Purchase failed"),
+          });
+        }
       }
     });
   }
 
   async restorePurchases(): Promise<PurchaseResult[]> {
-    if (!this.isConnected || !IAPModule) {
+    if (!this.connected || !RNIap) {
       return [{ success: false, error: "Store not connected" }];
     }
 
-    return new Promise(async (resolve) => {
-      try {
-        this.purchaseListener = IAPModule.setPurchaseListener(({ responseCode, results }: any) => {
-          if (responseCode === IAPModule.IAPResponseCode.OK && results) {
-            const restored = results.map((purchase: any) => {
-              IAPModule.finishTransactionAsync(purchase, true);
-              return {
-                success: true,
-                productId: purchase.productId,
-              };
-            });
-            resolve(restored.length > 0 ? restored : [{ success: false, error: "No purchases to restore" }]);
-          } else {
-            resolve([{ success: false, error: "Restore failed" }]);
-          }
-        });
+    try {
+      const purchases = await RNIap.getAvailablePurchases();
 
-        const history = await IAPModule.getPurchaseHistoryAsync();
-        if (!history || history.results?.length === 0) {
-          resolve([{ success: false, error: "No purchase history found" }]);
-        }
-      } catch (error: any) {
-        resolve([{ success: false, error: error.message || "Restore failed" }]);
+      if (purchases && purchases.length > 0) {
+        return purchases.map((purchase: any) => ({
+          success: true,
+          productId: purchase.productId,
+        }));
       }
-    });
+
+      return [{ success: false, error: "No purchases to restore" }];
+    } catch (error: any) {
+      return [{ success: false, error: error.message || "Restore failed" }];
+    }
   }
 
   async disconnect(): Promise<void> {
-    if (this.isConnected && IAPModule) {
+    if (this.connected && RNIap) {
       try {
-        await IAPModule.disconnectAsync();
-        this.isConnected = false;
+        if (this.purchaseUpdateSubscription) {
+          this.purchaseUpdateSubscription.remove();
+          this.purchaseUpdateSubscription = null;
+        }
+        if (this.purchaseErrorSubscription) {
+          this.purchaseErrorSubscription.remove();
+          this.purchaseErrorSubscription = null;
+        }
+        await RNIap.endConnection();
+        this.connected = false;
         console.log("Disconnected from store");
       } catch (error) {
         console.error("Failed to disconnect:", error);
