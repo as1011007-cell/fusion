@@ -247,8 +247,8 @@ export default function HomeScreen() {
           }
         } else {
           Alert.alert(
-            `${storeName} Purchase`,
-            `In-app purchases are available through the ${storeName}. Please install from the ${storeName} to make purchases.`,
+            "Purchase Unavailable",
+            "Unable to connect to the store. Please check your internet connection and try again.",
             [{ text: "OK" }]
           );
         }
