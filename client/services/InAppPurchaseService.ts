@@ -2,9 +2,9 @@ import { Platform } from "react-native";
 import Constants from "expo-constants";
 
 export const PRODUCT_IDS = {
-  STAR_POINTS_5000: "com.feudfusion.starpoints5000",
-  AD_FREE: "com.feudfusion.adfree",
-  SUPPORT_DEVELOPER: "com.feudfusion.support",
+  STAR_POINTS_5000: "com.feudfusion.starpoints",
+  AD_FREE: "com.feudfusion.adsfree",
+  SUPPORT_DEVELOPER: "com.feudfusion.supportus",
 } as const;
 
 export type ProductId = (typeof PRODUCT_IDS)[keyof typeof PRODUCT_IDS];
