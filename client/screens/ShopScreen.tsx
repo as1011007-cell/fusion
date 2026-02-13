@@ -56,12 +56,6 @@ export default function ShopScreen() {
     };
 
     initInAppPurchases();
-
-    return () => {
-      if (isNative) {
-        inAppPurchaseService.disconnect();
-      }
-    };
   }, [isNative]);
 
   const handleBack = () => {
