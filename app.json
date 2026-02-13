@@ -56,6 +56,7 @@
         }
       ],
       "expo-web-browser",
+      "./plugins/withIAPPodspecFix.js",
       "react-native-iap",
       [
         "./plugins/withPlayGamesServices.js",
