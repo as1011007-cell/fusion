@@ -130,7 +130,6 @@ class InAppPurchaseService {
         if (this.pendingPurchaseResolve) {
           const isCancelled =
             error?.code === "E_USER_CANCELLED" ||
-            error?.code === "E_ITEM_UNAVAILABLE" ||
             error?.responseCode === 1 ||
             error?.message?.toLowerCase()?.includes("cancel");
           this.pendingPurchaseResolve({
@@ -204,11 +203,7 @@ class InAppPurchaseService {
       }, 120000);
 
       try {
-        if (Platform.OS === "ios") {
-          await RNIap.requestPurchase({ sku: productId });
-        } else {
-          await RNIap.requestPurchase({ skus: [productId] });
-        }
+        await RNIap.requestPurchase({ sku: productId });
       } catch (error: any) {
         clearTimeout(timeout);
         if (this.pendingPurchaseResolve === resolve) {
