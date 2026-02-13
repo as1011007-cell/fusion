@@ -211,6 +211,10 @@ function configureExpoAndLanding(app: express.Application) {
     res.type("text/html").send("google-site-verification: google5558d3209820d790.html");
   });
 
+  app.get("/app-ads.txt", (_req: Request, res: Response) => {
+    res.type("text/plain").send("google.com, pub-9336364822145619, DIRECT, f08c47fec0942fa0");
+  });
+
   log("Expo routing: Checking expo-platform header on / and /manifest");
 }
 
