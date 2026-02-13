@@ -24,6 +24,9 @@ export interface IAPItemDetails {
   priceCurrencyCode: string;
 }
 
+const ANDROID_PURCHASE_STATE_PURCHASED = 1;
+const ANDROID_PURCHASE_STATE_PENDING = 2;
+
 const isExpoGo = Constants.appOwnership === "expo";
 const isNative = Platform.OS === "ios" || Platform.OS === "android";
 
@@ -44,6 +47,7 @@ class InAppPurchaseService {
   private purchaseErrorSubscription: any = null;
   private pendingPurchaseResolve: ((result: PurchaseResult) => void) | null =
     null;
+  private purchaseTimeout: ReturnType<typeof setTimeout> | null = null;
 
   isAvailable(): boolean {
     return isNative && !isExpoGo && RNIap !== null;
@@ -85,6 +89,21 @@ class InAppPurchaseService {
     }
   }
 
+  private clearPurchaseTimeout(): void {
+    if (this.purchaseTimeout) {
+      clearTimeout(this.purchaseTimeout);
+      this.purchaseTimeout = null;
+    }
+  }
+
+  private resolvePurchase(result: PurchaseResult): void {
+    this.clearPurchaseTimeout();
+    if (this.pendingPurchaseResolve) {
+      this.pendingPurchaseResolve(result);
+      this.pendingPurchaseResolve = null;
+    }
+  }
+
   private setupListeners(): void {
     if (!RNIap) return;
 
@@ -101,7 +120,31 @@ class InAppPurchaseService {
 
     this.purchaseUpdateSubscription = RNIap.purchaseUpdatedListener(
       async (purchase: any) => {
-        console.log("Purchase updated:", purchase?.productId);
+        console.log(
+          "Purchase updated:",
+          purchase?.productId,
+          "state:",
+          purchase?.purchaseStateAndroid
+        );
+
+        if (Platform.OS === "android") {
+          if (
+            purchase?.purchaseStateAndroid === ANDROID_PURCHASE_STATE_PENDING
+          ) {
+            console.log(
+              "Purchase is pending (deferred payment):",
+              purchase?.productId
+            );
+            this.resolvePurchase({
+              success: false,
+              productId: purchase?.productId,
+              error:
+                "Your purchase is pending. You'll receive your items once the payment is confirmed.",
+            });
+            return;
+          }
+        }
+
         const receipt =
           purchase?.transactionReceipt || purchase?.purchaseToken;
 
@@ -127,17 +170,25 @@ class InAppPurchaseService {
               });
               console.log("iOS transaction finished for:", purchase.productId);
             }
-          } catch (finishError) {
-            console.error("Error finishing transaction:", finishError);
-          }
-        }
 
-        if (this.pendingPurchaseResolve) {
-          this.pendingPurchaseResolve({
-            success: true,
-            productId: purchase?.productId,
+            this.resolvePurchase({
+              success: true,
+              productId: purchase?.productId,
+            });
+          } catch (finishError: any) {
+            console.error("Error finishing transaction:", finishError);
+            this.resolvePurchase({
+              success: false,
+              productId: purchase?.productId,
+              error:
+                "Purchase could not be confirmed with the store. Please try again or contact support.",
+            });
+          }
+        } else {
+          this.resolvePurchase({
+            success: false,
+            error: "No receipt received from the store. Please try again.",
           });
-          this.pendingPurchaseResolve = null;
         }
       }
     );
@@ -145,19 +196,16 @@ class InAppPurchaseService {
     this.purchaseErrorSubscription = RNIap.purchaseErrorListener(
       (error: any) => {
         console.log("Purchase error:", error?.code, error?.message);
-        if (this.pendingPurchaseResolve) {
-          const isCancelled =
-            error?.code === "E_USER_CANCELLED" ||
-            error?.responseCode === 1 ||
-            error?.message?.toLowerCase()?.includes("cancel");
-          this.pendingPurchaseResolve({
-            success: false,
-            error: isCancelled
-              ? "Purchase was cancelled"
-              : error?.message || "Purchase failed",
-          });
-          this.pendingPurchaseResolve = null;
-        }
+        const isCancelled =
+          error?.code === "E_USER_CANCELLED" ||
+          error?.responseCode === 1 ||
+          error?.message?.toLowerCase()?.includes("cancel");
+        this.resolvePurchase({
+          success: false,
+          error: isCancelled
+            ? "Purchase was cancelled"
+            : error?.message || "Purchase failed",
+        });
       }
     );
   }
@@ -213,9 +261,11 @@ class InAppPurchaseService {
     return new Promise(async (resolve) => {
       this.pendingPurchaseResolve = resolve;
 
-      const timeout = setTimeout(() => {
+      this.clearPurchaseTimeout();
+      this.purchaseTimeout = setTimeout(() => {
         if (this.pendingPurchaseResolve === resolve) {
           this.pendingPurchaseResolve = null;
+          this.purchaseTimeout = null;
           resolve({ success: false, error: "Purchase timed out" });
         }
       }, 120000);
@@ -232,13 +282,11 @@ class InAppPurchaseService {
           });
         }
       } catch (error: any) {
-        clearTimeout(timeout);
         if (this.pendingPurchaseResolve === resolve) {
-          this.pendingPurchaseResolve = null;
           const isCancelled =
             error?.code === "E_USER_CANCELLED" ||
             error?.message?.toLowerCase()?.includes("cancel");
-          resolve({
+          this.resolvePurchase({
             success: false,
             error: isCancelled
               ? "Purchase was cancelled"
@@ -273,6 +321,7 @@ class InAppPurchaseService {
   async disconnect(): Promise<void> {
     if (this.connected && RNIap) {
       try {
+        this.clearPurchaseTimeout();
         if (this.purchaseUpdateSubscription) {
           this.purchaseUpdateSubscription.remove();
           this.purchaseUpdateSubscription = null;
