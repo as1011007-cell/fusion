@@ -107,8 +107,26 @@ class InAppPurchaseService {
 
         if (receipt) {
           try {
-            await RNIap.finishTransaction({ purchase, isConsumable: false });
-            console.log("Transaction finished for:", purchase.productId);
+            if (Platform.OS === "android") {
+              if (purchase?.purchaseToken) {
+                const isConsumable =
+                  purchase?.productId === PRODUCT_IDS.STAR_POINTS_5000;
+                await RNIap.finishTransaction({
+                  purchase,
+                  isConsumable,
+                });
+                console.log(
+                  `Android transaction ${isConsumable ? "consumed" : "acknowledged"} for:`,
+                  purchase.productId
+                );
+              }
+            } else {
+              await RNIap.finishTransaction({
+                purchase,
+                isConsumable: false,
+              });
+              console.log("iOS transaction finished for:", purchase.productId);
+            }
           } catch (finishError) {
             console.error("Error finishing transaction:", finishError);
           }
@@ -203,7 +221,16 @@ class InAppPurchaseService {
       }, 120000);
 
       try {
-        await RNIap.requestPurchase({ sku: productId });
+        if (Platform.OS === "android") {
+          await RNIap.requestPurchase({
+            skus: [productId],
+          });
+        } else {
+          await RNIap.requestPurchase({
+            sku: productId,
+            andDangerouslyFinishTransactionAutomaticallyIOS: false,
+          });
+        }
       } catch (error: any) {
         clearTimeout(timeout);
         if (this.pendingPurchaseResolve === resolve) {
