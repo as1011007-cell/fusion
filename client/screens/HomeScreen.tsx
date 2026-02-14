@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View, Image, Pressable, Dimensions, Platform } from "react-native";
+import { StyleSheet, View, Image, Pressable, Dimensions, Platform, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -872,18 +872,33 @@ export default function HomeScreen() {
       </View>
 
       <Animated.View entering={FadeInUp.delay(900).springify()} style={[styles.footer, { paddingBottom: insets.bottom + Spacing.md }]}>
-        {!isAdFree && (
-          <Pressable 
-            onPress={handlePurchaseAdFree}
-            disabled={adFreePurchasing}
-            style={[styles.adsFreeButton, { backgroundColor: colors.surface, borderColor: colors.primary + "40", opacity: adFreePurchasing ? 0.6 : 1 }]}
-          >
-            <Feather name="shield" size={12} color={colors.primary} />
-            <ThemedText style={[styles.adsFreeText, { color: colors.primary }]}>
-              {adFreePurchasing ? "PROCESSING..." : "GET RID OF ALL THE ADS"}
-            </ThemedText>
-          </Pressable>
-        )}
+        {!isAdFree ? (
+          <View style={styles.adFreeCard}>
+            <View style={styles.adFreeHeader}>
+              <View style={[styles.adFreeIcon, { backgroundColor: GameColors.correct + "20" }]}>
+                <Feather name="zap-off" size={24} color={GameColors.correct} />
+              </View>
+              <View style={styles.adFreeInfo}>
+                <ThemedText style={styles.adFreeTitle}>Ad-Free Version</ThemedText>
+                <ThemedText style={styles.adFreeDesc}>Remove all ads forever</ThemedText>
+              </View>
+            </View>
+            <Pressable
+              style={styles.adFreeButton}
+              onPress={handlePurchaseAdFree}
+              disabled={adFreePurchasing}
+            >
+              {adFreePurchasing ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <ThemedText style={styles.adFreeButtonText}>$5.99</ThemedText>
+                  <Feather name="external-link" size={16} color="#fff" />
+                </>
+              )}
+            </Pressable>
+          </View>
+        ) : null}
         <ThemedText style={styles.footerText}>What Would They Say?</ThemedText>
       </Animated.View>
     </LinearGradient>
@@ -1235,19 +1250,51 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     gap: 8,
   },
-  adsFreeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    gap: 4,
+  adFreeCard: {
+    backgroundColor: GameColors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.sm,
+    width: '100%',
   },
-  adsFreeText: {
-    fontSize: 10,
-    fontWeight: "bold",
-    letterSpacing: 1,
+  adFreeHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  adFreeIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  adFreeInfo: {
+    flex: 1,
+    marginLeft: Spacing.md,
+  },
+  adFreeTitle: {
+    ...Typography.body,
+    color: GameColors.textPrimary,
+    fontWeight: "700",
+  },
+  adFreeDesc: {
+    ...Typography.caption,
+    color: GameColors.textSecondary,
+  },
+  adFreeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: GameColors.correct,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.sm,
+  },
+  adFreeButtonText: {
+    ...Typography.body,
+    color: "#fff",
+    fontWeight: "700",
   },
   footerText: {
     ...Typography.small,
