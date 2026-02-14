@@ -20,7 +20,6 @@ import Animated, {
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import * as WebBrowser from "expo-web-browser";
-import Constants from "expo-constants";
 import { Alert } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -89,6 +88,26 @@ export default function HomeScreen() {
   const themeId = currentTheme.id as ThemeId;
   const config = themeConfig[themeId];
   const [adFreePurchasing, setAdFreePurchasing] = useState(false);
+  const [storeKitReady, setStoreKitReady] = useState(false);
+
+  const isNative = Platform.OS === "ios" || Platform.OS === "android";
+
+  useEffect(() => {
+    const initInAppPurchases = async () => {
+      if (isNative) {
+        try {
+          const connected = await inAppPurchaseService.connect();
+          if (connected) {
+            await inAppPurchaseService.loadProducts();
+            setStoreKitReady(true);
+          }
+        } catch (error) {
+          console.log("In-app purchases not available:", error);
+        }
+      }
+    };
+    initInAppPurchases();
+  }, [isNative]);
 
   const profileScale = useSharedValue(1);
   const logoScale = useSharedValue(1);
@@ -218,24 +237,86 @@ export default function HomeScreen() {
     }
   };
 
-  const handlePurchaseAdFree = async () => {
-    if (adFreePurchasing) return;
-    
+  const retryStoreConnection = async (): Promise<boolean> => {
+    try {
+      const connected = await inAppPurchaseService.connect();
+      if (connected) {
+        await inAppPurchaseService.loadProducts();
+        setStoreKitReady(true);
+        return true;
+      }
+    } catch (error) {
+      console.log("Retry store connection failed:", error);
+    }
+    return false;
+  };
+
+  const handlePurchaseAdFreeNative = async () => {
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    
-    const isExpoGo = Constants.appOwnership === 'expo';
-    const isNativePlatform = Platform.OS === 'ios' || Platform.OS === 'android';
-    
     setAdFreePurchasing(true);
-    
-    if (isNativePlatform && !isExpoGo) {
-      try {
-        const connected = await inAppPurchaseService.connect();
-        if (connected) {
-          const result = await inAppPurchaseService.purchaseProduct(PRODUCT_IDS.AD_FREE);
-          if (result.success) {
+    try {
+      const result = await inAppPurchaseService.purchaseProduct(PRODUCT_IDS.AD_FREE);
+      if (result.success) {
+        if (settings.hapticsEnabled) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+        setAdFree(true);
+        Alert.alert(
+          "Thank You!",
+          "Your purchase was successful! Enjoy your ad-free experience.",
+          [{ text: "Awesome!" }]
+        );
+      } else if (result.error !== "Purchase was cancelled") {
+        if (settings.hapticsEnabled) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        }
+        Alert.alert("Purchase Failed", result.error || "Something went wrong. Please try again.");
+      }
+    } catch (error) {
+      console.error('StoreKit purchase error:', error);
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+    } finally {
+      setAdFreePurchasing(false);
+    }
+  };
+
+  const handlePurchaseAdFreeStripe = async () => {
+    if (settings.hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    setAdFreePurchasing(true);
+    try {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/stripe/products`);
+      const data = await response.json();
+
+      const adFreeProduct = data.products?.find((p: any) => 
+        p.name?.toLowerCase().includes('ad-free') || p.metadata?.category === 'upgrade'
+      );
+
+      if (adFreeProduct?.prices?.[0]?.id) {
+        const successUrl = `${apiUrl}/payment-success?type=adfree`;
+        const cancelUrl = `${apiUrl}/payment-cancel`;
+
+        const checkoutResponse = await fetch(`${apiUrl}/api/stripe/create-checkout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            priceId: adFreeProduct.prices[0].id,
+            successUrl,
+            cancelUrl,
+          }),
+        });
+        const checkoutData = await checkoutResponse.json();
+
+        if (checkoutData.url && checkoutData.sessionId) {
+          await WebBrowser.openBrowserAsync(checkoutData.url);
+          const paymentSuccess = await verifyPayment(checkoutData.sessionId);
+          if (paymentSuccess) {
             if (settings.hapticsEnabled) {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             }
@@ -245,91 +326,50 @@ export default function HomeScreen() {
               "Your purchase was successful! Enjoy your ad-free experience.",
               [{ text: "Awesome!" }]
             );
-          } else if (result.error !== "Purchase was cancelled") {
+          } else {
             if (settings.hapticsEnabled) {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
             }
-            Alert.alert("Purchase Failed", result.error || "Something went wrong. Please try again.");
+            Alert.alert(
+              "Payment Incomplete",
+              "Your payment was not completed. Please try again.",
+              [{ text: "OK" }]
+            );
           }
-        } else {
-          if (settings.hapticsEnabled) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-          }
-          Alert.alert(
-            "Purchase Unavailable",
-            "Unable to connect to the store. Please check your internet connection and try again.",
-            [{ text: "OK" }]
-          );
         }
-      } catch (error) {
-        console.error('Native purchase error:', error);
+      } else {
+        console.error('Ad-Free product not found in Stripe');
         if (settings.hapticsEnabled) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
-      } finally {
-        setAdFreePurchasing(false);
+      }
+    } catch (error) {
+      console.error('Purchase error:', error);
+      if (settings.hapticsEnabled) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+    } finally {
+      setAdFreePurchasing(false);
+    }
+  };
+
+  const handlePurchaseAdFree = async () => {
+    if (adFreePurchasing) return;
+    if (isNative && storeKitReady) {
+      handlePurchaseAdFreeNative();
+    } else if (isNative && !storeKitReady) {
+      const retried = await retryStoreConnection();
+      if (retried) {
+        handlePurchaseAdFreeNative();
+      } else {
+        Alert.alert(
+          "Purchase Unavailable",
+          "Unable to connect to the store. Please check your internet connection and try again.",
+          [{ text: "OK" }]
+        );
       }
     } else {
-      try {
-        const apiUrl = getApiUrl();
-        const response = await fetch(`${apiUrl}/api/stripe/products`);
-        const data = await response.json();
-
-        const adFreeProduct = data.products?.find((p: any) => 
-          p.name?.toLowerCase().includes('ad-free') || p.metadata?.category === 'upgrade'
-        );
-
-        if (adFreeProduct?.prices?.[0]?.id) {
-          const successUrl = `${apiUrl}/payment-success?type=adfree`;
-          const cancelUrl = `${apiUrl}/payment-cancel`;
-
-          const checkoutResponse = await fetch(`${apiUrl}/api/stripe/create-checkout`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              priceId: adFreeProduct.prices[0].id,
-              successUrl,
-              cancelUrl,
-            }),
-          });
-          const checkoutData = await checkoutResponse.json();
-
-          if (checkoutData.url && checkoutData.sessionId) {
-            await WebBrowser.openBrowserAsync(checkoutData.url);
-            const paymentSuccess = await verifyPayment(checkoutData.sessionId);
-            if (paymentSuccess) {
-              if (settings.hapticsEnabled) {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              }
-              setAdFree(true);
-              Alert.alert(
-                "Thank You!",
-                "Your purchase was successful! Enjoy your ad-free experience.",
-                [{ text: "Awesome!" }]
-              );
-            } else {
-              if (settings.hapticsEnabled) {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-              }
-              Alert.alert(
-                "Payment Incomplete",
-                "Your payment was not completed. Please try again.",
-                [{ text: "OK" }]
-              );
-            }
-          }
-        } else {
-          Alert.alert("Not Available", "Ad-free purchase is not available at this time.");
-        }
-      } catch (error) {
-        console.error('Purchase error:', error);
-        if (settings.hapticsEnabled) {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        }
-        Alert.alert("Error", "Something went wrong. Please try again.");
-      } finally {
-        setAdFreePurchasing(false);
-      }
+      handlePurchaseAdFreeStripe();
     }
   };
 
@@ -873,31 +913,20 @@ export default function HomeScreen() {
 
       <Animated.View entering={FadeInUp.delay(900).springify()} style={[styles.footer, { paddingBottom: insets.bottom + Spacing.md }]}>
         {!isAdFree ? (
-          <View style={styles.adFreeCard}>
-            <View style={styles.adFreeHeader}>
-              <View style={[styles.adFreeIcon, { backgroundColor: GameColors.correct + "20" }]}>
-                <Feather name="zap-off" size={24} color={GameColors.correct} />
-              </View>
-              <View style={styles.adFreeInfo}>
-                <ThemedText style={styles.adFreeTitle}>Ad-Free Version</ThemedText>
-                <ThemedText style={styles.adFreeDesc}>Remove all ads forever</ThemedText>
-              </View>
-            </View>
-            <Pressable
-              style={styles.adFreeButton}
-              onPress={handlePurchaseAdFree}
-              disabled={adFreePurchasing}
-            >
-              {adFreePurchasing ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <ThemedText style={styles.adFreeButtonText}>$5.99</ThemedText>
-                  <Feather name="external-link" size={16} color="#fff" />
-                </>
-              )}
-            </Pressable>
-          </View>
+          <Pressable 
+            onPress={handlePurchaseAdFree}
+            disabled={adFreePurchasing}
+            style={[styles.adsFreeButton, { backgroundColor: colors.surface, borderColor: colors.primary + "40" }]}
+          >
+            {adFreePurchasing ? (
+              <ActivityIndicator color={colors.primary} size="small" />
+            ) : (
+              <>
+                <Feather name="shield" size={12} color={colors.primary} />
+                <ThemedText style={[styles.adsFreeText, { color: colors.primary }]}>GET RID OF ALL THE ADS</ThemedText>
+              </>
+            )}
+          </Pressable>
         ) : null}
         <ThemedText style={styles.footerText}>What Would They Say?</ThemedText>
       </Animated.View>
@@ -1250,51 +1279,19 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
     gap: 8,
   },
-  adFreeCard: {
-    backgroundColor: GameColors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    marginBottom: Spacing.sm,
-    width: '100%',
+  adsFreeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    gap: 4,
   },
-  adFreeHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: Spacing.md,
-  },
-  adFreeIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  adFreeInfo: {
-    flex: 1,
-    marginLeft: Spacing.md,
-  },
-  adFreeTitle: {
-    ...Typography.body,
-    color: GameColors.textPrimary,
-    fontWeight: "700",
-  },
-  adFreeDesc: {
-    ...Typography.caption,
-    color: GameColors.textSecondary,
-  },
-  adFreeButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: GameColors.correct,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.md,
-    gap: Spacing.sm,
-  },
-  adFreeButtonText: {
-    ...Typography.body,
-    color: "#fff",
-    fontWeight: "700",
+  adsFreeText: {
+    fontSize: 10,
+    fontWeight: "bold",
+    letterSpacing: 1,
   },
   footerText: {
     ...Typography.small,
