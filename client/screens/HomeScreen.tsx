@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, View, Image, Pressable, Dimensions, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -88,6 +88,7 @@ export default function HomeScreen() {
   const colors = currentTheme.colors;
   const themeId = currentTheme.id as ThemeId;
   const config = themeConfig[themeId];
+  const [adFreePurchasing, setAdFreePurchasing] = useState(false);
 
   const profileScale = useSharedValue(1);
   const logoScale = useSharedValue(1);
@@ -218,15 +219,17 @@ export default function HomeScreen() {
   };
 
   const handlePurchaseAdFree = async () => {
+    if (adFreePurchasing) return;
+    
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     
     const isExpoGo = Constants.appOwnership === 'expo';
     const isNativePlatform = Platform.OS === 'ios' || Platform.OS === 'android';
-    const storeName = Platform.OS === 'ios' ? 'App Store' : 'Play Store';
     
-    // Use native in-app purchases for iOS and Android (when not in Expo Go)
+    setAdFreePurchasing(true);
+    
     if (isNativePlatform && !isExpoGo) {
       try {
         const connected = await inAppPurchaseService.connect();
@@ -243,9 +246,15 @@ export default function HomeScreen() {
               [{ text: "Awesome!" }]
             );
           } else if (result.error !== "Purchase was cancelled") {
+            if (settings.hapticsEnabled) {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            }
             Alert.alert("Purchase Failed", result.error || "Something went wrong. Please try again.");
           }
         } else {
+          if (settings.hapticsEnabled) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          }
           Alert.alert(
             "Purchase Unavailable",
             "Unable to connect to the store. Please check your internet connection and try again.",
@@ -254,9 +263,13 @@ export default function HomeScreen() {
         }
       } catch (error) {
         console.error('Native purchase error:', error);
+        if (settings.hapticsEnabled) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        }
+      } finally {
+        setAdFreePurchasing(false);
       }
     } else {
-      // Web and Expo Go use Stripe
       try {
         const apiUrl = getApiUrl();
         const response = await fetch(`${apiUrl}/api/stripe/products`);
@@ -288,10 +301,11 @@ export default function HomeScreen() {
               if (settings.hapticsEnabled) {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               }
+              setAdFree(true);
               Alert.alert(
                 "Thank You!",
                 "Your purchase was successful! Enjoy your ad-free experience.",
-                [{ text: "Awesome!", onPress: () => setAdFree(true) }]
+                [{ text: "Awesome!" }]
               );
             } else {
               if (settings.hapticsEnabled) {
@@ -309,7 +323,12 @@ export default function HomeScreen() {
         }
       } catch (error) {
         console.error('Purchase error:', error);
+        if (settings.hapticsEnabled) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        }
         Alert.alert("Error", "Something went wrong. Please try again.");
+      } finally {
+        setAdFreePurchasing(false);
       }
     }
   };
@@ -856,10 +875,13 @@ export default function HomeScreen() {
         {!isAdFree && (
           <Pressable 
             onPress={handlePurchaseAdFree}
-            style={[styles.adsFreeButton, { backgroundColor: colors.surface, borderColor: colors.primary + "40" }]}
+            disabled={adFreePurchasing}
+            style={[styles.adsFreeButton, { backgroundColor: colors.surface, borderColor: colors.primary + "40", opacity: adFreePurchasing ? 0.6 : 1 }]}
           >
             <Feather name="shield" size={12} color={colors.primary} />
-            <ThemedText style={[styles.adsFreeText, { color: colors.primary }]}>GET RID OF ALL THE ADS</ThemedText>
+            <ThemedText style={[styles.adsFreeText, { color: colors.primary }]}>
+              {adFreePurchasing ? "PROCESSING..." : "GET RID OF ALL THE ADS"}
+            </ThemedText>
           </Pressable>
         )}
         <ThemedText style={styles.footerText}>What Would They Say?</ThemedText>

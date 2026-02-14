@@ -373,10 +373,11 @@ export default function ShopScreen() {
             if (settings.hapticsEnabled) {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             }
+            setAdFree(true);
             Alert.alert(
               "Thank You!",
               "Your purchase was successful! Enjoy your ad-free experience.",
-              [{ text: "Awesome!", onPress: () => setAdFree(true) }]
+              [{ text: "Awesome!" }]
             );
           } else {
             if (settings.hapticsEnabled) {
