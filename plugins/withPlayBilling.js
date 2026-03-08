@@ -1,9 +1,11 @@
-const { withDangerousMod } = require('@expo/config-plugins');
+const { withDangerousMod, withProjectBuildGradle } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
+const COMPATIBLE_KOTLIN = '1.9.24';
+
 const withPlayBilling = (config) => {
-  return withDangerousMod(config, [
+  config = withDangerousMod(config, [
     'android',
     async (config) => {
       const iapBuildGradlePath = path.join(
@@ -15,44 +17,104 @@ const withPlayBilling = (config) => {
       );
 
       if (fs.existsSync(iapBuildGradlePath)) {
-        let buildGradle = fs.readFileSync(iapBuildGradlePath, 'utf8');
+        let content = fs.readFileSync(iapBuildGradlePath, 'utf8');
+        let patched = false;
 
-        const oldKotlinResolution = `def kotlinVersion = rootProject.ext.has("kotlinVersion") ? rootProject.ext.get("kotlinVersion") : project.properties["RNIap_kotlinVersion"]`;
-
-        if (buildGradle.includes(oldKotlinResolution)) {
-          buildGradle = buildGradle.replace(
-            oldKotlinResolution,
-            `def kotlinVersion = project.properties["RNIap_kotlinVersion"] ?: "1.9.24"`
+        const buildscriptKotlinRegex = /def\s+kotlinVersion\s*=\s*rootProject\.ext\.has\("kotlinVersion"\)\s*\?\s*rootProject\.ext\.get\("kotlinVersion"\)\s*:\s*project\.properties\["RNIap_kotlinVersion"\]/;
+        if (buildscriptKotlinRegex.test(content)) {
+          content = content.replace(
+            buildscriptKotlinRegex,
+            `def kotlinVersion = "${COMPATIBLE_KOTLIN}"`
           );
-          console.log('[withPlayBilling] Patched react-native-iap to use Kotlin 1.9.24 instead of root project version');
+          patched = true;
+          console.log(`[withPlayBilling] Patched buildscript kotlinVersion to ${COMPATIBLE_KOTLIN}`);
         }
 
-        const oldKotlinDef = `def kotlinVersion = getExtOrDefault("kotlinVersion")`;
-        if (buildGradle.includes(oldKotlinDef)) {
-          buildGradle = buildGradle.replace(
-            oldKotlinDef,
-            `def kotlinVersion = "1.9.24"`
+        const depsKotlinRegex = /def\s+kotlinVersion\s*=\s*getExtOrDefault\("kotlinVersion"\)/;
+        if (depsKotlinRegex.test(content)) {
+          content = content.replace(
+            depsKotlinRegex,
+            `def kotlinVersion = "${COMPATIBLE_KOTLIN}"`
           );
-          console.log('[withPlayBilling] Patched react-native-iap dependencies to use Kotlin 1.9.24');
+          patched = true;
+          console.log(`[withPlayBilling] Patched dependencies kotlinVersion to ${COMPATIBLE_KOTLIN}`);
         }
 
-        const oldCompileSdk = /compileSdkVersion\s+getExtOrIntDefault\("compileSdkVersion",\s*\d+\)/;
-        if (oldCompileSdk.test(buildGradle)) {
-          buildGradle = buildGradle.replace(
-            oldCompileSdk,
+        const agpRegex = /classpath\s+"com\.android\.tools\.build:gradle:7\.4\.\d+"/;
+        if (agpRegex.test(content)) {
+          content = content.replace(
+            agpRegex,
+            'classpath "com.android.tools.build:gradle:8.2.1"'
+          );
+          patched = true;
+          console.log('[withPlayBilling] Updated Android Gradle Plugin to 8.2.1');
+        }
+
+        const compileSdkRegex = /compileSdkVersion\s+getExtOrIntegerDefault\("compileSdkVersion"\)/;
+        if (compileSdkRegex.test(content)) {
+          content = content.replace(
+            compileSdkRegex,
             'compileSdkVersion 35'
           );
-          console.log('[withPlayBilling] Updated react-native-iap compileSdkVersion to 35');
+          patched = true;
+          console.log('[withPlayBilling] Updated compileSdkVersion to 35');
         }
 
-        fs.writeFileSync(iapBuildGradlePath, buildGradle, 'utf8');
+        const targetSdkRegex = /targetSdkVersion\s+getExtOrIntegerDefault\("targetSdkVersion"\)/;
+        if (targetSdkRegex.test(content)) {
+          content = content.replace(
+            targetSdkRegex,
+            'targetSdkVersion 35'
+          );
+          patched = true;
+          console.log('[withPlayBilling] Updated targetSdkVersion to 35');
+        }
+
+        const javaCompatRegex = /sourceCompatibility\s+JavaVersion\.VERSION_1_8\s*\n\s*targetCompatibility\s+JavaVersion\.VERSION_1_8/;
+        if (javaCompatRegex.test(content)) {
+          content = content.replace(
+            javaCompatRegex,
+            'sourceCompatibility JavaVersion.VERSION_17\n    targetCompatibility JavaVersion.VERSION_17'
+          );
+          patched = true;
+          console.log('[withPlayBilling] Updated Java compatibility to VERSION_17');
+        }
+
+        const lintRegex = /lintOptions\s*\{/;
+        if (lintRegex.test(content)) {
+          content = content.replace(lintRegex, 'lint {');
+          patched = true;
+          console.log('[withPlayBilling] Updated deprecated lintOptions to lint block');
+        }
+
+        if (!content.includes('kotlinOptions')) {
+          const compileOptionsEnd = /compileOptions\s*\{[^}]*\}/;
+          const match = content.match(compileOptionsEnd);
+          if (match) {
+            content = content.replace(
+              match[0],
+              match[0] + `\n\n  kotlinOptions {\n    jvmTarget = "17"\n  }`
+            );
+            patched = true;
+            console.log('[withPlayBilling] Added kotlinOptions with jvmTarget 17');
+          }
+        }
+
+        if (patched) {
+          fs.writeFileSync(iapBuildGradlePath, content, 'utf8');
+          console.log('[withPlayBilling] All patches applied to react-native-iap');
+        } else {
+          console.log('[withPlayBilling] No patches needed for react-native-iap');
+        }
       } else {
-        console.log('[withPlayBilling] react-native-iap android/build.gradle not found, skipping patch');
+        console.log('[withPlayBilling] react-native-iap build.gradle not found');
       }
 
       return config;
     },
   ]);
+
+  return config;
 };
 
 module.exports = withPlayBilling;
