@@ -2,28 +2,28 @@ const { withDangerousMod, withProjectBuildGradle } = require('@expo/config-plugi
 const fs = require('fs');
 const path = require('path');
 
-const COMPATIBLE_KOTLIN = '1.9.24';
-
 const withPlayBilling = (config) => {
   config = withProjectBuildGradle(config, (config) => {
     let contents = config.modResults.contents;
 
     if (!contents.includes('languageVersion = "1.9"')) {
       const kotlinCompilerFix = `
-subprojects {
-    plugins.withId("org.jetbrains.kotlin.android") {
-        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-            kotlinOptions {
-                jvmTarget = "17"
-                apiVersion = "1.9"
-                languageVersion = "1.9"
+subprojects { subproject ->
+    if (subproject.name == "react-native-iap") {
+        subproject.plugins.withId("org.jetbrains.kotlin.android") {
+            subproject.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+                kotlinOptions {
+                    jvmTarget = "17"
+                    apiVersion = "1.9"
+                    languageVersion = "1.9"
+                }
             }
         }
     }
 }
 `;
       contents += kotlinCompilerFix;
-      console.log('[withPlayBilling] Added Kotlin 1.9 compatibility fix to root build.gradle');
+      console.log('[withPlayBilling] Added targeted Kotlin 1.9 compatibility fix for react-native-iap in root build.gradle');
     }
 
     config.modResults.contents = contents;
@@ -45,52 +45,23 @@ subprojects {
         let content = fs.readFileSync(iapBuildGradlePath, 'utf8');
         let patched = false;
 
-        const buildscriptKotlinRegex = /def\s+kotlinVersion\s*=\s*rootProject\.ext\.has\("kotlinVersion"\)\s*\?\s*rootProject\.ext\.get\("kotlinVersion"\)\s*:\s*project\.properties\["RNIap_kotlinVersion"\]/;
-        if (buildscriptKotlinRegex.test(content)) {
-          content = content.replace(
-            buildscriptKotlinRegex,
-            `def kotlinVersion = "${COMPATIBLE_KOTLIN}"`
-          );
+        const removeOwnBuildscript = /^buildscript\s*\{[\s\S]*?\n\}\s*\n/m;
+        if (removeOwnBuildscript.test(content)) {
+          content = content.replace(removeOwnBuildscript, '');
           patched = true;
-          console.log(`[withPlayBilling] Patched buildscript kotlinVersion to ${COMPATIBLE_KOTLIN}`);
-        }
-
-        const depsKotlinRegex = /def\s+kotlinVersion\s*=\s*getExtOrDefault\("kotlinVersion"\)/;
-        if (depsKotlinRegex.test(content)) {
-          content = content.replace(
-            depsKotlinRegex,
-            `def kotlinVersion = "${COMPATIBLE_KOTLIN}"`
-          );
-          patched = true;
-          console.log(`[withPlayBilling] Patched dependencies kotlinVersion to ${COMPATIBLE_KOTLIN}`);
-        }
-
-        const agpRegex = /classpath\s+"com\.android\.tools\.build:gradle:7\.4\.\d+"/;
-        if (agpRegex.test(content)) {
-          content = content.replace(
-            agpRegex,
-            'classpath "com.android.tools.build:gradle:8.2.1"'
-          );
-          patched = true;
-          console.log('[withPlayBilling] Updated Android Gradle Plugin to 8.2.1');
+          console.log('[withPlayBilling] Removed react-native-iap buildscript block (will use root project Kotlin plugin)');
         }
 
         const compileSdkRegex = /compileSdkVersion\s+getExtOrIntegerDefault\("compileSdkVersion"\)/;
         if (compileSdkRegex.test(content)) {
-          content = content.replace(
-            compileSdkRegex,
-            'compileSdkVersion 35'
-          );
+          content = content.replace(compileSdkRegex, 'compileSdkVersion 35');
           patched = true;
           console.log('[withPlayBilling] Updated compileSdkVersion to 35');
         }
 
         const targetSdkRegex = /targetSdkVersion\s+getExtOrIntegerDefault\("targetSdkVersion"\)/;
         if (targetSdkRegex.test(content)) {
-          content = content.replace(
-            targetSdkRegex,
-            'targetSdkVersion 35'
-          );
+          content = content.replace(targetSdkRegex, 'targetSdkVersion 35');
           patched = true;
           console.log('[withPlayBilling] Updated targetSdkVersion to 35');
         }
@@ -118,10 +89,10 @@ subprojects {
           if (match) {
             content = content.replace(
               match[0],
-              match[0] + `\n\n  kotlinOptions {\n    jvmTarget = "17"\n  }`
+              match[0] + `\n\n  kotlinOptions {\n    jvmTarget = "17"\n    apiVersion = "1.9"\n    languageVersion = "1.9"\n  }`
             );
             patched = true;
-            console.log('[withPlayBilling] Added kotlinOptions with jvmTarget 17');
+            console.log('[withPlayBilling] Added kotlinOptions with jvmTarget 17, apiVersion 1.9, languageVersion 1.9');
           }
         }
 
