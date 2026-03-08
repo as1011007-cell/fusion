@@ -10,21 +10,13 @@ const withPlayBilling = (config) => {
 
     if (!contents.includes('languageVersion = "1.9"')) {
       const kotlinCompilerFix = `
-subprojects { subproject ->
-    afterEvaluate {
-        subproject.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+subprojects {
+    plugins.withId("org.jetbrains.kotlin.android") {
+        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
             kotlinOptions {
                 jvmTarget = "17"
                 apiVersion = "1.9"
                 languageVersion = "1.9"
-            }
-        }
-        if (subproject.hasProperty("android")) {
-            subproject.android {
-                if (subproject.android.compileOptions) {
-                    subproject.android.compileOptions.sourceCompatibility = JavaVersion.VERSION_17
-                    subproject.android.compileOptions.targetCompatibility = JavaVersion.VERSION_17
-                }
             }
         }
     }
