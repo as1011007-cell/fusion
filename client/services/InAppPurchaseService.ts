@@ -250,11 +250,27 @@ class InAppPurchaseService {
     return this.products.find((p) => p.productId === productId);
   }
 
+  hasProduct(productId: ProductId): boolean {
+    return this.products.some((p) => p.productId === productId);
+  }
+
+  hasAnyProducts(): boolean {
+    return this.products.length > 0;
+  }
+
   async purchaseProduct(productId: ProductId): Promise<PurchaseResult> {
     if (!this.connected || !RNIap) {
       return {
         success: false,
-        error: "Store not connected",
+        error: "Store not connected. Please try again later.",
+      };
+    }
+
+    if (!this.hasProduct(productId)) {
+      return {
+        success: false,
+        error:
+          "This product is currently unavailable. Please try again later.",
       };
     }
 

@@ -46,7 +46,9 @@ export default function ShopScreen() {
           if (connected) {
             const products = await inAppPurchaseService.loadProducts();
             setStoreKitProducts(products);
-            setStoreKitReady(true);
+            if (products.length > 0) {
+              setStoreKitReady(true);
+            }
             console.log("In-app purchases initialized with products:", products.length);
           }
         } catch (error) {
@@ -189,13 +191,22 @@ export default function ShopScreen() {
         if (settings.hapticsEnabled) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
-        Alert.alert("Purchase Failed", result.error || "Something went wrong. Please try again.");
+        Alert.alert(
+          "Purchase Unavailable",
+          result.error || "This purchase is not available right now. Please try again later.",
+          [{ text: "OK" }]
+        );
       }
     } catch (error) {
       console.error('StoreKit purchase error:', error);
       if (settings.hapticsEnabled) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
+      Alert.alert(
+        "Purchase Unavailable",
+        "Something went wrong. Please check your internet connection and try again.",
+        [{ text: "OK" }]
+      );
     } finally {
       setLoading(null);
     }
@@ -276,8 +287,10 @@ export default function ShopScreen() {
       if (connected) {
         const products = await inAppPurchaseService.loadProducts();
         setStoreKitProducts(products);
-        setStoreKitReady(true);
-        return true;
+        if (products.length > 0) {
+          setStoreKitReady(true);
+          return true;
+        }
       }
     } catch (error) {
       console.log("Retry store connection failed:", error);
@@ -325,13 +338,22 @@ export default function ShopScreen() {
         if (settings.hapticsEnabled) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
-        Alert.alert("Purchase Failed", result.error || "Something went wrong. Please try again.");
+        Alert.alert(
+          "Purchase Unavailable",
+          result.error || "This purchase is not available right now. Please try again later.",
+          [{ text: "OK" }]
+        );
       }
     } catch (error) {
       console.error('StoreKit purchase error:', error);
       if (settings.hapticsEnabled) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
+      Alert.alert(
+        "Purchase Unavailable",
+        "Something went wrong. Please check your internet connection and try again.",
+        [{ text: "OK" }]
+      );
     } finally {
       setLoading(null);
     }
@@ -447,13 +469,22 @@ export default function ShopScreen() {
         if (settings.hapticsEnabled) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
-        Alert.alert("Purchase Failed", result.error || "Something went wrong. Please try again.");
+        Alert.alert(
+          "Purchase Unavailable",
+          result.error || "This purchase is not available right now. Please try again later.",
+          [{ text: "OK" }]
+        );
       }
     } catch (error) {
       console.error('StoreKit purchase error:', error);
       if (settings.hapticsEnabled) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
+      Alert.alert(
+        "Purchase Unavailable",
+        "Something went wrong. Please check your internet connection and try again.",
+        [{ text: "OK" }]
+      );
     } finally {
       setLoading(null);
     }
