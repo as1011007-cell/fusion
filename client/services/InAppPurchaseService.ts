@@ -210,6 +210,19 @@ class InAppPurchaseService {
     );
   }
 
+  private mapProduct(product: any): IAPItemDetails {
+    return {
+      productId: product.productId,
+      title: product.title || product.name || "",
+      description: product.description || "",
+      price: product.localizedPrice || product.price || "0",
+      priceAmountMicros: product.price
+        ? Math.round(parseFloat(String(product.price)) * 1000000)
+        : 0,
+      priceCurrencyCode: product.currency || "USD",
+    };
+  }
+
   async loadProducts(): Promise<IAPItemDetails[]> {
     if (!this.connected || !RNIap) {
       return [];
@@ -217,27 +230,66 @@ class InAppPurchaseService {
 
     try {
       const productIds = Object.values(PRODUCT_IDS);
-      const products = await RNIap.getProducts({ skus: productIds });
+      let allProducts: any[] = [];
 
-      if (!products || products.length === 0) {
+      try {
+        const products = await RNIap.getProducts({ skus: productIds });
+        if (products && products.length > 0) {
+          allProducts = [...products];
+          console.log(
+            `getProducts returned ${products.length} items:`,
+            products.map((p: any) => p.productId)
+          );
+        }
+      } catch (e) {
+        console.log("getProducts failed:", e);
+      }
+
+      const loadedIds = new Set(allProducts.map((p: any) => p.productId));
+      const missingIds = productIds.filter((id) => !loadedIds.has(id));
+
+      if (missingIds.length > 0) {
         console.log(
-          "No products returned from store. Verify product IDs are configured in App Store Connect / Google Play Console."
+          "Products not found via getProducts, trying getSubscriptions:",
+          missingIds
+        );
+        try {
+          const subs = await RNIap.getSubscriptions({ skus: missingIds });
+          if (subs && subs.length > 0) {
+            allProducts = [...allProducts, ...subs];
+            console.log(
+              `getSubscriptions returned ${subs.length} items:`,
+              subs.map((s: any) => s.productId)
+            );
+          }
+        } catch (e) {
+          console.log("getSubscriptions failed:", e);
+        }
+      }
+
+      if (allProducts.length === 0) {
+        console.log(
+          "No products returned from store. Verify product IDs are configured in App Store Connect / Google Play Console.",
+          "Requested IDs:",
+          productIds
         );
         return [];
       }
 
-      this.products = products.map((product: any) => ({
-        productId: product.productId,
-        title: product.title || product.name || "",
-        description: product.description || "",
-        price: product.localizedPrice || product.price || "0",
-        priceAmountMicros: product.price
-          ? Math.round(parseFloat(String(product.price)) * 1000000)
-          : 0,
-        priceCurrencyCode: product.currency || "USD",
-      }));
+      this.products = allProducts.map((product: any) => this.mapProduct(product));
+
+      const stillMissing = productIds.filter(
+        (id) => !this.products.some((p) => p.productId === id)
+      );
+      if (stillMissing.length > 0) {
+        console.log(
+          "WARNING: The following product IDs were not found in the store:",
+          stillMissing
+        );
+      }
+
       console.log(
-        `Loaded ${this.products.length} products from ${this.getStoreName()}`
+        `Loaded ${this.products.length} of ${productIds.length} products from ${this.getStoreName()}`
       );
       return this.products;
     } catch (error) {

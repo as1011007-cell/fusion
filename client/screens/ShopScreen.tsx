@@ -859,6 +859,22 @@ export default function ShopScreen() {
     );
   };
 
+  const getProductPrice = (productId: string, fallback: string): string => {
+    if (isNative && storeKitProducts.length > 0) {
+      const product = storeKitProducts.find((p: any) => p.productId === productId);
+      return product ? product.price : fallback;
+    }
+    return fallback;
+  };
+
+  const isStoreLoading = isNative && !storeKitReady;
+
+  const isProductAvailable = (productId: string): boolean => {
+    if (!isNative) return true;
+    if (!storeKitReady) return false;
+    return storeKitProducts.some((p: any) => p.productId === productId);
+  };
+
   const renderPremiumTab = () => (
     <Animated.View entering={FadeInDown.springify()}>
       <ThemedText style={styles.sectionTitle}>Premium Purchases</ThemedText>
@@ -876,15 +892,22 @@ export default function ShopScreen() {
         </View>
 
         <Pressable
-          style={styles.realMoneyButton}
+          style={[
+            styles.realMoneyButton,
+            (!isProductAvailable(PRODUCT_IDS.STAR_POINTS_5000) && !isStoreLoading) ? styles.realMoneyButtonDisabled : null,
+          ]}
           onPress={handlePurchaseStarPoints}
-          disabled={loading === "starPoints"}
+          disabled={loading === "starPoints" || isStoreLoading || !isProductAvailable(PRODUCT_IDS.STAR_POINTS_5000)}
         >
-          {loading === "starPoints" ? (
+          {loading === "starPoints" || isStoreLoading ? (
             <ActivityIndicator color="#fff" />
+          ) : !isProductAvailable(PRODUCT_IDS.STAR_POINTS_5000) ? (
+            <ThemedText style={styles.realMoneyText}>Unavailable</ThemedText>
           ) : (
             <>
-              <ThemedText style={styles.realMoneyText}>$5.99</ThemedText>
+              <ThemedText style={styles.realMoneyText}>
+                {getProductPrice(PRODUCT_IDS.STAR_POINTS_5000, "$5.99")}
+              </ThemedText>
               <Feather name="external-link" size={16} color="#fff" />
             </>
           )}
@@ -909,15 +932,22 @@ export default function ShopScreen() {
           </View>
         ) : (
           <Pressable
-            style={styles.realMoneyButton}
+            style={[
+              styles.realMoneyButton,
+              (!isProductAvailable(PRODUCT_IDS.AD_FREE) && !isStoreLoading) ? styles.realMoneyButtonDisabled : null,
+            ]}
             onPress={handlePurchaseAdFree}
-            disabled={loading === "adFree"}
+            disabled={loading === "adFree" || isStoreLoading || !isProductAvailable(PRODUCT_IDS.AD_FREE)}
           >
-            {loading === "adFree" ? (
+            {loading === "adFree" || isStoreLoading ? (
               <ActivityIndicator color="#fff" />
+            ) : !isProductAvailable(PRODUCT_IDS.AD_FREE) ? (
+              <ThemedText style={styles.realMoneyText}>Unavailable</ThemedText>
             ) : (
               <>
-                <ThemedText style={styles.realMoneyText}>$5.99</ThemedText>
+                <ThemedText style={styles.realMoneyText}>
+                  {getProductPrice(PRODUCT_IDS.AD_FREE, "$5.99")}
+                </ThemedText>
                 <Feather name="external-link" size={16} color="#fff" />
               </>
             )}
@@ -943,15 +973,23 @@ export default function ShopScreen() {
           </View>
         ) : (
           <Pressable
-            style={[styles.realMoneyButton, { backgroundColor: "#8B4513" }]}
+            style={[
+              styles.realMoneyButton,
+              { backgroundColor: "#8B4513" },
+              (!isProductAvailable(PRODUCT_IDS.SUPPORT_DEVELOPER) && !isStoreLoading) ? styles.realMoneyButtonDisabled : null,
+            ]}
             onPress={handleSupportDeveloper}
-            disabled={loading === "support"}
+            disabled={loading === "support" || isStoreLoading || !isProductAvailable(PRODUCT_IDS.SUPPORT_DEVELOPER)}
           >
-            {loading === "support" ? (
+            {loading === "support" || isStoreLoading ? (
               <ActivityIndicator color="#fff" />
+            ) : !isProductAvailable(PRODUCT_IDS.SUPPORT_DEVELOPER) ? (
+              <ThemedText style={styles.realMoneyText}>Unavailable</ThemedText>
             ) : (
               <>
-                <ThemedText style={styles.realMoneyText}>$3.99</ThemedText>
+                <ThemedText style={styles.realMoneyText}>
+                  {getProductPrice(PRODUCT_IDS.SUPPORT_DEVELOPER, "$3.99")}
+                </ThemedText>
                 <Feather name="external-link" size={16} color="#fff" />
               </>
             )}
@@ -1494,6 +1532,10 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.md,
     gap: Spacing.sm,
+  },
+  realMoneyButtonDisabled: {
+    backgroundColor: "#555",
+    opacity: 0.6,
   },
   realMoneyText: {
     ...Typography.body,
