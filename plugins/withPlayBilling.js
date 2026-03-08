@@ -5,6 +5,39 @@ const path = require('path');
 const COMPATIBLE_KOTLIN = '1.9.24';
 
 const withPlayBilling = (config) => {
+  config = withProjectBuildGradle(config, (config) => {
+    let contents = config.modResults.contents;
+
+    if (!contents.includes('languageVersion = "1.9"')) {
+      const kotlinCompilerFix = `
+subprojects { subproject ->
+    afterEvaluate {
+        subproject.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+            kotlinOptions {
+                jvmTarget = "17"
+                apiVersion = "1.9"
+                languageVersion = "1.9"
+            }
+        }
+        if (subproject.hasProperty("android")) {
+            subproject.android {
+                if (subproject.android.compileOptions) {
+                    subproject.android.compileOptions.sourceCompatibility = JavaVersion.VERSION_17
+                    subproject.android.compileOptions.targetCompatibility = JavaVersion.VERSION_17
+                }
+            }
+        }
+    }
+}
+`;
+      contents += kotlinCompilerFix;
+      console.log('[withPlayBilling] Added Kotlin 1.9 compatibility fix to root build.gradle');
+    }
+
+    config.modResults.contents = contents;
+    return config;
+  });
+
   config = withDangerousMod(config, [
     'android',
     async (config) => {
@@ -102,12 +135,12 @@ const withPlayBilling = (config) => {
 
         if (patched) {
           fs.writeFileSync(iapBuildGradlePath, content, 'utf8');
-          console.log('[withPlayBilling] All patches applied to react-native-iap');
+          console.log('[withPlayBilling] All patches applied to react-native-iap build.gradle');
         } else {
-          console.log('[withPlayBilling] No patches needed for react-native-iap');
+          console.log('[withPlayBilling] No patches needed for react-native-iap build.gradle');
         }
       } else {
-        console.log('[withPlayBilling] react-native-iap build.gradle not found');
+        console.log('[withPlayBilling] react-native-iap build.gradle not found, skipping node_modules patch');
       }
 
       return config;
