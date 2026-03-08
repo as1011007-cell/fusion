@@ -57,6 +57,7 @@
       ],
       "expo-web-browser",
       "./plugins/withIAPPodspecFix.js",
+      "./plugins/withPlayBilling.js",
       "react-native-iap",
       [
         "./plugins/withPlayGamesServices.js",
@@ -64,7 +65,6 @@
           "appId": "YOUR_PLAY_GAMES_APP_ID"
         }
       ],
-      "./plugins/withPlayBilling.js",
       [
         "react-native-google-mobile-ads",
         {
