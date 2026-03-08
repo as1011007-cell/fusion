@@ -1,35 +1,8 @@
-const { withDangerousMod, withProjectBuildGradle } = require('@expo/config-plugins');
+const { withDangerousMod } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
 const withPlayBilling = (config) => {
-  config = withProjectBuildGradle(config, (config) => {
-    let contents = config.modResults.contents;
-
-    if (!contents.includes('languageVersion = "1.9"')) {
-      const kotlinCompilerFix = `
-subprojects { subproject ->
-    if (subproject.name == "react-native-iap") {
-        subproject.plugins.withId("org.jetbrains.kotlin.android") {
-            subproject.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-                kotlinOptions {
-                    jvmTarget = "17"
-                    apiVersion = "1.9"
-                    languageVersion = "1.9"
-                }
-            }
-        }
-    }
-}
-`;
-      contents += kotlinCompilerFix;
-      console.log('[withPlayBilling] Added targeted Kotlin 1.9 compatibility fix for react-native-iap in root build.gradle');
-    }
-
-    config.modResults.contents = contents;
-    return config;
-  });
-
   config = withDangerousMod(config, [
     'android',
     async (config) => {
@@ -54,16 +27,16 @@ subprojects { subproject ->
 
         const compileSdkRegex = /compileSdkVersion\s+getExtOrIntegerDefault\("compileSdkVersion"\)/;
         if (compileSdkRegex.test(content)) {
-          content = content.replace(compileSdkRegex, 'compileSdkVersion 35');
+          content = content.replace(compileSdkRegex, 'compileSdkVersion 36');
           patched = true;
-          console.log('[withPlayBilling] Updated compileSdkVersion to 35');
+          console.log('[withPlayBilling] Updated compileSdkVersion to 36');
         }
 
         const targetSdkRegex = /targetSdkVersion\s+getExtOrIntegerDefault\("targetSdkVersion"\)/;
         if (targetSdkRegex.test(content)) {
-          content = content.replace(targetSdkRegex, 'targetSdkVersion 35');
+          content = content.replace(targetSdkRegex, 'targetSdkVersion 36');
           patched = true;
-          console.log('[withPlayBilling] Updated targetSdkVersion to 35');
+          console.log('[withPlayBilling] Updated targetSdkVersion to 36');
         }
 
         const javaCompatRegex = /sourceCompatibility\s+JavaVersion\.VERSION_1_8\s*\n\s*targetCompatibility\s+JavaVersion\.VERSION_1_8/;
