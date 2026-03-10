@@ -74,7 +74,9 @@ class InAppPurchaseService {
 
       if (Platform.OS === "android") {
         try {
-          await RNIap.flushFailedPurchasesCachedAsPendingAndroid();
+          if (typeof RNIap.flushFailedPurchasesCachedAsPendingAndroid === 'function') {
+            await RNIap.flushFailedPurchasesCachedAsPendingAndroid();
+          }
         } catch (e) {
           console.log("No failed purchases to flush");
         }

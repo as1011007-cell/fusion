@@ -51,8 +51,6 @@ android {
 
   kotlinOptions {
     jvmTarget = "17"
-    apiVersion = "1.9"
-    languageVersion = "1.9"
   }
 
   flavorDimensions "store"
@@ -121,7 +119,7 @@ const withPlayBilling = (config) => {
 
       if (fs.existsSync(iapBuildGradlePath)) {
         fs.writeFileSync(iapBuildGradlePath, REPLACEMENT_BUILD_GRADLE.trim(), 'utf8');
-        console.log('[withPlayBilling] Replaced react-native-iap build.gradle with Kotlin 2.x compatible version');
+        console.log('[withPlayBilling] Replaced react-native-iap build.gradle with modern Kotlin 2.x compatible version');
       } else {
         console.log('[withPlayBilling] react-native-iap build.gradle not found at: ' + iapBuildGradlePath);
       }
