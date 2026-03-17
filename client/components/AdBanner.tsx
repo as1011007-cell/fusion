@@ -23,7 +23,9 @@ if (Platform.OS !== 'web' && !isExpoGo) {
   }
 }
 
-const INTERSTITIAL_AD_UNIT_ID = 'ca-app-pub-9336364822145619/1234567890';
+const IOS_INTERSTITIAL_AD_UNIT_ID = 'ca-app-pub-9336364822145619/4775458412';
+const ANDROID_INTERSTITIAL_AD_UNIT_ID = 'ca-app-pub-9336364822145619/1234567890';
+const INTERSTITIAL_AD_UNIT_ID = Platform.OS === 'ios' ? IOS_INTERSTITIAL_AD_UNIT_ID : ANDROID_INTERSTITIAL_AD_UNIT_ID;
 
 type AdBannerProps = {
   style?: object;
