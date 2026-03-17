@@ -30,7 +30,7 @@
       "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false,
       "package": "com.feudfusionwhatwouldtheysay.app",
-      "versionCode": 20,
+      "versionCode": 21,
       "permissions": [
         "INTERNET",
         "VIBRATE",
