@@ -105,6 +105,53 @@ if (isNewArchitectureEnabled()) {
 }
 `;
 
+function patchKotlinSource(projectRoot) {
+  const modulePath = path.join(
+    projectRoot,
+    'node_modules',
+    'react-native-iap',
+    'android',
+    'src',
+    'play',
+    'java',
+    'com',
+    'dooboolab',
+    'rniap',
+    'RNIapModule.kt'
+  );
+
+  if (!fs.existsSync(modulePath)) {
+    console.log('[withPlayBilling] RNIapModule.kt not found, skipping source patch');
+    return;
+  }
+
+  let source = fs.readFileSync(modulePath, 'utf8');
+  let modified = false;
+
+  if (!source.includes('import com.android.billingclient.api.PendingPurchasesParams')) {
+    source = source.replace(
+      'import com.android.billingclient.api.PurchasesUpdatedListener',
+      'import com.android.billingclient.api.PendingPurchasesParams\nimport com.android.billingclient.api.PurchasesUpdatedListener'
+    );
+    modified = true;
+  }
+
+  if (source.includes('.enablePendingPurchases(),') || source.includes('.enablePendingPurchases()')) {
+    source = source.replace(
+      /\.enablePendingPurchases\(\)/g,
+      '.enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().enablePrepaidPlans().build())'
+    );
+    modified = true;
+  }
+
+  if (modified) {
+    fs.writeFileSync(modulePath, source, 'utf8');
+    console.log('[withPlayBilling] Patched RNIapModule.kt: enablePendingPurchases -> PendingPurchasesParams (billing-ktx 7.0.0 compat)');
+  } else {
+    console.log('[withPlayBilling] RNIapModule.kt already patched or no changes needed');
+  }
+}
+
 const withPlayBilling = (config) => {
   config = withDangerousMod(config, [
     'android',
@@ -119,10 +166,12 @@ const withPlayBilling = (config) => {
 
       if (fs.existsSync(iapBuildGradlePath)) {
         fs.writeFileSync(iapBuildGradlePath, REPLACEMENT_BUILD_GRADLE.trim(), 'utf8');
-        console.log('[withPlayBilling] Replaced react-native-iap build.gradle with modern Kotlin 2.x compatible version');
+        console.log('[withPlayBilling] Replaced react-native-iap build.gradle with Kotlin 2.x compatible version');
       } else {
         console.log('[withPlayBilling] react-native-iap build.gradle not found at: ' + iapBuildGradlePath);
       }
+
+      patchKotlinSource(config.modRequest.projectRoot);
 
       return config;
     },
