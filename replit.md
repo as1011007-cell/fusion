@@ -75,13 +75,15 @@ The game features a vibrant "Electric Collision" aesthetic with neon accents, pe
 - 5 purchasable UI themes: Electric Collision (free), Sunset Vibes, Ocean Breeze, Forest Mist, Galaxy Night (1500 stars each)
 - Power card bundle purchase: +2 Skip, +2 Steal, +2 Double Bluff for 500 star points
 
-### In-App Purchase Integration (January 2026)
-- Native in-app purchases via expo-in-app-purchases for iOS and Android
+### In-App Purchase Integration (March 2026)
+- react-native-iap v14.5.0 with react-native-nitro-modules (Nitro Modules architecture)
+- Uses OpenIAP library (StoreKit 2 on iOS, Google Play Billing on Android)
 - InAppPurchaseService handles connection, product loading, purchases, and restore
-- Product IDs: com.feudfusion.starpoints5000, com.feudfusion.adfree, com.feudfusion.support
-- Uses StoreKit on iOS, Google Play Billing on Android
+- Product IDs: com.feudfusion.starpoints (consumable), com.feudfusion.adsfree, com.feudfusion.supportus
+- v14 API: fetchProducts (type: 'all'/'in-app'/'subs'), requestPurchase with platform-specific request objects
 - Restore Purchases button in Premium tab for iOS/Android users
 - Products must be configured in App Store Connect and Google Play Console with matching IDs
+- Old withPlayBilling.js and withIAPPodspecFix.js plugins removed (v14 handles native setup natively)
 
 
 ### Multiplayer Mode (January 2026)

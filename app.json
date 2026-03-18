@@ -30,7 +30,7 @@
       "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false,
       "package": "com.feudfusionwhatwouldtheysay.app",
-      "versionCode": 21,
+      "versionCode": 22,
       "permissions": [
         "INTERNET",
         "VIBRATE",
@@ -56,8 +56,6 @@
         }
       ],
       "expo-web-browser",
-      "./plugins/withIAPPodspecFix.js",
-      "./plugins/withPlayBilling.js",
       "react-native-iap",
       [
         "./plugins/withPlayGamesServices.js",

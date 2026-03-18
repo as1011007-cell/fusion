@@ -72,16 +72,6 @@ class InAppPurchaseService {
       console.log("IAP connection result:", result);
       this.connected = true;
 
-      if (Platform.OS === "android") {
-        try {
-          if (typeof RNIap.flushFailedPurchasesCachedAsPendingAndroid === 'function') {
-            await RNIap.flushFailedPurchasesCachedAsPendingAndroid();
-          }
-        } catch (e) {
-          console.log("No failed purchases to flush");
-        }
-      }
-
       this.setupListeners();
       console.log(`Connected to ${this.getStoreName()}`);
       return true;
@@ -122,9 +112,10 @@ class InAppPurchaseService {
 
     this.purchaseUpdateSubscription = RNIap.purchaseUpdatedListener(
       async (purchase: any) => {
+        const purchaseProductId = purchase?.productId || purchase?.id;
         console.log(
           "Purchase updated:",
-          purchase?.productId,
+          purchaseProductId,
           "state:",
           purchase?.purchaseStateAndroid
         );
@@ -135,11 +126,11 @@ class InAppPurchaseService {
           ) {
             console.log(
               "Purchase is pending (deferred payment):",
-              purchase?.productId
+              purchaseProductId
             );
             this.resolvePurchase({
               success: false,
-              productId: purchase?.productId,
+              productId: purchaseProductId,
               error:
                 "Your purchase is pending. You'll receive your items once the payment is confirmed.",
             });
@@ -152,36 +143,26 @@ class InAppPurchaseService {
 
         if (receipt) {
           try {
-            if (Platform.OS === "android") {
-              if (purchase?.purchaseToken) {
-                const isConsumable =
-                  purchase?.productId === PRODUCT_IDS.STAR_POINTS_5000;
-                await RNIap.finishTransaction({
-                  purchase,
-                  isConsumable,
-                });
-                console.log(
-                  `Android transaction ${isConsumable ? "consumed" : "acknowledged"} for:`,
-                  purchase.productId
-                );
-              }
-            } else {
-              await RNIap.finishTransaction({
-                purchase,
-                isConsumable: false,
-              });
-              console.log("iOS transaction finished for:", purchase.productId);
-            }
+            const isConsumable =
+              purchaseProductId === PRODUCT_IDS.STAR_POINTS_5000;
+            await RNIap.finishTransaction({
+              purchase,
+              isConsumable,
+            });
+            console.log(
+              `Transaction ${isConsumable ? "consumed" : "acknowledged"} for:`,
+              purchaseProductId
+            );
 
             this.resolvePurchase({
               success: true,
-              productId: purchase?.productId,
+              productId: purchaseProductId,
             });
           } catch (finishError: any) {
             console.error("Error finishing transaction:", finishError);
             this.resolvePurchase({
               success: false,
-              productId: purchase?.productId,
+              productId: purchaseProductId,
               error:
                 "Purchase could not be confirmed with the store. Please try again or contact support.",
             });
@@ -213,14 +194,19 @@ class InAppPurchaseService {
   }
 
   private mapProduct(product: any): IAPItemDetails {
+    const productId = product.productId || product.id || "";
+    const price = product.displayPrice || product.localizedPrice || product.price || "0";
+    const rawPrice = product.price;
+    const micros = rawPrice
+      ? Math.round(parseFloat(String(rawPrice)) * 1000000)
+      : 0;
+
     return {
-      productId: product.productId,
-      title: product.title || product.name || "",
+      productId,
+      title: product.title || product.name || product.displayName || "",
       description: product.description || "",
-      price: product.localizedPrice || product.price || "0",
-      priceAmountMicros: product.price
-        ? Math.round(parseFloat(String(product.price)) * 1000000)
-        : 0,
+      price,
+      priceAmountMicros: micros,
       priceCurrencyCode: product.currency || "USD",
     };
   }
@@ -235,37 +221,23 @@ class InAppPurchaseService {
       let allProducts: any[] = [];
 
       try {
-        const products = await RNIap.getProducts({ skus: productIds });
+        const products = await RNIap.fetchProducts({ skus: productIds, type: 'all' });
         if (products && products.length > 0) {
           allProducts = [...products];
           console.log(
-            `getProducts returned ${products.length} items:`,
-            products.map((p: any) => p.productId)
+            `fetchProducts returned ${products.length} items:`,
+            products.map((p: any) => p.id || p.productId)
           );
         }
       } catch (e) {
-        console.log("getProducts failed:", e);
-      }
-
-      const loadedIds = new Set(allProducts.map((p: any) => p.productId));
-      const missingIds = productIds.filter((id) => !loadedIds.has(id));
-
-      if (missingIds.length > 0) {
-        console.log(
-          "Products not found via getProducts, trying getSubscriptions:",
-          missingIds
-        );
+        console.log("fetchProducts failed, trying in-app type:", e);
         try {
-          const subs = await RNIap.getSubscriptions({ skus: missingIds });
-          if (subs && subs.length > 0) {
-            allProducts = [...allProducts, ...subs];
-            console.log(
-              `getSubscriptions returned ${subs.length} items:`,
-              subs.map((s: any) => s.productId)
-            );
+          const inappProducts = await RNIap.fetchProducts({ skus: productIds, type: 'in-app' });
+          if (inappProducts && inappProducts.length > 0) {
+            allProducts = [...inappProducts];
           }
-        } catch (e) {
-          console.log("getSubscriptions failed:", e);
+        } catch (e2) {
+          console.log("fetchProducts in-app also failed:", e2);
         }
       }
 
@@ -343,12 +315,22 @@ class InAppPurchaseService {
       try {
         if (Platform.OS === "android") {
           await RNIap.requestPurchase({
-            skus: [productId],
+            request: {
+              android: {
+                skus: [productId],
+              },
+            },
+            type: "in-app",
           });
         } else {
           await RNIap.requestPurchase({
-            sku: productId,
-            andDangerouslyFinishTransactionAutomaticallyIOS: false,
+            request: {
+              ios: {
+                sku: productId,
+                andDangerouslyFinishTransactionAutomatically: false,
+              },
+            },
+            type: "in-app",
           });
         }
       } catch (error: any) {
@@ -378,7 +360,7 @@ class InAppPurchaseService {
       if (purchases && purchases.length > 0) {
         return purchases.map((purchase: any) => ({
           success: true,
-          productId: purchase.productId,
+          productId: purchase.productId || purchase.id,
         }));
       }
 
