@@ -51,6 +51,8 @@ android {
 
   kotlinOptions {
     jvmTarget = "17"
+    apiVersion = "1.9"
+    languageVersion = "1.9"
   }
 
   flavorDimensions += "store"
@@ -87,7 +89,7 @@ dependencies {
   testImplementation "junit:junit:4.13.2"
   testImplementation "io.mockk:mockk:1.13.5"
 
-  playImplementation "com.android.billingclient:billing-ktx:7.1.1"
+  playImplementation "com.android.billingclient:billing-ktx:6.2.1"
   playImplementation "com.google.android.gms:play-services-base:18.1.0"
 
   amazonImplementation "com.amazon.device:amazon-appstore-sdk:3.0.7"
@@ -104,53 +106,6 @@ if (isNewArchitectureEnabled()) {
   }
 }
 `;
-
-function patchKotlinSource(projectRoot) {
-  const modulePath = path.join(
-    projectRoot,
-    'node_modules',
-    'react-native-iap',
-    'android',
-    'src',
-    'play',
-    'java',
-    'com',
-    'dooboolab',
-    'rniap',
-    'RNIapModule.kt'
-  );
-
-  if (!fs.existsSync(modulePath)) {
-    console.log('[withPlayBilling] RNIapModule.kt not found, skipping source patch');
-    return;
-  }
-
-  let source = fs.readFileSync(modulePath, 'utf8');
-  let modified = false;
-
-  if (!source.includes('import com.android.billingclient.api.PendingPurchasesParams')) {
-    source = source.replace(
-      'import com.android.billingclient.api.PurchasesUpdatedListener',
-      'import com.android.billingclient.api.PendingPurchasesParams\nimport com.android.billingclient.api.PurchasesUpdatedListener'
-    );
-    modified = true;
-  }
-
-  if (source.includes('.enablePendingPurchases(),') || source.includes('.enablePendingPurchases()')) {
-    source = source.replace(
-      /\.enablePendingPurchases\(\)/g,
-      '.enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().enablePrepaidPlans().build())'
-    );
-    modified = true;
-  }
-
-  if (modified) {
-    fs.writeFileSync(modulePath, source, 'utf8');
-    console.log('[withPlayBilling] Patched RNIapModule.kt: enablePendingPurchases -> PendingPurchasesParams (billing-ktx 7.x compat)');
-  } else {
-    console.log('[withPlayBilling] RNIapModule.kt already patched or no changes needed');
-  }
-}
 
 const withPlayBilling = (config) => {
   config = withDangerousMod(config, [
@@ -170,8 +125,6 @@ const withPlayBilling = (config) => {
       } else {
         console.log('[withPlayBilling] react-native-iap build.gradle not found at: ' + iapBuildGradlePath);
       }
-
-      patchKotlinSource(config.modRequest.projectRoot);
 
       return config;
     },
