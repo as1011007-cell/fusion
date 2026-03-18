@@ -79,15 +79,10 @@ The game features a vibrant "Electric Collision" aesthetic with neon accents, pe
 - Native in-app purchases via expo-in-app-purchases for iOS and Android
 - InAppPurchaseService handles connection, product loading, purchases, and restore
 - Product IDs: com.feudfusion.starpoints5000, com.feudfusion.adfree, com.feudfusion.support
-- Uses StoreKit on iOS, Google Play Billing on Android, falls back to Stripe on web
+- Uses StoreKit on iOS, Google Play Billing on Android
 - Restore Purchases button in Premium tab for iOS/Android users
 - Products must be configured in App Store Connect and Google Play Console with matching IDs
 
-### Stripe Integration
-- Stripe payments for real-money purchases using stripe-replit-sync
-- Backend routes: /api/stripe/products, /api/stripe/create-checkout, /api/stripe/webhook
-- Webhook handling for payment confirmation
-- Uses expo-web-browser to open Stripe Checkout on mobile
 
 ### Multiplayer Mode (January 2026)
 - Real-time multiplayer across devices using WebSocket

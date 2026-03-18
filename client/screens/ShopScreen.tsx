@@ -6,7 +6,6 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import * as WebBrowser from "expo-web-browser";
 
 import { ThemedText } from "@/components/ThemedText";
 import { FeudFusionBrand } from "@/components/FeudFusionBrand";
@@ -15,7 +14,6 @@ import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useProfile } from "@/context/ProfileContext";
 import { useGame } from "@/context/GameContext";
 import { useTheme } from "@/context/ThemeContext";
-import { getApiUrl } from "@/lib/query-client";
 import { inAppPurchaseService, PRODUCT_IDS } from "@/services/InAppPurchaseService";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, "Shop">;
@@ -158,18 +156,6 @@ export default function ShopScreen() {
     }
   };
 
-  const verifyPayment = async (sessionId: string): Promise<boolean> => {
-    try {
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/api/stripe/verify-payment/${sessionId}`);
-      const data = await response.json();
-      return data.success === true;
-    } catch (error) {
-      console.error('Payment verification error:', error);
-      return false;
-    }
-  };
-
   const handlePurchaseStarPointsNative = async () => {
     if (settings.hapticsEnabled) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -212,75 +198,6 @@ export default function ShopScreen() {
     }
   };
 
-  const handlePurchaseStarPointsStripe = async () => {
-    if (settings.hapticsEnabled) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    setLoading("starPoints");
-    try {
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/api/stripe/products`);
-      const data = await response.json();
-
-      const starProduct = data.products?.find((p: any) => 
-        p.name?.toLowerCase().includes('star') || p.metadata?.category === 'currency'
-      );
-
-      if (starProduct?.prices?.[0]?.id) {
-        const successUrl = `${apiUrl}/payment-success?type=starpoints`;
-        const cancelUrl = `${apiUrl}/payment-cancel`;
-
-        const checkoutResponse = await fetch(`${apiUrl}/api/stripe/create-checkout`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            priceId: starProduct.prices[0].id,
-            successUrl,
-            cancelUrl,
-          }),
-        });
-        const checkoutData = await checkoutResponse.json();
-
-        if (checkoutData.url && checkoutData.sessionId) {
-          await WebBrowser.openBrowserAsync(checkoutData.url);
-          const paymentSuccess = await verifyPayment(checkoutData.sessionId);
-          if (paymentSuccess) {
-            if (settings.hapticsEnabled) {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            }
-            Alert.alert(
-              "Thank You!",
-              "Your purchase was successful! You've received 5,000 Star Points.",
-              [{ text: "Awesome!", onPress: () => addStarPoints(5000) }]
-            );
-          } else {
-            if (settings.hapticsEnabled) {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-            }
-            Alert.alert(
-              "Payment Incomplete",
-              "Your payment was not completed. Please try again.",
-              [{ text: "OK" }]
-            );
-            navigation.navigate("Home");
-          }
-        }
-      } else {
-        console.error('Star Points product not found in Stripe');
-        if (settings.hapticsEnabled) {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        }
-      }
-    } catch (error) {
-      console.error('Purchase error:', error);
-      if (settings.hapticsEnabled) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
-    } finally {
-      setLoading(null);
-    }
-  };
-
   const retryStoreConnection = async (): Promise<boolean> => {
     try {
       const connected = await inAppPurchaseService.connect();
@@ -313,7 +230,11 @@ export default function ShopScreen() {
         );
       }
     } else {
-      handlePurchaseStarPointsStripe();
+      Alert.alert(
+        "Not Available",
+        "Purchases are only available on iOS and Android devices.",
+        [{ text: "OK" }]
+      );
     }
   };
 
@@ -359,76 +280,6 @@ export default function ShopScreen() {
     }
   };
 
-  const handlePurchaseAdFreeStripe = async () => {
-    if (settings.hapticsEnabled) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    setLoading("adFree");
-    try {
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/api/stripe/products`);
-      const data = await response.json();
-
-      const adFreeProduct = data.products?.find((p: any) => 
-        p.name?.toLowerCase().includes('ad-free') || p.metadata?.category === 'upgrade'
-      );
-
-      if (adFreeProduct?.prices?.[0]?.id) {
-        const successUrl = `${apiUrl}/payment-success?type=adfree`;
-        const cancelUrl = `${apiUrl}/payment-cancel`;
-
-        const checkoutResponse = await fetch(`${apiUrl}/api/stripe/create-checkout`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            priceId: adFreeProduct.prices[0].id,
-            successUrl,
-            cancelUrl,
-          }),
-        });
-        const checkoutData = await checkoutResponse.json();
-
-        if (checkoutData.url && checkoutData.sessionId) {
-          await WebBrowser.openBrowserAsync(checkoutData.url);
-          const paymentSuccess = await verifyPayment(checkoutData.sessionId);
-          if (paymentSuccess) {
-            if (settings.hapticsEnabled) {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            }
-            setAdFree(true);
-            Alert.alert(
-              "Thank You!",
-              "Your purchase was successful! Enjoy your ad-free experience.",
-              [{ text: "Awesome!" }]
-            );
-          } else {
-            if (settings.hapticsEnabled) {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-            }
-            Alert.alert(
-              "Payment Incomplete",
-              "Your payment was not completed. Please try again.",
-              [{ text: "OK" }]
-            );
-            navigation.navigate("Home");
-          }
-        }
-      } else {
-        console.error('Ad-Free product not found in Stripe');
-        if (settings.hapticsEnabled) {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        }
-      }
-    } catch (error) {
-      console.error('Purchase error:', error);
-      if (settings.hapticsEnabled) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
-    } finally {
-      setLoading(null);
-    }
-  };
-
   const handlePurchaseAdFree = async () => {
     if (isNative && storeKitReady) {
       handlePurchaseAdFreeNative();
@@ -444,7 +295,11 @@ export default function ShopScreen() {
         );
       }
     } else {
-      handlePurchaseAdFreeStripe();
+      Alert.alert(
+        "Not Available",
+        "Purchases are only available on iOS and Android devices.",
+        [{ text: "OK" }]
+      );
     }
   };
 
@@ -490,77 +345,6 @@ export default function ShopScreen() {
     }
   };
 
-  const handleSupportDeveloperStripe = async () => {
-    if (settings.hapticsEnabled) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    setLoading("support");
-    try {
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/api/stripe/products`);
-      const data = await response.json();
-
-      const coffeeProduct = data.products?.find((p: any) => 
-        p.name?.toLowerCase().includes('coffee') || 
-        p.name?.toLowerCase().includes('support') ||
-        p.metadata?.category === 'tip'
-      );
-
-      if (coffeeProduct?.prices?.[0]?.id) {
-        const successUrl = `${apiUrl}/payment-success?type=support`;
-        const cancelUrl = `${apiUrl}/payment-cancel`;
-
-        const checkoutResponse = await fetch(`${apiUrl}/api/stripe/create-checkout`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            priceId: coffeeProduct.prices[0].id,
-            successUrl,
-            cancelUrl,
-          }),
-        });
-        const checkoutData = await checkoutResponse.json();
-
-        if (checkoutData.url && checkoutData.sessionId) {
-          await WebBrowser.openBrowserAsync(checkoutData.url);
-          const paymentSuccess = await verifyPayment(checkoutData.sessionId);
-          if (paymentSuccess) {
-            if (settings.hapticsEnabled) {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            }
-            Alert.alert(
-              "Thank You!",
-              "Your support means the world to us! You're now a Developer Supporter.",
-              [{ text: "Happy to help!", onPress: () => setHasSupported(true) }]
-            );
-          } else {
-            if (settings.hapticsEnabled) {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-            }
-            Alert.alert(
-              "Payment Incomplete",
-              "Your payment was not completed. Please try again.",
-              [{ text: "OK" }]
-            );
-            navigation.navigate("Home");
-          }
-        }
-      } else {
-        console.error('Support product not found in Stripe');
-        if (settings.hapticsEnabled) {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        }
-      }
-    } catch (error) {
-      console.error('Support purchase error:', error);
-      if (settings.hapticsEnabled) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
-    } finally {
-      setLoading(null);
-    }
-  };
-
   const handleSupportDeveloper = async () => {
     if (isNative && storeKitReady) {
       handleSupportDeveloperNative();
@@ -576,7 +360,11 @@ export default function ShopScreen() {
         );
       }
     } else {
-      handleSupportDeveloperStripe();
+      Alert.alert(
+        "Not Available",
+        "Purchases are only available on iOS and Android devices.",
+        [{ text: "OK" }]
+      );
     }
   };
 

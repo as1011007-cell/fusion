@@ -19,11 +19,9 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import * as WebBrowser from "expo-web-browser";
 import { Alert } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
-import { getApiUrl } from "@/lib/query-client";
 import { FloatingBubbles } from "@/components/FloatingBubbles";
 import { GameColors, Spacing, Typography, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -227,18 +225,6 @@ export default function HomeScreen() {
     navigation.navigate("LastTurnLobby");
   };
 
-  const verifyPayment = async (sessionId: string): Promise<boolean> => {
-    try {
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/api/stripe/verify-payment/${sessionId}`);
-      const data = await response.json();
-      return data.success === true;
-    } catch (error) {
-      console.error('Payment verification error:', error);
-      return false;
-    }
-  };
-
   const retryStoreConnection = async (): Promise<boolean> => {
     try {
       const connected = await inAppPurchaseService.connect();
@@ -297,75 +283,6 @@ export default function HomeScreen() {
     }
   };
 
-  const handlePurchaseAdFreeStripe = async () => {
-    if (settings.hapticsEnabled) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    setAdFreePurchasing(true);
-    try {
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/api/stripe/products`);
-      const data = await response.json();
-
-      const adFreeProduct = data.products?.find((p: any) => 
-        p.name?.toLowerCase().includes('ad-free') || p.metadata?.category === 'upgrade'
-      );
-
-      if (adFreeProduct?.prices?.[0]?.id) {
-        const successUrl = `${apiUrl}/payment-success?type=adfree`;
-        const cancelUrl = `${apiUrl}/payment-cancel`;
-
-        const checkoutResponse = await fetch(`${apiUrl}/api/stripe/create-checkout`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            priceId: adFreeProduct.prices[0].id,
-            successUrl,
-            cancelUrl,
-          }),
-        });
-        const checkoutData = await checkoutResponse.json();
-
-        if (checkoutData.url && checkoutData.sessionId) {
-          await WebBrowser.openBrowserAsync(checkoutData.url);
-          const paymentSuccess = await verifyPayment(checkoutData.sessionId);
-          if (paymentSuccess) {
-            if (settings.hapticsEnabled) {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            }
-            setAdFree(true);
-            Alert.alert(
-              "Thank You!",
-              "Your purchase was successful! Enjoy your ad-free experience.",
-              [{ text: "Awesome!" }]
-            );
-          } else {
-            if (settings.hapticsEnabled) {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-            }
-            Alert.alert(
-              "Payment Incomplete",
-              "Your payment was not completed. Please try again.",
-              [{ text: "OK" }]
-            );
-          }
-        }
-      } else {
-        console.error('Ad-Free product not found in Stripe');
-        if (settings.hapticsEnabled) {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        }
-      }
-    } catch (error) {
-      console.error('Purchase error:', error);
-      if (settings.hapticsEnabled) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
-    } finally {
-      setAdFreePurchasing(false);
-    }
-  };
-
   const handlePurchaseAdFree = async () => {
     if (adFreePurchasing) return;
     if (isNative && storeKitReady) {
@@ -382,7 +299,11 @@ export default function HomeScreen() {
         );
       }
     } else {
-      handlePurchaseAdFreeStripe();
+      Alert.alert(
+        "Not Available",
+        "Purchases are only available on iOS and Android devices.",
+        [{ text: "OK" }]
+      );
     }
   };
 
