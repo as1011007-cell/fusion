@@ -19,12 +19,12 @@ def safeExtGet(prop, fallback) {
 }
 
 android {
-  compileSdkVersion safeExtGet("compileSdkVersion", 36)
+  compileSdk safeExtGet("compileSdkVersion", 36)
   namespace "com.dooboolab.rniap"
 
   defaultConfig {
-    minSdkVersion safeExtGet("minSdkVersion", 24)
-    targetSdkVersion safeExtGet("targetSdkVersion", 36)
+    minSdk safeExtGet("minSdkVersion", 24)
+    targetSdk safeExtGet("targetSdkVersion", 36)
     buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
     buildConfigField "boolean", "IS_AMAZON_DRM_ENABLED", "true"
   }
@@ -53,7 +53,7 @@ android {
     jvmTarget = "17"
   }
 
-  flavorDimensions "store"
+  flavorDimensions += "store"
 
   productFlavors {
     amazon {
@@ -87,7 +87,7 @@ dependencies {
   testImplementation "junit:junit:4.13.2"
   testImplementation "io.mockk:mockk:1.13.5"
 
-  playImplementation "com.android.billingclient:billing-ktx:7.0.0"
+  playImplementation "com.android.billingclient:billing-ktx:7.1.1"
   playImplementation "com.google.android.gms:play-services-base:18.1.0"
 
   amazonImplementation "com.amazon.device:amazon-appstore-sdk:3.0.7"
@@ -146,7 +146,7 @@ function patchKotlinSource(projectRoot) {
 
   if (modified) {
     fs.writeFileSync(modulePath, source, 'utf8');
-    console.log('[withPlayBilling] Patched RNIapModule.kt: enablePendingPurchases -> PendingPurchasesParams (billing-ktx 7.0.0 compat)');
+    console.log('[withPlayBilling] Patched RNIapModule.kt: enablePendingPurchases -> PendingPurchasesParams (billing-ktx 7.x compat)');
   } else {
     console.log('[withPlayBilling] RNIapModule.kt already patched or no changes needed');
   }
@@ -166,7 +166,7 @@ const withPlayBilling = (config) => {
 
       if (fs.existsSync(iapBuildGradlePath)) {
         fs.writeFileSync(iapBuildGradlePath, REPLACEMENT_BUILD_GRADLE.trim(), 'utf8');
-        console.log('[withPlayBilling] Replaced react-native-iap build.gradle with Kotlin 2.x compatible version');
+        console.log('[withPlayBilling] Replaced react-native-iap build.gradle with Gradle 9 / Kotlin 2.x compatible version');
       } else {
         console.log('[withPlayBilling] react-native-iap build.gradle not found at: ' + iapBuildGradlePath);
       }
